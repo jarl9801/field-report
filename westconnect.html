@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Field Report - Westconnect NE4">
+    <meta name="theme-color" content="#1976D2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FR WC">
+    <title>Field Report - Westconnect</title>
+    <link rel="manifest" href="manifest-wc.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231976D2' width='192' height='192' rx='32'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-weight='bold'>WC</text></svg>">
+    <style>
+        :root {
+            --primary: #1976D2;
+            --primary-dark: #1565C0;
+            --primary-light: #42A5F5;
+            --secondary: #00C853;
+            --danger: #D32F2F;
+            --warning: #F57C00;
+            --success: #388E3C;
+            --gray-light: #F5F5F5;
+            --gray-medium: #E0E0E0;
+            --gray-dark: #424242;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-light); color: var(--text-primary);
+            line-height: 1.5; overflow-x: hidden; width: 100%;
+            min-height: 100vh; min-height: -webkit-fill-available;
+        }
+        html { height: -webkit-fill-available; }
+        .app-container { display:flex; flex-direction:column; width:100%; min-height:100vh; background:white; }
+
+        /* Status Bar */
+        .status-bar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color:white; padding:12px 16px; font-size:14px;
+            display:flex; justify-content:space-between; align-items:center;
+            position:sticky; top:0; z-index:100; box-shadow:0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-info { display:flex; gap:8px; align-items:center; }
+        .connection-indicator {
+            display:inline-block; width:10px; height:10px; border-radius:50%;
+            background:#4CAF50; animation:pulse 2s infinite;
+        }
+        .connection-indicator.offline { background:#FF9800; animation:none; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+        .lang-btn {
+            background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5);
+            color:white; padding:4px 10px; border-radius:4px; font-size:12px;
+            font-weight:600; cursor:pointer;
+        }
+        .lang-btn.active { background:rgba(255,255,255,0.9); color:var(--primary); }
+
+        /* Main Content */
+        .main-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:80px; }
+        .screen { display:none; padding:16px; animation:fadeIn 0.3s ease; }
+        .screen.active { display:flex; flex-direction:column; }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+        /* PIN Screen */
+        .pin-screen { justify-content:flex-start; align-items:center; gap:16px; padding-top:20px; }
+        .logo { width:50px; height:50px; margin:0 auto 8px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; }
+        .logo-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
+        .logo-subtitle { font-size:12px; color:var(--text-secondary); text-align:center; }
+        .pin-digits { display:flex; gap:12px; justify-content:center; margin:16px 0; }
+        .pin-digit { width:48px; height:56px; text-align:center; font-size:24px; border:2px solid var(--gray-medium); border-radius:8px; background:white; pointer-events:none; }
+        .pin-digit.filled { border-color:var(--primary); background:var(--gray-light); }
+        .pin-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:280px; margin:0 auto; }
+        .key-btn { height:56px; font-size:22px; font-weight:600; border:1px solid var(--gray-medium); border-radius:8px; background:white; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .key-btn:active { background:var(--gray-light); }
+        .key-btn.delete { font-size:18px; }
+
+        /* Form */
+        .form-section { background:white; border:1px solid var(--gray-medium); border-radius:var(--border-radius); padding:16px; margin-bottom:12px; }
+        .section-title { font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+        .section-counter { font-size:12px; font-weight:600; padding:2px 8px; border-radius:10px; background:var(--gray-light); color:var(--text-secondary); }
+        .section-counter.complete { background:#E8F5E9; color:var(--success); }
+        .form-group { margin-bottom:12px; }
+        .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+        .form-label.required::after { content:' *'; color:var(--danger); }
+        .form-input, .form-select, .form-textarea {
+            width:100%; padding:10px 12px; border:1px solid var(--gray-medium);
+            border-radius:6px; font-size:15px; background:white; -webkit-appearance:none;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--primary); }
+        .form-textarea { min-height:80px; resize:vertical; }
+        .time-inputs { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .error-message { font-size:12px; color:var(--danger); margin-top:4px; display:none; }
+
+        /* Collapsible */
+        .section-collapsible { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; -webkit-tap-highlight-color:transparent; }
+        .collapse-icon { transition:transform 0.3s; font-size:12px; }
+        .section-collapsible.collapsed .collapse-icon { transform:rotate(0deg); }
+        .section-collapsible:not(.collapsed) .collapse-icon { transform:rotate(90deg); }
+        .section-collapsible.collapsed + .section-content { display:none; }
+
+        /* Photos */
+        .photo-section { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f0f0f0; }
+        .photo-section:last-child { border-bottom:none; margin-bottom:0; }
+        .photo-label { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px; display:block; }
+        .photo-label.required::after { content:' *'; color:var(--danger); }
+        .photo-label.optional::after { content:' (opcional)'; color:var(--text-secondary); font-weight:400; font-size:11px; }
+        .upload-btn {
+            display:inline-flex; align-items:center; gap:4px; padding:8px 16px;
+            background:var(--gray-light); border:1px dashed var(--gray-medium);
+            border-radius:6px; font-size:13px; cursor:pointer; min-height:44px;
+        }
+        .upload-btn:active { background:var(--gray-medium); }
+        .photo-file-input { display:none; }
+        .photo-preview-container { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .photo-preview { position:relative; width:64px; height:64px; border-radius:6px; overflow:hidden; border:1px solid var(--gray-medium); }
+        .photo-preview img { width:100%; height:100%; object-fit:cover; }
+        .photo-preview.photo-warn { border:2px solid var(--warning); }
+        .photo-warning { position:absolute; bottom:0; left:0; right:0; background:rgba(245,124,0,0.85); color:white; font-size:9px; font-weight:600; text-align:center; padding:2px; line-height:1.2; }
+        .photo-remove { position:absolute; top:2px; right:2px; width:20px; height:20px; background:var(--danger); color:white; border:none; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+        /* Checkbox */
+        .checkbox-group { display:flex; flex-direction:column; gap:8px; }
+        .checkbox-item { display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--gray-light); border-radius:6px; }
+        .checkbox-item input[type="checkbox"] { width:20px; height:20px; margin-top:2px; accent-color:var(--primary); }
+        .checkbox-label { font-size:14px; }
+
+        /* Progress */
+        .progress-bar { height:4px; background:var(--gray-medium); border-radius:2px; margin-bottom:12px; overflow:hidden; }
+        .progress-fill { height:100%; background:var(--primary); transition:width 0.3s; }
+
+        /* Alerts */
+        .alert { padding:12px 16px; border-radius:6px; margin-bottom:8px; font-size:13px; animation:fadeIn 0.3s; }
+        .alert-error { background:#FFEBEE; color:var(--danger); border:1px solid #FFCDD2; }
+        .alert-warning { background:#FFF3E0; color:var(--warning); border:1px solid #FFE0B2; }
+        .alert-info { background:#E3F2FD; color:var(--primary); border:1px solid #BBDEFB; }
+        .alert-success { background:#E8F5E9; color:var(--success); border:1px solid #C8E6C9; }
+
+        /* Bottom Actions */
+        .bottom-actions { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--gray-medium); padding:12px 16px; z-index:50; }
+        .bottom-actions.hidden { display:none; }
+        .fab-group { display:flex; gap:12px; }
+        .fab { flex:1; padding:14px; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; min-height:48px; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:disabled { background:var(--gray-medium); color:var(--text-secondary); }
+        .btn-secondary { background:var(--gray-light); color:var(--text-primary); border:1px solid var(--gray-medium); }
+
+        /* Modal */
+        .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal-overlay.show { display:flex; }
+        .modal { background:white; padding:32px 24px; border-radius:12px; text-align:center; max-width:320px; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .modal-icon { font-size:48px; margin-bottom:16px; }
+        .modal-title { font-size:18px; font-weight:700; margin-bottom:12px; }
+        .modal-message { font-size:14px; color:var(--text-secondary); margin-bottom:24px; }
+        .modal-button { width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+
+        /* Member */
+        .member-btn { width:100%; padding:14px; background:white; border:2px solid var(--gray-medium); border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; text-align:center; }
+        .member-btn:active { border-color:var(--primary); background:#E3F2FD; }
+
+        /* WE tabs */
+        .we-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+        .we-tab { padding:6px 14px; border:2px solid var(--gray-medium); border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; background:white; }
+        .we-tab.active { border-color:var(--primary); background:#E3F2FD; color:var(--primary-dark); }
+        .we-tab.complete { border-color:var(--success); background:#E8F5E9; }
+        .we-panel { display:none; }
+        .we-panel.active { display:block; }
+        .we-data-row { display:flex; gap:8px; margin-bottom:8px; }
+        .we-data-row .form-input { flex:1; padding:8px 10px; font-size:13px; }
+        .we-data-row .form-input:first-child { flex:0 0 130px; font-family:monospace; letter-spacing:1px; }
+        .we-presence-toggle { display:flex; gap:8px; margin:8px 0 12px; }
+        .we-presence-toggle label {
+            display:flex; align-items:center; gap:6px; padding:8px 16px;
+            border:2px solid var(--gray-medium); border-radius:8px; cursor:pointer;
+            font-weight:600; font-size:13px; transition:var(--transition);
+        }
+        .we-presence-toggle label.selected-present { border-color:var(--success); background:#E8F5E9; color:var(--success); }
+        .we-presence-toggle label.selected-absent { border-color:var(--warning); background:#FFF3E0; color:var(--warning); }
+        .we-presence-hint { font-size:12px; color:var(--text-secondary); margin-bottom:8px; font-style:italic; }
+        .we-absent-section { background:#FFF8E1; border-left:3px solid var(--warning); padding:12px; border-radius:0 8px 8px 0; margin-bottom:8px; }
+        .we-absent-section .photo-label { font-size:13px; }
+        .we-variant-select { width:100%; padding:8px 10px; font-size:13px; border:2px solid var(--gray-medium); border-radius:8px; margin-bottom:8px; background:white; }
+
+        /* Validation Score Card */
+        .validation-card { background:white; border:2px solid var(--gray-medium); border-radius:var(--border-radius); padding:16px; margin-bottom:12px; transition:border-color 0.3s; }
+        .validation-card.score-high { border-color:var(--success); }
+        .validation-card.score-mid { border-color:var(--warning); }
+        .validation-card.score-low { border-color:var(--danger); }
+        .validation-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .validation-score-display { font-size:22px; font-weight:700; }
+        .validation-score-display.high { color:var(--success); }
+        .validation-score-display.mid { color:var(--warning); }
+        .validation-score-display.low { color:var(--danger); }
+        .validation-items { font-size:13px; line-height:2; font-family:monospace; }
+        .validation-items .v-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--gray-light); }
+        .validation-items .v-row:last-child { border-bottom:none; }
+        .v-label { color:var(--text-secondary); }
+        .v-value { font-weight:600; }
+        .v-ok { color:var(--success); }
+        .v-warn { color:var(--warning); }
+        .v-fail { color:var(--danger); }
+        .ha-format-hint { font-size:11px; color:var(--warning); margin-top:2px; display:none; }
+
+        /* Score Warning Modal */
+        .modal-overlay#scoreWarningModal .modal { max-width:340px; }
+        .modal-actions { display:flex; gap:10px; margin-top:16px; }
+        .modal-actions button { flex:1; padding:12px; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; }
+        .modal-btn-back { background:var(--gray-light); color:var(--text-primary); }
+        .modal-btn-proceed { background:var(--warning); color:white; }
+
+        @media (prefers-reduced-motion: reduce) { * { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-info">
+            <span class="connection-indicator" id="connectionIndicator"></span>
+            <span id="statusText">Online</span>
+        </div>
+        <div style="display:flex;gap:8px;" id="langToggle">
+            <button class="lang-btn active" onclick="setLang('es')">ES</button>
+            <button class="lang-btn" onclick="setLang('de')">DE</button>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <!-- PIN Screen -->
+        <div class="screen pin-screen active" id="pinScreen">
+            <div>
+                <div class="logo">WC</div>
+                <div class="logo-title">Field Report</div>
+                <div class="logo-subtitle">Westconnect NE4</div>
+            </div>
+            <div style="width:100%;max-width:320px;">
+                <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:8px;" id="pinLabel">Ingrese PIN (4 digitos)</div>
+                <div class="pin-digits" id="pinDigits">
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                </div>
+                <div class="pin-keypad" id="pinKeypad">
+                    <button class="key-btn" data-key="1">1</button>
+                    <button class="key-btn" data-key="2">2</button>
+                    <button class="key-btn" data-key="3">3</button>
+                    <button class="key-btn" data-key="4">4</button>
+                    <button class="key-btn" data-key="5">5</button>
+                    <button class="key-btn" data-key="6">6</button>
+                    <button class="key-btn" data-key="7">7</button>
+                    <button class="key-btn" data-key="8">8</button>
+                    <button class="key-btn" data-key="9">9</button>
+                    <button class="key-btn delete" data-key="del">&#x232B;</button>
+                    <button class="key-btn" data-key="0">0</button>
+                    <button class="key-btn" data-key="" style="visibility:hidden"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Selection -->
+        <div class="screen" id="memberScreen">
+            <div style="text-align:center;padding-top:40px;">
+                <div style="font-size:48px;margin-bottom:12px;">&#x1F477;</div>
+                <h2 id="memberTeamName" style="color:var(--primary);margin-bottom:4px;">Equipo</h2>
+                <p style="color:var(--text-secondary);font-size:14px;" data-t="selectMember">Seleccione su nombre</p>
+            </div>
+            <div id="memberList" style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:16px auto 0;"></div>
+        </div>
+
+        <!-- Form Screen -->
+        <div class="screen" id="formScreen">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            <div id="alertContainer"></div>
+            <form id="fieldForm" onsubmit="return false;">
+                <input type="hidden" id="client" value="westconnect">
+
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <div class="section-title" data-t="sectionBasic">Informacion Basica</div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblTeam">Equipo</label>
+                        <div class="form-input" id="teamDisplay" style="background:var(--gray-light);font-weight:600;">&#x2014;</div>
+                    </div>
+                    <div class="form-group" id="technicianGroup" style="display:none;">
+                        <label class="form-label" data-t="lblTech">Tecnico</label>
+                        <div class="form-input" id="techDisplay" style="background:var(--gray-light);font-weight:600;">&#x2014;</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblSupport">Equipo de Apoyo</label>
+                        <select class="form-select" id="supportTeam"><option value="" data-t="noSupport">Sin equipo de apoyo</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblDate">Fecha</label>
+                        <input type="date" class="form-input" id="date" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblSchedule">Horario</label>
+                        <div class="time-inputs">
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblStart">Inicio</label><input type="time" class="form-input" id="startTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblEnd">Fin</label><input type="time" class="form-input" id="endTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblStatus">Estado del Trabajo</label>
+                        <select class="form-select" id="workStatus" onchange="handleStatusChange()">
+                            <option value="" data-t="selectStatus">Seleccionar estado...</option>
+                            <option value="completed" data-t="statusCompleted">Vivienda Finalizada</option>
+                            <option value="second-visit" data-t="statusSecondVisit">Requiere Segunda Visita</option>
+                            <option value="no-install" data-t="statusNoInstall">Vivienda sin Instalacion</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="commentsLabel" data-t="lblComments">Observaciones</label>
+                        <textarea class="form-textarea" id="comments" placeholder="Agregue observaciones..." data-t-ph="phComments"></textarea>
+                    </div>
+                </div>
+
+                <!-- WESTCONNECT DATA -->
+                <div id="wcSection" style="display:none;">
+                    <div class="form-section">
+                        <div class="section-title" data-t="wcData">Datos HA - Westconnect</div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblHA">N&#xBA; HA</label>
+                            <input type="text" class="form-input" id="ha" placeholder="Ej: HA898706">
+                            <div class="ha-format-hint" id="haFormatHint" data-t="valHaFormatHint">HA debe empezar con "HA" seguido de numeros</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblUnits">Unidades de Vivienda (WE)</label>
+                            <input type="number" class="form-input" id="units" min="1" max="50" placeholder="WE" onchange="updateWcWePhotos()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblVariant">Variante de Ejecucion</label>
+                            <select class="form-select" id="variant" onchange="updateWcWePhotos()">
+                                <option value="" data-t="selectOpt">Seleccionar variante...</option>
+                                <option value="empty-pipes" data-t="varEmpty">Tuberias vacias / Conductos chimenea</option>
+                                <option value="interior-riser" data-t="varInterior">Montante interior / vivienda</option>
+                                <option value="corridor-riser" data-t="varCorridor">Montante de pasillo</option>
+                                <option value="exterior-riser" data-t="varExterior">Montante exterior fachada</option>
+                                <option value="mixed" data-t="varMixed">Mixto / Mischbau</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblApExists">Existe AP instalada?</label>
+                            <div style="display:flex;gap:12px;margin-top:4px;">
+                                <label style="display:flex;align-items:center;gap:6px;padding:10px 20px;border:2px solid var(--gray-medium);border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;" id="apNoLabel">
+                                    <input type="radio" name="apInstalled" value="no" id="apNo" onchange="handleApChange()" checked style="width:18px;height:18px;accent-color:var(--primary);"> No
+                                </label>
+                                <label style="display:flex;align-items:center;gap:6px;padding:10px 20px;border:2px solid var(--gray-medium);border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;" id="apYesLabel">
+                                    <input type="radio" name="apInstalled" value="yes" id="apYes" onchange="handleApChange()" style="width:18px;height:18px;accent-color:var(--primary);"> Si
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AP Photos (when AP exists) -->
+                    <div class="form-section" id="apSection" style="display:none;">
+                        <div class="section-title" data-t="apSectionTitle">Fotos AP Instalada <span class="section-counter" id="apCounter">0/2</span></div>
+                        <div id="apPhotosContainer"></div>
+                    </div>
+
+                    <!-- Protocols -->
+                    <div class="form-section" id="wcProtocols" style="display:none;">
+                        <div class="section-title" data-t="protocols">Protocolos (4/4 obligatorios)</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_auskundung">
+                                <label class="checkbox-label" for="prot_auskundung"><strong>Auskundungsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Protocolo de exploracion — firmado por tecnico y propietario</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_installation">
+                                <label class="checkbox-label" for="prot_installation"><strong>Installationsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">N&#xBA; contrato, Home-ID, serial ONT, fibra por WE, GV-Port</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_mess">
+                                <label class="checkbox-label" for="prot_mess"><strong>Messprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Mediciones de TODAS las WE (incluso las del APL)</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_farb">
+                                <label class="checkbox-label" for="prot_farb"><strong>Farbcodierungsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Asignacion de fibras — Rot + Reserva en Weiss por WE</span></label>
+                            </div>
+                        </div>
+                        <div id="protocolUploads" style="margin-top:12px;"></div>
+                    </div>
+
+                    <!-- NE4 Documentation Checklist -->
+                    <div class="form-section" id="wcChecklist" style="display:none;">
+                        <div class="section-title"><span data-t="checklistTitle">&#x1F4CB; Checklist Documentacion NE4</span> <span class="section-counter" id="checklistCounter">0/0</span></div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_contract">
+                                <label class="checkbox-label" for="chk_inst_contract"><strong data-t="chkContract">N&#xBA; Contrato en Installationsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkContractDesc">Vertragsnummer incluido y correcto</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_homeid">
+                                <label class="checkbox-label" for="chk_inst_homeid"><strong data-t="chkHomeId">HOME-ID pegada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHomeIdDesc">Etiqueta HOME-ID visible y pegada en GFTA</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_ont">
+                                <label class="checkbox-label" for="chk_inst_ont"><strong data-t="chkOntSerial">Serial ONT correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkOntSerialDesc">Numero de serie ONT registrado correctamente</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_fiber">
+                                <label class="checkbox-label" for="chk_inst_fiber"><strong data-t="chkFiberWe">Fibra asignada por WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFiberWeDesc">Cada WE tiene fibra asignada con nombre/unidad</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_gvport">
+                                <label class="checkbox-label" for="chk_inst_gvport"><strong data-t="chkGvPort">GV-Port para GE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkGvPortDesc">Puerto GV indicado (ej: 1/2, 3/4)</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_sign">
+                                <label class="checkbox-label" for="chk_inst_sign"><strong data-t="chkSignature">Protocolo firmado</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkSignatureDesc">Installationsprotokoll firmado por tecnico</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
+                                <input type="checkbox" id="chk_mess_allwe">
+                                <label class="checkbox-label" for="chk_mess_allwe"><strong data-t="chkMessAll">Mediciones de TODAS las WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessAllDesc">Incluso las conectadas directo al APL (anotarlo)</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
+                                <input type="checkbox" id="chk_mess_ge">
+                                <label class="checkbox-label" for="chk_mess_ge"><strong data-t="chkMessGe">GE: ambas fibras medidas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessGeDesc">Documentar mediciones de ambas fibras para GE</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
+                                <input type="checkbox" id="chk_mess_ugformat">
+                                <label class="checkbox-label" for="chk_mess_ugformat"><strong data-t="chkUgFormat">Formato UG-WE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkUgFormatDesc">Formato: A.-0X.00X</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_we">
+                                <label class="checkbox-label" for="chk_farb_we"><strong data-t="chkFarbWe">WE: Rot + reserva Weiss</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbWeDesc">NO dejar verde por defecto — WE = Rojo + Blanco</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_ge">
+                                <label class="checkbox-label" for="chk_farb_ge"><strong data-t="chkFarbGe">GE: Rot / Grun</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbGeDesc">Unidades comerciales con Rojo / Verde</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_count">
+                                <label class="checkbox-label" for="chk_farb_count"><strong data-t="chkFarbCount">Cantidad WE/GE correcta</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbCountDesc">Verificar numero correcto de WE y GE registradas</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
+                                <input type="checkbox" id="chk_baumappe_hochzeit">
+                                <label class="checkbox-label" for="chk_baumappe_hochzeit"><strong data-t="chkHochzeit">Hochzeit indicada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHochzeitDesc">Indicar si se realizo la conexion APL-GV</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
+                                <input type="checkbox" id="chk_baumappe_lp">
+                                <label class="checkbox-label" for="chk_baumappe_lp"><strong data-t="chkLp">Leistungspositionen correctas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkLpDesc">#100, #200, #210, #110, #180 segun corresponda</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_apl">
+                                <label class="checkbox-label" for="chk_fotos_apl"><strong data-t="chkFotoApl">Foto APL-GV conexion clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoAplDesc">Patchkabel en canal, sin cables visibles</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_kassette">
+                                <label class="checkbox-label" for="chk_fotos_kassette"><strong data-t="chkFotoKassette">Foto cada Kassette clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoKassetteDesc">Cada casete con patchkabel visibles</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_gfta">
+                                <label class="checkbox-label" for="chk_fotos_gfta"><strong data-t="chkFotoGfta">GFTA+ONT: HOME-ID legible, ONT encendido</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoGftaDesc">Misma altura, rectos, no cerca del suelo</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_medicion">
+                                <label class="checkbox-label" for="chk_fotos_medicion"><strong data-t="chkFotoMedicion">1 foto por cada fibra medida</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoMedicionDesc">Incluir GE — no olvidar ninguna</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E0F2F1;border-left:3px solid #009688;">
+                                <input type="checkbox" id="chk_sauberkeit">
+                                <label class="checkbox-label" for="chk_sauberkeit"><strong data-t="chkClean">&#x1F9F9; Lugar de trabajo limpio</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkCleanDesc">Sitio ordenado y limpio al terminar</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WC photos generated dynamically -->
+                    <div id="wcPhotosContainer"></div>
+                </div>
+
+                <!-- Validation Score Card -->
+                <div class="form-section validation-card" id="validationCard" style="display:none;">
+                    <div class="validation-header">
+                        <span style="font-size:15px;font-weight:700;color:var(--primary-dark);" data-t="valTitle">&#x1F4CA; Score de Documentacion</span>
+                        <span class="validation-score-display" id="valScoreDisplay">0%</span>
+                    </div>
+                    <div class="validation-items" id="valItems"></div>
+                </div>
+
+                <!-- Evidence (non-OK statuses) -->
+                <div class="form-section" id="evidenceSection" style="display:none;">
+                    <div class="section-title" data-t="evidenceTitle">Foto de Evidencia (Obligatoria)</div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;" data-t="evidenceHint">Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)</p>
+                    <div id="evidencePhotos"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- History -->
+        <div class="screen" id="historyScreen">
+            <div style="padding:16px 0;">
+                <h2 style="font-size:18px;margin-bottom:16px;" data-t="histTitle">Envios de Hoy</h2>
+                <div id="historyList"><div style="text-align:center;color:var(--text-secondary);padding:40px 0;" data-t="histEmpty">&#x1F4CB; No hay envios aun</div></div>
+                <button style="width:100%;padding:12px;margin-top:16px;background:var(--gray-light);border:1px solid var(--gray-medium);border-radius:8px;font-size:15px;cursor:pointer;" onclick="showScreen('formScreen')" data-t="histBack">&#x2190; Volver al formulario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions hidden" id="bottomActions">
+        <div class="fab-group">
+            <button class="fab btn-secondary" id="historyBtn" onclick="showHistory()">&#x1F4CB; Historial</button>
+            <button class="fab btn-primary" id="submitBtn" onclick="handleSubmit()">&#x2713; Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal">
+        <div class="modal-icon">&#x2705;</div>
+        <div class="modal-title" id="modalTitle">Enviado con Exito</div>
+        <div class="modal-message" id="modalMsg">Los datos se han registrado correctamente.</div>
+        <button class="modal-button" onclick="resetForm()" data-t="newForm">Nuevo Formulario</button>
+    </div>
+</div>
+
+<!-- Score Warning Modal -->
+<div class="modal-overlay" id="scoreWarningModal">
+    <div class="modal">
+        <div class="modal-icon">&#x26A0;&#xFE0F;</div>
+        <div class="modal-title" id="scoreWarningTitle">Score bajo</div>
+        <div class="modal-message" id="scoreWarningMsg">El score de documentacion es bajo. Enviar de todas formas?</div>
+        <div class="modal-actions">
+            <button class="modal-btn-back" onclick="closeScoreWarning()" data-t="valGoBack">&#x2190; Revisar</button>
+            <button class="modal-btn-proceed" onclick="forceSubmit()" data-t="valSendAnyway">Enviar &#x2192;</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// CONFIG & STATE
+// ============================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec';
+
+const state = {
+    lang: 'es',
+    pin: '',
+    teams: {},
+    teamConfig: [],
+    configLoaded: false,
+    currentTeam: null,
+    currentTechnician: '',
+    photos: {},
+    photoQuality: {},
+    submissions: [],
+};
+
+// ============================================
+// I18N
+// ============================================
+const T = {
+    es: {
+        online:'En linea', offline:'Sin conexion', pinLabel:'Ingrese PIN (4 digitos)', invalidPin:'PIN invalido',
+        sendBtn:'\u2713 Enviar', sending:'\u23F3 Enviando...', histBtn:'\uD83D\uDCCB Historial',
+        successTitle:'Enviado con Exito', successMsg:'Los datos se han registrado correctamente.', newForm:'Nuevo Formulario',
+        savedOffline:'\uD83D\uDCF1 Guardado localmente. Se enviara cuando haya conexion.', connError:'\u26A0\uFE0F Error de conexion. Guardado localmente.',
+        fillRequired:'Complete todos los campos obligatorios', timeError:'Hora fin debe ser posterior a inicio',
+        needComments:'Se requieren observaciones para este estado', needEvidence:'Se requiere al menos 1 foto de evidencia',
+        needPhotos:'Faltan fotos obligatorias', needProtocols:'Deben completarse los 4 protocolos',
+        needHA:'Ingrese todos los datos HA requeridos',
+        needApPhoto:'Falta foto de la AP instalada', needApMediciones:'Faltan fotos de mediciones de potencia en AP',
+        needWeNomenclature:'Falta nomenclatura en WE-{we}', needWeClientName:'Falta nombre de cliente en WE-{we}',
+        needWeAbsentOnt:'Falta foto ONT en sotano para WE-{we} (ausente)',
+        lblApExists:'Existe AP instalada?', apSectionTitle:'Fotos AP Instalada',
+        lblWeNomenclature:'Nomenclatura (Einheit)', lblWeClientName:'Nombre Cliente (Klingelschild)',
+        lblWePresence:'Cliente', lblWePresent:'Presente', lblWeAbsent:'Ausente',
+        weAbsentHint:'Solo ONT en sotano + medicion',
+        wePresentHint:'Instalacion completa en vivienda',
+        sectionBasic:'Informacion Basica', lblTeam:'Equipo', lblTech:'Tecnico',
+        lblSupport:'Equipo de Apoyo', noSupport:'Sin equipo de apoyo', lblDate:'Fecha', lblSchedule:'Horario',
+        lblStart:'Inicio', lblEnd:'Fin', lblStatus:'Estado del Trabajo', selectStatus:'Seleccionar estado...',
+        statusCompleted:'Vivienda Finalizada', statusSecondVisit:'Requiere Segunda Visita', statusNoInstall:'Vivienda sin Instalacion',
+        lblComments:'Observaciones', phComments:'Agregue observaciones...',
+        selectOpt:'Seleccionar...',
+        wcData:'Datos HA - Westconnect', lblHA:'N\u00BA HA', lblUnits:'Unidades de Vivienda (WE)', lblVariant:'Variante de Ejecucion',
+        varEmpty:'Tuberias vacias / Conductos chimenea', varInterior:'Montante interior / vivienda',
+        varCorridor:'Montante de pasillo', varExterior:'Montante exterior fachada',
+        varMixed:'Mixto / Mischbau', lblWeVariant:'Variante para esta WE',
+        needWeVariant:'Seleccione variante para WE-{we}',
+        protocols:'Protocolos (4/4 obligatorios)',
+        fotosSotano:'Fotos Sotano', fotosVivienda:'Fotos por Vivienda', fotosExterior:'Fotos Exterior/Pasillo',
+        evidenceTitle:'Foto de Evidencia (Obligatoria)', evidenceHint:'Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)',
+        evidencePhoto:'Foto de Evidencia', evidenceExtra:'Foto Adicional',
+        histTitle:'Envios de Hoy', histEmpty:'\uD83D\uDCCB No hay envios aun', histBack:'\u2190 Volver al formulario',
+        selectMember:'Seleccione su nombre',
+        checklistTitle:'\uD83D\uDCCB Checklist Documentacion NE4',
+        chkContract:'N\u00BA Contrato en Installationsprotokoll', chkContractDesc:'Vertragsnummer incluido y correcto',
+        chkHomeId:'HOME-ID pegada', chkHomeIdDesc:'Etiqueta HOME-ID visible y pegada en GFTA',
+        chkOntSerial:'Serial ONT correcto', chkOntSerialDesc:'Numero de serie ONT registrado correctamente',
+        chkFiberWe:'Fibra asignada por WE', chkFiberWeDesc:'Cada WE tiene fibra asignada con nombre/unidad',
+        chkGvPort:'GV-Port para GE correcto', chkGvPortDesc:'Puerto GV indicado (ej: 1/2, 3/4)',
+        chkSignature:'Protocolo firmado', chkSignatureDesc:'Installationsprotokoll firmado por tecnico',
+        chkMessAll:'Mediciones de TODAS las WE', chkMessAllDesc:'Incluso las conectadas directo al APL (anotarlo)',
+        chkMessGe:'GE: ambas fibras medidas', chkMessGeDesc:'Documentar mediciones de ambas fibras para GE',
+        chkUgFormat:'Formato UG-WE correcto', chkUgFormatDesc:'Formato: A.-0X.00X',
+        chkFarbWe:'WE: Rot + reserva Weiss', chkFarbWeDesc:'NO dejar verde por defecto — WE = Rojo + Blanco',
+        chkFarbGe:'GE: Rot / Grun', chkFarbGeDesc:'Unidades comerciales con Rojo / Verde',
+        chkFarbCount:'Cantidad WE/GE correcta', chkFarbCountDesc:'Verificar numero correcto de WE y GE registradas',
+        chkHochzeit:'Hochzeit indicada', chkHochzeitDesc:'Indicar si se realizo la conexion APL-GV',
+        chkLp:'Leistungspositionen correctas', chkLpDesc:'#100, #200, #210, #110, #180 segun corresponda',
+        chkFotoApl:'Foto APL-GV conexion clara', chkFotoAplDesc:'Patchkabel en canal, sin cables visibles',
+        chkFotoKassette:'Foto cada Kassette clara', chkFotoKassetteDesc:'Cada casete con patchkabel visibles',
+        chkFotoGfta:'GFTA+ONT: HOME-ID legible, ONT encendido', chkFotoGftaDesc:'Misma altura, rectos, no cerca del suelo',
+        chkFotoMedicion:'1 foto por cada fibra medida', chkFotoMedicionDesc:'Incluir GE — no olvidar ninguna',
+        chkClean:'\uD83E\uDDF9 Lugar de trabajo limpio', chkCleanDesc:'Sitio ordenado y limpio al terminar',
+        needChecklist:'Complete todos los items del checklist NE4',
+        valTitle:'\uD83D\uDCCA Score de Documentacion',
+        valBasicData:'Datos basicos', valComplete:'Completos', valIncomplete:'Incompletos',
+        valPhotos:'Fotos', valMissing:'faltan', valChecklist:'Checklist NE4',
+        valProtocols:'Protocolos', valComments:'Observaciones', valIncluded:'Incluidas',
+        valNotIncluded:'Sin observaciones', valHaFormat:'Formato HA',
+        valHaFormatHint:'HA debe empezar con "HA" seguido de numeros',
+        valGoBack:'\u2190 Revisar', valSendAnyway:'Enviar \u2192',
+        valLowScoreTitle:'Score incompleto', valLowScoreMsg:'El score de documentacion es {score}%. Faltan items por completar. Enviar de todas formas?',
+        photoBlurry:'Foto borrosa', photoDark:'Foto oscura', photoOverexposed:'Foto sobreexpuesta', photoQuality:'Calidad de fotos',
+    },
+    de: {
+        online:'Online', offline:'Keine Verbindung', pinLabel:'PIN eingeben (4 Ziffern)', invalidPin:'Ungultige PIN',
+        sendBtn:'\u2713 Einreichen', sending:'\u23F3 Senden...', histBtn:'\uD83D\uDCCB Verlauf',
+        successTitle:'Erfolgreich gesendet', successMsg:'Daten korrekt registriert.', newForm:'Neues Formular',
+        savedOffline:'\uD83D\uDCF1 Lokal gespeichert.', connError:'\u26A0\uFE0F Verbindungsfehler. Lokal gespeichert.',
+        fillRequired:'Bitte alle Pflichtfelder ausfullen', timeError:'Endzeit muss nach Startzeit liegen',
+        needComments:'Anmerkungen fur diesen Status erforderlich', needEvidence:'Mindestens 1 Beweisfoto erforderlich',
+        needPhotos:'Pflichtfotos fehlen', needProtocols:'Alle 4 Protokolle mussen ausgefullt sein',
+        needHA:'Alle HA-Daten eingeben',
+        needApPhoto:'Foto der installierten AP fehlt', needApMediciones:'Fotos der Leistungsmessungen an AP fehlen',
+        needWeNomenclature:'Nomenklatur fehlt bei WE-{we}', needWeClientName:'Kundenname fehlt bei WE-{we}',
+        needWeAbsentOnt:'ONT-Foto im Keller fehlt fur WE-{we} (abwesend)',
+        lblApExists:'Ist eine AP installiert?', apSectionTitle:'Fotos installierte AP',
+        lblWeNomenclature:'Nomenklatur (Einheit)', lblWeClientName:'Kundenname (Klingelschild)',
+        lblWePresence:'Kunde', lblWePresent:'Anwesend', lblWeAbsent:'Abwesend',
+        weAbsentHint:'Nur ONT im Keller + Messung',
+        wePresentHint:'Vollstandige Installation in Wohnung',
+        sectionBasic:'Grundinformationen', lblTeam:'Team', lblTech:'Techniker',
+        lblSupport:'Unterstutzungsteam', noSupport:'Kein Unterstutzungsteam', lblDate:'Datum', lblSchedule:'Zeitplan',
+        lblStart:'Start', lblEnd:'Ende', lblStatus:'Arbeitsstatus', selectStatus:'Status auswahlen...',
+        statusCompleted:'Wohnung fertiggestellt', statusSecondVisit:'Zweiter Besuch erforderlich', statusNoInstall:'Wohnung ohne Installation',
+        lblComments:'Anmerkungen', phComments:'Wichtige Anmerkungen...',
+        selectOpt:'Auswahlen...',
+        wcData:'HA-Daten - Westconnect', lblHA:'HA-Nr.', lblUnits:'Wohneinheiten (WE)', lblVariant:'Ausfuhrungsvariante',
+        varEmpty:'Leerrohre / Schornsteinzuge', varInterior:'Innensteigleitung / Wohnungssteigleitung',
+        varCorridor:'Flursteigleitung', varExterior:'Aussensteigleitung Fassade',
+        varMixed:'Mischbau', lblWeVariant:'Variante fur diese WE',
+        needWeVariant:'Bitte Variante fur WE-{we} auswahlen',
+        protocols:'Protokolle (4/4 erforderlich)',
+        fotosSotano:'Fotos Keller', fotosVivienda:'Fotos pro Wohnung', fotosExterior:'Fotos Aussen/Flur',
+        evidenceTitle:'Beweisfoto (Pflicht)', evidenceHint:'Mindestens 1 Foto als Nachweis (Briefkasten, Wohnung, Flyer, Problem, etc.)',
+        evidencePhoto:'Beweisfoto', evidenceExtra:'Zusatzliches Foto',
+        histTitle:'Heutige Einreichungen', histEmpty:'\uD83D\uDCCB Noch keine Einreichungen', histBack:'\u2190 Zuruck zum Formular',
+        selectMember:'Wahlen Sie Ihren Namen',
+        checklistTitle:'\uD83D\uDCCB Checkliste NE4-Dokumentation',
+        chkContract:'Vertragsnr. im Installationsprotokoll', chkContractDesc:'Vertragsnummer korrekt eingetragen',
+        chkHomeId:'HOME-ID aufgeklebt', chkHomeIdDesc:'HOME-ID-Aufkleber sichtbar auf GFTA',
+        chkOntSerial:'ONT-Seriennr. korrekt', chkOntSerialDesc:'ONT-Seriennummer korrekt erfasst',
+        chkFiberWe:'Faser pro WE zugewiesen', chkFiberWeDesc:'Jede WE hat zugewiesene Faser mit Name/Einheit',
+        chkGvPort:'GV-Port fur GE korrekt', chkGvPortDesc:'GV-Port angegeben (z.B. 1/2, 3/4)',
+        chkSignature:'Protokoll unterschrieben', chkSignatureDesc:'Installationsprotokoll vom Techniker unterschrieben',
+        chkMessAll:'Messungen ALLER WE', chkMessAllDesc:'Auch direkt am APL angeschlossene (vermerken)',
+        chkMessGe:'GE: beide Fasern gemessen', chkMessGeDesc:'Messungen beider Fasern fur GE dokumentiert',
+        chkUgFormat:'UG-WE Format korrekt', chkUgFormatDesc:'Format: A.-0X.00X',
+        chkFarbWe:'WE: Rot + Reserve Weiss', chkFarbWeDesc:'NICHT Standard Grun — WE = Rot + Weiss',
+        chkFarbGe:'GE: Rot / Grun', chkFarbGeDesc:'Gewerbeeinheiten mit Rot / Grun',
+        chkFarbCount:'Anzahl WE/GE korrekt', chkFarbCountDesc:'Korrekte Anzahl WE und GE uberpruft',
+        chkHochzeit:'Hochzeit vermerkt', chkHochzeitDesc:'Angeben ob APL-GV Verbindung hergestellt wurde',
+        chkLp:'Leistungspositionen korrekt', chkLpDesc:'#100, #200, #210, #110, #180 je nach Bedarf',
+        chkFotoApl:'Foto APL-GV Verbindung klar', chkFotoAplDesc:'Patchkabel im Kanal, keine sichtbaren Kabel',
+        chkFotoKassette:'Foto jeder Kassette klar', chkFotoKassetteDesc:'Jede Kassette mit sichtbaren Patchkabeln',
+        chkFotoGfta:'GFTA+ONT: HOME-ID lesbar, ONT an', chkFotoGftaDesc:'Gleiche Hohe, gerade, nicht bodennah',
+        chkFotoMedicion:'1 Foto pro gemessener Faser', chkFotoMedicionDesc:'Inkl. GE — keine vergessen',
+        chkClean:'\uD83E\uDDF9 Arbeitsplatz sauber', chkCleanDesc:'Ordentlich und sauber hinterlassen',
+        needChecklist:'Bitte alle NE4-Checklisten-Punkte ausfullen',
+        valTitle:'\uD83D\uDCCA Dokumentations-Score',
+        valBasicData:'Basisdaten', valComplete:'Vollstandig', valIncomplete:'Unvollstandig',
+        valPhotos:'Fotos', valMissing:'fehlen', valChecklist:'Checkliste NE4',
+        valProtocols:'Protokolle', valComments:'Anmerkungen', valIncluded:'Vorhanden',
+        valNotIncluded:'Keine Anmerkungen', valHaFormat:'HA-Format',
+        valHaFormatHint:'HA muss mit "HA" gefolgt von Zahlen beginnen',
+        valGoBack:'\u2190 Prufen', valSendAnyway:'Senden \u2192',
+        valLowScoreTitle:'Score unvollstandig', valLowScoreMsg:'Der Dokumentations-Score betragt {score}%. Es fehlen noch Punkte. Trotzdem senden?',
+        photoBlurry:'Foto unscharf', photoDark:'Foto zu dunkel', photoOverexposed:'Foto uberbelichtet', photoQuality:'Fotoqualitat',
+    }
+};
+
+function t(key) { return (T[state.lang] && T[state.lang][key]) || T.es[key] || key; }
+
+function setLang(lang) {
+    state.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
+    document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-ph]').forEach(el => {
+        const key = el.getAttribute('data-t-ph');
+        if (T[lang] && T[lang][key]) el.placeholder = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-opt]').forEach(el => {
+        const key = el.getAttribute('data-t-opt');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.getElementById('pinLabel').textContent = t('pinLabel');
+    document.getElementById('submitBtn').textContent = t('sendBtn');
+    document.getElementById('historyBtn').textContent = t('histBtn');
+    document.getElementById('modalTitle').textContent = t('successTitle');
+    document.getElementById('modalMsg').textContent = t('successMsg');
+    handleStatusChange();
+    updateConnectionStatus();
+}
+
+// ============================================
+// PHOTO HELPERS
+// ============================================
+function createPhotoField(id, label, required) {
+    const inputId = 'photo_' + id;
+    const previewId = 'preview_' + id;
+    return `<div class="photo-section">
+        <label class="photo-label ${required ? 'required' : 'optional'}">${label}</label>
+        <div style="display:flex;gap:8px;">
+            <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">\uD83D\uDCC2 Galeria</button>
+            <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}_cam').click()">\uD83D\uDCF7 Camara</button>
+        </div>
+        <input type="file" class="photo-file-input" id="${inputId}" accept="image/*" multiple onchange="handlePhoto(this,'${id}')">
+        <input type="file" class="photo-file-input" id="${inputId}_cam" accept="image/*" capture="environment" onchange="handlePhoto(this,'${id}')">
+        <div class="photo-preview-container" id="${previewId}"></div>
+    </div>`;
+}
+
+function compressPhoto(file, maxW, quality) {
+    maxW = maxW || 1280; quality = quality || 0.7;
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================
+// PHOTO QUALITY DETECTION
+// ============================================
+function toGrayscale(imageData) {
+    const d = imageData.data, len = d.length / 4;
+    const gray = new Float32Array(len);
+    for (let i = 0; i < len; i++) gray[i] = 0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2];
+    return gray;
+}
+
+function laplacianVariance(gray, w, h) {
+    let sum = 0, sum2 = 0, n = 0;
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const val = -4 * gray[y*w+x] + gray[(y-1)*w+x] + gray[(y+1)*w+x] + gray[y*w+x-1] + gray[y*w+x+1];
+            sum += val; sum2 += val * val; n++;
+        }
+    }
+    if (n === 0) return 999;
+    const mean = sum / n;
+    return (sum2 / n) - (mean * mean);
+}
+
+function averageBrightness(gray) {
+    let sum = 0;
+    for (let i = 0; i < gray.length; i++) sum += gray[i];
+    return gray.length > 0 ? sum / gray.length : 128;
+}
+
+function checkPhotoQuality(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const scale = Math.min(200 / img.width, 200 / img.height, 1);
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const gray = toGrayscale(imageData);
+            const blur = laplacianVariance(gray, canvas.width, canvas.height);
+            const brightness = averageBrightness(gray);
+            const warnings = [];
+            if (blur < 100) warnings.push(t('photoBlurry'));
+            if (brightness < 40) warnings.push(t('photoDark'));
+            if (brightness > 240) warnings.push(t('photoOverexposed'));
+            resolve({ isBlurry: blur < 100, isDark: brightness < 40, isOverexposed: brightness > 240, blurScore: blur, brightness, warnings });
+        };
+        img.onerror = () => resolve({ isBlurry:false, isDark:false, isOverexposed:false, blurScore:999, brightness:128, warnings:[] });
+        img.src = dataUrl;
+    });
+}
+
+function renderPhotoWarning(previewDiv, quality) {
+    if (quality.warnings.length > 0) {
+        previewDiv.classList.add('photo-warn');
+        const warn = document.createElement('div');
+        warn.className = 'photo-warning';
+        warn.textContent = '\u26A0\uFE0F ' + quality.warnings.join(', ');
+        previewDiv.appendChild(warn);
+    }
+}
+
+function handlePhoto(input, fieldId) {
+    if (!input.files || !input.files.length) return;
+    Array.from(input.files).forEach(file => {
+        compressPhoto(file).then(async dataUrl => {
+            if (!state.photos[fieldId]) state.photos[fieldId] = [];
+            if (!state.photoQuality[fieldId]) state.photoQuality[fieldId] = [];
+            state.photos[fieldId].push(dataUrl);
+            const quality = await checkPhotoQuality(dataUrl);
+            state.photoQuality[fieldId].push(quality);
+            const preview = document.getElementById('preview_' + fieldId);
+            if (preview) {
+                const div = document.createElement('div');
+                div.className = 'photo-preview';
+                div.innerHTML = `<img src="${dataUrl}"><button type="button" class="photo-remove" onclick="removePhoto('${fieldId}',this)">\u00D7</button>`;
+                renderPhotoWarning(div, quality);
+                preview.appendChild(div);
+            }
+            updateSectionCounters();
+            renderValidationCard();
+        }).catch(err => console.error('Photo error:', err));
+    });
+    input.value = '';
+}
+
+function removePhoto(fieldId, btn) {
+    const container = btn.closest('.photo-preview-container');
+    const idx = Array.from(container.children).indexOf(btn.closest('.photo-preview'));
+    if (state.photos[fieldId]) state.photos[fieldId].splice(idx, 1);
+    if (state.photoQuality[fieldId]) state.photoQuality[fieldId].splice(idx, 1);
+    btn.closest('.photo-preview').remove();
+    updateSectionCounters();
+    renderValidationCard();
+}
+
+function hasPhoto(fieldId) { return state.photos[fieldId] && state.photos[fieldId].length > 0; }
+
+// ============================================
+// WESTCONNECT PHOTO DEFINITIONS
+// ============================================
+const WC_BASEMENT = [
+    { id:'wc_gfap', label:'GF-AP (abierto antes, despues y cerrado/precintado)', req:true },
+    { id:'wc_hochzeit', label:'Hochzeit: Conexion GF-AP \u2194 GF-GV (patchkabel en canal)', req:true },
+    { id:'wc_gv_interior', label:'Interior GF-GV (kassettes, empalmes, puertos)', req:true },
+    { id:'wc_gv_cerrado', label:'GF-GV cerrado', req:true },
+];
+
+// Per-WE photos — 'variants' = array of variant keys where this photo applies, or 'all'
+const WC_WE_PHOTOS = [
+    { suffix:'gfta_ont', label:'GF-TA + ONT (HOME-ID, patch, LEDs, N\u00BA serie)', req:true, variants:'all' },
+    { suffix:'canal', label:'Canal superficial hasta GF-TA', req:true, variants:['interior-riser','corridor-riser','exterior-riser'] },
+    { suffix:'medicion', label:'Medicion de fibra', req:true, variants:'all' },
+];
+
+// Exterior/route photos — variant-specific
+const WC_EXTERIOR_BY_VARIANT = {
+    'empty-pipes': [],
+    'interior-riser': [
+        { id:'wc_canal_interior', label:'Canal interior entre plantas', req:true },
+        { id:'wc_sello_perforacion', label:'Sello cortafuegos en perforacion', req:true },
+    ],
+    'corridor-riser': [
+        { id:'wc_canal_pasillo', label:'Canal en pasillo / escalera', req:true },
+        { id:'wc_sello_pasillo', label:'Sello cortafuegos pasillo', req:true },
+    ],
+    'exterior-riser': [
+        { id:'wc_canal_fachada', label:'Canal exterior en fachada', req:true },
+        { id:'wc_sello_ext', label:'Sello cortafuegos exterior', req:true },
+        { id:'wc_penetracion', label:'Sellado penetracion muro', req:true },
+    ],
+};
+
+function getWePhotosForVariant(variant) {
+    return WC_WE_PHOTOS.filter(p => p.variants === 'all' || p.variants.includes(variant));
+}
+
+function getExteriorPhotos(variant) {
+    return WC_EXTERIOR_BY_VARIANT[variant] || [];
+}
+
+// Returns the effective variant for a specific WE
+function getWeVariant(weId) {
+    const globalVariant = document.getElementById('variant').value;
+    if (globalVariant !== 'mixed') return globalVariant;
+    const weSelect = document.getElementById(weId + '_variant');
+    return weSelect ? weSelect.value : '';
+}
+
+// Returns all unique variants actually used across WEs (for exterior photos)
+function getUsedVariants() {
+    const globalVariant = document.getElementById('variant').value;
+    if (globalVariant !== 'mixed') return globalVariant ? [globalVariant] : [];
+    const numWe = parseInt(document.getElementById('units')?.value) || 0;
+    const variants = new Set();
+    for (let i = 1; i <= numWe; i++) {
+        const v = getWeVariant('we' + String(i).padStart(2, '0'));
+        if (v) variants.add(v);
+    }
+    return [...variants];
+}
+
+// Photos for absent WE (only ONT in basement + measurement)
+const WC_WE_ABSENT_PHOTOS = [
+    { suffix:'ont_sotano', label:'ONT en sotano (Keller)', req:true },
+    { suffix:'medicion', label:'Medicion de fibra', req:true },
+];
+
+function updateWcWePhotos() {
+    const status = document.getElementById('workStatus').value;
+    const isCompleted = status === 'completed';
+    const container = document.getElementById('wcPhotosContainer');
+
+    if (!isCompleted) { container.innerHTML = ''; return; }
+
+    const numWe = parseInt(document.getElementById('units').value) || 0;
+    let html = '';
+
+    // Basement
+    html += '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('fotosSotano')} <span class="section-counter" id="wcBasementCounter">0/${WC_BASEMENT.filter(p=>p.req).length}</span></div>`;
+    html += '<div class="collapse-icon">\u25B6</div></div><div class="section-content">';
+    WC_BASEMENT.forEach(p => { html += createPhotoField(p.id, p.label, p.req); });
+    html += '</div></div>';
+
+    // Per WE with data entry
+    const globalVariant = document.getElementById('variant').value;
+    const isMixed = globalVariant === 'mixed';
+    if (numWe > 0) {
+        html += '<div class="form-section">';
+        html += `<div class="section-title">${t('fotosVivienda')} (${numWe} WE)</div>`;
+        html += '<div class="we-tabs" id="weTabs">';
+        for (let i = 1; i <= numWe; i++) {
+            html += `<div class="we-tab ${i===1?'active':''}" onclick="switchWeTab(${i})">WE-${String(i).padStart(2,'0')}</div>`;
+        }
+        html += '</div>';
+        for (let i = 1; i <= numWe; i++) {
+            const weId = 'we' + String(i).padStart(2,'0');
+            const weNum = String(i).padStart(2,'0');
+            html += `<div class="we-panel ${i===1?'active':''}" id="panel_${weId}">`;
+            html += `<div style="font-weight:600;font-size:14px;color:var(--primary-dark);margin-bottom:10px;">WE-${weNum} <span class="section-counter" id="counter_${weId}">0/0</span></div>`;
+
+            // Per-WE variant selector (only when global is mixed)
+            if (isMixed) {
+                html += `<select class="we-variant-select" id="${weId}_variant" onchange="handleWePresenceChange('${weId}')">`;
+                html += `<option value="">${t('lblWeVariant')}...</option>`;
+                html += `<option value="empty-pipes">${t('varEmpty')}</option>`;
+                html += `<option value="interior-riser">${t('varInterior')}</option>`;
+                html += `<option value="corridor-riser">${t('varCorridor')}</option>`;
+                html += `<option value="exterior-riser">${t('varExterior')}</option>`;
+                html += '</select>';
+            }
+
+            // Nomenclature + Client name inputs
+            html += '<div class="we-data-row">';
+            html += `<input type="text" class="form-input" id="${weId}_nomenclature" placeholder="A.000.00${i}" maxlength="9" oninput="formatNomenclature(this);renderValidationCard();" title="${t('lblWeNomenclature')}">`;
+            html += `<input type="text" class="form-input" id="${weId}_clientname" placeholder="${t('lblWeClientName')}" oninput="renderValidationCard();" title="${t('lblWeClientName')}">`;
+            html += '</div>';
+
+            // Present / Absent toggle
+            html += '<div class="we-presence-toggle">';
+            html += `<label id="${weId}_presentLabel" class="selected-present"><input type="radio" name="${weId}_presence" value="present" id="${weId}_present" onchange="handleWePresenceChange('${weId}')" checked style="width:16px;height:16px;accent-color:var(--success);"> ${t('lblWePresent')}</label>`;
+            html += `<label id="${weId}_absentLabel"><input type="radio" name="${weId}_presence" value="absent" id="${weId}_absent" onchange="handleWePresenceChange('${weId}')" style="width:16px;height:16px;accent-color:var(--warning);"> ${t('lblWeAbsent')}</label>`;
+            html += '</div>';
+
+            // Photos container (will be filled by handleWePresenceChange)
+            html += `<div id="${weId}_photos"></div>`;
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // Exterior — aggregate all used variants
+    html += '<div id="wcExteriorContainer"></div>';
+
+    container.innerHTML = html;
+
+    // Initialize each WE's photo section
+    for (let i = 1; i <= numWe; i++) {
+        handleWePresenceChange('we' + String(i).padStart(2,'0'));
+    }
+    updateExteriorPhotos();
+    updateSectionCounters();
+}
+
+function formatNomenclature(input) {
+    // Auto-format to A.XXX.XXX pattern
+    let v = input.value.toUpperCase().replace(/[^A-Z0-9.]/g, '');
+    // Insert dots at positions 1 and 5 if user types without them
+    if (v.length === 2 && !v.includes('.')) v = v[0] + '.' + v[1];
+    input.value = v;
+}
+
+function handleWePresenceChange(weId) {
+    const isPresent = document.getElementById(weId + '_present').checked;
+    const variant = getWeVariant(weId);
+    const photosContainer = document.getElementById(weId + '_photos');
+    const presentLabel = document.getElementById(weId + '_presentLabel');
+    const absentLabel = document.getElementById(weId + '_absentLabel');
+
+    // Highlight selected
+    presentLabel.className = isPresent ? 'selected-present' : '';
+    absentLabel.className = !isPresent ? 'selected-absent' : '';
+
+    const wePhotos = getWePhotosForVariant(variant);
+    let html = '';
+    if (isPresent) {
+        html += `<div class="we-presence-hint">${t('wePresentHint')}</div>`;
+        wePhotos.forEach(p => {
+            html += createPhotoField(`${weId}_${p.suffix}`, p.label, p.req);
+        });
+    } else {
+        html += `<div class="we-presence-hint">${t('weAbsentHint')}</div>`;
+        html += '<div class="we-absent-section">';
+        WC_WE_ABSENT_PHOTOS.forEach(p => {
+            html += createPhotoField(`${weId}_${p.suffix}`, p.label, p.req);
+        });
+        html += '</div>';
+    }
+
+    photosContainer.innerHTML = html;
+    updateExteriorPhotos();
+    updateSectionCounters();
+    renderValidationCard();
+}
+
+// Rebuild exterior section based on all variants actually used
+function updateExteriorPhotos() {
+    const extContainer = document.getElementById('wcExteriorContainer');
+    if (!extContainer) return;
+
+    const usedVariants = getUsedVariants();
+    // Collect all unique exterior photos across used variants
+    const allExtPhotos = [];
+    const seenIds = new Set();
+    usedVariants.forEach(v => {
+        getExteriorPhotos(v).forEach(p => {
+            if (!seenIds.has(p.id)) { seenIds.add(p.id); allExtPhotos.push(p); }
+        });
+    });
+
+    if (allExtPhotos.length === 0) {
+        extContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('fotosExterior')} <span class="section-counter" id="wcExtCounter">0/${allExtPhotos.filter(p=>p.req).length}</span></div>`;
+    html += '<div class="collapse-icon">\u25B6</div></div><div class="section-content">';
+    allExtPhotos.forEach(p => { html += createPhotoField(p.id, p.label, p.req); });
+    html += '</div></div>';
+    extContainer.innerHTML = html;
+}
+
+function switchWeTab(num) {
+    document.querySelectorAll('.we-tab').forEach((tab, i) => tab.classList.toggle('active', i === num - 1));
+    document.querySelectorAll('.we-panel').forEach((panel, i) => panel.classList.toggle('active', i === num - 1));
+}
+
+// ============================================
+// AP CHECK
+// ============================================
+function handleApChange() {
+    const apYes = document.getElementById('apYes').checked;
+    const section = document.getElementById('apSection');
+    const yesLabel = document.getElementById('apYesLabel');
+    const noLabel = document.getElementById('apNoLabel');
+
+    // Highlight selected radio
+    yesLabel.style.borderColor = apYes ? 'var(--primary)' : 'var(--gray-medium)';
+    yesLabel.style.background = apYes ? '#E3F2FD' : 'white';
+    noLabel.style.borderColor = !apYes ? 'var(--primary)' : 'var(--gray-medium)';
+    noLabel.style.background = !apYes ? '#E3F2FD' : 'white';
+
+    if (apYes) {
+        section.style.display = 'block';
+        const container = document.getElementById('apPhotosContainer');
+        if (!container.innerHTML.trim()) {
+            container.innerHTML =
+                createPhotoField('ap_foto', 'Foto de la AP instalada', true) +
+                createPhotoField('ap_mediciones', 'Mediciones de potencia en la AP', true);
+        }
+        updateApCounter();
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function updateApCounter() {
+    const counter = document.getElementById('apCounter');
+    if (!counter) return;
+    let filled = 0;
+    if (hasPhoto('ap_foto')) filled++;
+    if (hasPhoto('ap_mediciones')) filled++;
+    counter.textContent = `${filled}/2`;
+    counter.className = 'section-counter' + (filled === 2 ? ' complete' : '');
+}
+
+// ============================================
+// STATUS CHANGE
+// ============================================
+function handleStatusChange() {
+    const status = document.getElementById('workStatus').value;
+    const isCompleted = status === 'completed';
+    const needsEvidence = ['second-visit','no-install'].includes(status);
+
+    // Comments required for non-completed
+    const label = document.getElementById('commentsLabel');
+    label.className = needsEvidence ? 'form-label required' : 'form-label';
+
+    // Evidence section
+    const evSection = document.getElementById('evidenceSection');
+    if (needsEvidence) {
+        evSection.style.display = 'block';
+        const evPhotos = document.getElementById('evidencePhotos');
+        evPhotos.innerHTML = createPhotoField('evidence_1', t('evidencePhoto'), true) + createPhotoField('evidence_2', t('evidenceExtra'), false);
+    } else {
+        evSection.style.display = 'none';
+    }
+
+    // Show WC section always (need HA, units, variant)
+    document.getElementById('wcSection').style.display = 'block';
+    document.getElementById('wcProtocols').style.display = isCompleted ? 'block' : 'none';
+    document.getElementById('wcChecklist').style.display = isCompleted ? 'block' : 'none';
+    if (isCompleted) {
+        updateChecklistCounter();
+        const pu = document.getElementById('protocolUploads');
+        pu.innerHTML = createPhotoField('protocol_inst', 'Installationsprotokoll (foto/PDF)', true);
+    }
+    updateWcWePhotos();
+    renderValidationCard();
+}
+
+// ============================================
+// SECTION COUNTERS
+// ============================================
+function updateSectionCounters() {
+    // WC basement counter
+    const bcEl = document.getElementById('wcBasementCounter');
+    if (bcEl) {
+        const req = WC_BASEMENT.filter(p => p.req);
+        const filled = req.filter(p => hasPhoto(p.id)).length;
+        bcEl.textContent = `${filled}/${req.length}`;
+        bcEl.className = 'section-counter' + (filled === req.length ? ' complete' : '');
+    }
+
+    // WC exterior counter (aggregated from all used variants)
+    const usedVars = getUsedVariants();
+    const allExtPhotos = [];
+    const seenExtIds = new Set();
+    usedVars.forEach(v => {
+        getExteriorPhotos(v).forEach(p => { if (!seenExtIds.has(p.id)) { seenExtIds.add(p.id); allExtPhotos.push(p); } });
+    });
+    const ecEl = document.getElementById('wcExtCounter');
+    if (ecEl) {
+        const req = allExtPhotos.filter(p => p.req);
+        const filled = req.filter(p => hasPhoto(p.id)).length;
+        ecEl.textContent = `${filled}/${req.length}`;
+        ecEl.className = 'section-counter' + (filled === req.length ? ' complete' : '');
+    }
+
+    // Per-WE counters (conditional on present/absent + per-WE variant)
+    const numWe = parseInt(document.getElementById('units')?.value) || 0;
+    for (let i = 1; i <= numWe; i++) {
+        const weId = 'we' + String(i).padStart(2, '0');
+        const weVar = getWeVariant(weId);
+        const isPresent = document.getElementById(weId + '_present')?.checked !== false;
+        const photoSet = isPresent ? getWePhotosForVariant(weVar) : WC_WE_ABSENT_PHOTOS;
+        const reqPhotos = photoSet.filter(p => p.req);
+        const filled = reqPhotos.filter(p => hasPhoto(`${weId}_${p.suffix}`)).length;
+
+        // Also count data fields (nomenclature + client name)
+        const hasNom = !!(document.getElementById(weId + '_nomenclature')?.value?.trim());
+        const hasClient = !!(document.getElementById(weId + '_clientname')?.value?.trim());
+        const dataFilled = (hasNom ? 1 : 0) + (hasClient ? 1 : 0);
+        const totalReq = reqPhotos.length + 2; // +2 for nomenclature + client name
+        const totalFilled = filled + dataFilled;
+
+        const cEl = document.getElementById('counter_' + weId);
+        if (cEl) {
+            cEl.textContent = `${totalFilled}/${totalReq}`;
+            cEl.className = 'section-counter' + (totalFilled === totalReq ? ' complete' : '');
+        }
+        const tab = document.querySelectorAll('.we-tab')[i - 1];
+        if (tab) {
+            tab.classList.toggle('complete', totalFilled === totalReq);
+        }
+    }
+
+    // AP counter
+    updateApCounter();
+}
+
+// ============================================
+// NE4 CHECKLIST
+// ============================================
+const NE4_CHECKS = ['chk_inst_contract','chk_inst_homeid','chk_inst_ont','chk_inst_fiber','chk_inst_gvport','chk_inst_sign','chk_mess_allwe','chk_mess_ge','chk_mess_ugformat','chk_farb_we','chk_farb_ge','chk_farb_count','chk_baumappe_hochzeit','chk_baumappe_lp','chk_fotos_apl','chk_fotos_kassette','chk_fotos_gfta','chk_fotos_medicion','chk_sauberkeit'];
+
+function updateChecklistCounter() {
+    const el = document.getElementById('checklistCounter');
+    if (!el) return;
+    const checked = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
+    el.textContent = `${checked}/${NE4_CHECKS.length}`;
+    el.className = 'section-counter' + (checked === NE4_CHECKS.length ? ' complete' : '');
+}
+
+// Attach listeners after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    NE4_CHECKS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => { updateChecklistCounter(); renderValidationCard(); });
+    });
+    // Live validation on form inputs
+    ['ha','units','variant','startTime','endTime','date','comments','workStatus'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', renderValidationCard);
+        if (el) el.addEventListener('change', renderValidationCard);
+    });
+    // Protocol checkboxes
+    ['prot_auskundung','prot_installation','prot_mess','prot_farb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderValidationCard);
+    });
+});
+
+// ============================================
+// VALIDATION
+// ============================================
+function validate() {
+    const status = document.getElementById('workStatus').value;
+    const start = document.getElementById('startTime').value;
+    const end = document.getElementById('endTime').value;
+    const comments = document.getElementById('comments').value;
+
+    if (!status || !start || !end || !document.getElementById('date').value) {
+        showAlert(t('fillRequired'), 'error'); return false;
+    }
+    if (start >= end) { showAlert(t('timeError'), 'error'); return false; }
+
+    const needsEvidence = ['second-visit','no-install'].includes(status);
+    if (needsEvidence && !comments.trim()) { showAlert(t('needComments'), 'error'); return false; }
+    if (needsEvidence && !hasPhoto('evidence_1')) { showAlert(t('needEvidence'), 'error'); return false; }
+
+    const ha = document.getElementById('ha').value;
+    const units = document.getElementById('units').value;
+    const variant = document.getElementById('variant').value;
+    if (!ha || !units || !variant) { showAlert(t('needHA'), 'error'); return false; }
+
+    // AP photos required when AP is installed
+    if (document.getElementById('apYes').checked) {
+        if (!hasPhoto('ap_foto')) { showAlert(t('needApPhoto'), 'error'); return false; }
+        if (!hasPhoto('ap_mediciones')) { showAlert(t('needApMediciones'), 'error'); return false; }
+    }
+
+    const isCompleted = status === 'completed';
+    if (isCompleted) {
+        // Validate per-WE data
+        const numWe = parseInt(document.getElementById('units').value) || 0;
+        const isMixed = variant === 'mixed';
+        for (let i = 1; i <= numWe; i++) {
+            const weId = 'we' + String(i).padStart(2, '0');
+            const weNum = String(i).padStart(2, '0');
+
+            // Check per-WE variant when mixed
+            if (isMixed && !getWeVariant(weId)) {
+                showAlert(t('needWeVariant').replace('{we}', weNum), 'error'); return false;
+            }
+
+            const nom = document.getElementById(weId + '_nomenclature')?.value?.trim();
+            const clientName = document.getElementById(weId + '_clientname')?.value?.trim();
+            if (!nom) { showAlert(t('needWeNomenclature').replace('{we}', weNum), 'error'); return false; }
+            if (!clientName) { showAlert(t('needWeClientName').replace('{we}', weNum), 'error'); return false; }
+
+            // Check absent WE has ONT photo
+            const isPresent = document.getElementById(weId + '_present')?.checked;
+            if (!isPresent && !hasPhoto(weId + '_ont_sotano')) {
+                showAlert(t('needWeAbsentOnt').replace('{we}', weNum), 'error'); return false;
+            }
+        }
+
+        const valResult = computeValidationScore();
+        if (valResult && valResult.score < 30) {
+            showAlert(t('fillRequired') + ' \u2014 Score: ' + valResult.score + '%', 'error');
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// ============================================
+// SMART VALIDATION SCORE
+// ============================================
+function computeValidationScore() {
+    const status = document.getElementById('workStatus').value;
+    if (status !== 'completed') return null;
+
+    const results = { items: [], totalPoints: 0, earnedPoints: 0 };
+
+    // --- 1. Basic data completeness (weight: 20) ---
+    const ha = document.getElementById('ha').value.trim();
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const dateVal = document.getElementById('date').value;
+    const units = document.getElementById('units').value;
+    const variant = document.getElementById('variant').value;
+    const comments = document.getElementById('comments').value.trim();
+
+    const basicFields = [ha, startTime, endTime, dateVal, units, variant];
+    const basicFilled = basicFields.filter(v => v).length;
+    const basicOk = basicFilled === basicFields.length;
+    results.totalPoints += 20;
+    results.earnedPoints += basicOk ? 20 : Math.round(20 * basicFilled / basicFields.length);
+    results.items.push({
+        label: t('valBasicData'),
+        ok: basicOk,
+        detail: basicOk ? `\u2705 ${t('valComplete')}` : `\u274C ${t('valIncomplete')} (${basicFilled}/${basicFields.length})`,
+        cssClass: basicOk ? 'v-ok' : 'v-fail'
+    });
+
+    // --- 2. HA format check (weight: 5) ---
+    const haFormatOk = /^HA\d+$/i.test(ha);
+    results.totalPoints += 5;
+    results.earnedPoints += haFormatOk ? 5 : (ha ? 2 : 0);
+    const haHint = document.getElementById('haFormatHint');
+    if (haHint) haHint.style.display = (ha && !haFormatOk) ? 'block' : 'none';
+    results.items.push({
+        label: t('valHaFormat'),
+        ok: haFormatOk,
+        detail: haFormatOk ? '\u2705 OK' : (ha ? '\u26A0\uFE0F ' + t('valHaFormatHint') : '\u274C'),
+        cssClass: haFormatOk ? 'v-ok' : (ha ? 'v-warn' : 'v-fail')
+    });
+
+    // --- 3. Photos (weight: 30) ---
+    const numWe = parseInt(units) || 0;
+    const expectedBasement = WC_BASEMENT.filter(p => p.req).length;
+    let expectedWeTotal = 0;
+    let actualWe = 0;
+    for (let i = 1; i <= numWe; i++) {
+        const weId = 'we' + String(i).padStart(2, '0');
+        const weVar = getWeVariant(weId);
+        const isPresent = document.getElementById(weId + '_present')?.checked !== false;
+        const photoSet = isPresent ? getWePhotosForVariant(weVar) : WC_WE_ABSENT_PHOTOS;
+        const reqPhotos = photoSet.filter(p => p.req);
+        expectedWeTotal += reqPhotos.length;
+        actualWe += reqPhotos.filter(p => hasPhoto(`${weId}_${p.suffix}`)).length;
+    }
+    // Exterior: aggregate all used variants
+    const usedVarsScore = getUsedVariants();
+    const allExtScore = [];
+    const seenExtScore = new Set();
+    usedVarsScore.forEach(v => {
+        getExteriorPhotos(v).forEach(p => { if (!seenExtScore.has(p.id)) { seenExtScore.add(p.id); allExtScore.push(p); } });
+    });
+    let actualExt = allExtScore.filter(p => p.req && hasPhoto(p.id)).length;
+    const expectedExt = allExtScore.filter(p => p.req).length;
+    const expectedTotal = expectedBasement + expectedWeTotal + expectedExt;
+
+    let actualBasement = WC_BASEMENT.filter(p => hasPhoto(p.id)).length;
+    const actualTotal = actualBasement + actualWe + actualExt;
+
+    const photoRatio = expectedTotal > 0 ? Math.min(actualTotal / expectedTotal, 1) : 1;
+    results.totalPoints += 30;
+    let badPhotoCount = 0;
+    Object.values(state.photoQuality).forEach(arr => { if (arr) arr.forEach(q => { if (q && q.warnings && q.warnings.length > 0) badPhotoCount++; }); });
+    const qualityPenalty = Math.min(badPhotoCount * 5, 30);
+    const photoPoints = Math.max(0, Math.round(30 * photoRatio) - qualityPenalty);
+    results.earnedPoints += photoPoints;
+    const photosOk = actualTotal >= expectedTotal && badPhotoCount === 0;
+    let photoDetail = photosOk ? `\u2705 ${actualTotal}/${expectedTotal}` : `\u26A0\uFE0F ${actualTotal}/${expectedTotal}`;
+    if (actualTotal < expectedTotal) photoDetail += ` (${t('valMissing')} ${expectedTotal - actualTotal})`;
+    if (badPhotoCount > 0) photoDetail += ` | \u26A0\uFE0F ${badPhotoCount} ${t('photoQuality').toLowerCase()}`;
+    results.items.push({
+        label: t('valPhotos'),
+        ok: photosOk,
+        detail: photoDetail,
+        cssClass: photosOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 4. Checklist NE4 (weight: 25) ---
+    const checkedCount = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
+    const checklistOk = checkedCount === NE4_CHECKS.length;
+    const checkRatio = NE4_CHECKS.length > 0 ? checkedCount / NE4_CHECKS.length : 1;
+    results.totalPoints += 25;
+    results.earnedPoints += Math.round(25 * checkRatio);
+    results.items.push({
+        label: t('valChecklist'),
+        ok: checklistOk,
+        detail: checklistOk ? `\u2705 ${checkedCount}/${NE4_CHECKS.length}` : `\u26A0\uFE0F ${checkedCount}/${NE4_CHECKS.length}`,
+        cssClass: checklistOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 5. Protocols (weight: 10) ---
+    const prots = ['prot_auskundung','prot_installation','prot_mess','prot_farb'];
+    const protsChecked = prots.filter(id => document.getElementById(id)?.checked).length;
+    const protsOk = protsChecked === 4;
+    results.totalPoints += 10;
+    results.earnedPoints += Math.round(10 * protsChecked / 4);
+    results.items.push({
+        label: t('valProtocols'),
+        ok: protsOk,
+        detail: protsOk ? `\u2705 ${protsChecked}/4` : `\u26A0\uFE0F ${protsChecked}/4`,
+        cssClass: protsOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 6. Comments (weight: 10) ---
+    const commentsOk = comments.length > 0;
+    results.totalPoints += 10;
+    results.earnedPoints += commentsOk ? 10 : 0;
+    results.items.push({
+        label: t('valComments'),
+        ok: commentsOk,
+        detail: commentsOk ? `\u2705 ${t('valIncluded')}` : `\u26A0\uFE0F ${t('valNotIncluded')}`,
+        cssClass: commentsOk ? 'v-ok' : 'v-warn'
+    });
+
+    results.score = results.totalPoints > 0 ? Math.round(100 * results.earnedPoints / results.totalPoints) : 0;
+    return results;
+}
+
+function renderValidationCard() {
+    const card = document.getElementById('validationCard');
+    const result = computeValidationScore();
+
+    if (!result) { card.style.display = 'none'; return; }
+
+    card.style.display = 'block';
+    const scoreEl = document.getElementById('valScoreDisplay');
+    const itemsEl = document.getElementById('valItems');
+
+    const score = result.score;
+    const emoji = score >= 90 ? '\uD83D\uDFE2' : score >= 70 ? '\uD83D\uDFE1' : '\uD83D\uDD34';
+    const level = score >= 90 ? 'high' : score >= 70 ? 'mid' : 'low';
+
+    scoreEl.textContent = `${emoji} ${score}%`;
+    scoreEl.className = `validation-score-display ${level}`;
+    card.className = `form-section validation-card score-${level}`;
+
+    itemsEl.innerHTML = result.items.map((item, i) => {
+        const sym = i === result.items.length - 1 ? '\u2514' : '\u251C';
+        return `<div class="v-row"><span class="v-label">${sym} ${item.label}</span><span class="v-value ${item.cssClass}">${item.detail}</span></div>`;
+    }).join('');
+}
+
+function closeScoreWarning() {
+    document.getElementById('scoreWarningModal').classList.remove('show');
+}
+
+function forceSubmit() {
+    document.getElementById('scoreWarningModal').classList.remove('show');
+    doSubmit();
+}
+
+// ============================================
+// SUBMIT
+// ============================================
+function collectFormData() {
+    const data = {
+        timestamp: new Date().toISOString(),
+        team: state.currentTeam?.name || '',
+        technician: state.currentTechnician || '',
+        client: 'westconnect',
+        date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        workStatus: document.getElementById('workStatus').value,
+        comments: document.getElementById('comments').value,
+        supportTeam: document.getElementById('supportTeam').value,
+        ha: document.getElementById('ha').value,
+        units: document.getElementById('units').value,
+        variant: document.getElementById('variant').value,
+        protocols: ['prot_auskundung','prot_installation','prot_mess','prot_farb'].filter(id => document.getElementById(id)?.checked),
+        ne4Checklist: NE4_CHECKS.filter(id => document.getElementById(id)?.checked),
+        apInstalled: document.getElementById('apYes').checked ? 'yes' : 'no',
+        photos: state.photos,
+    };
+    // Per-WE data
+    const numWe = parseInt(document.getElementById('units').value) || 0;
+    const weData = [];
+    for (let i = 1; i <= numWe; i++) {
+        const weId = 'we' + String(i).padStart(2, '0');
+        weData.push({
+            we: weId,
+            variant: getWeVariant(weId),
+            nomenclature: document.getElementById(weId + '_nomenclature')?.value?.trim() || '',
+            clientName: document.getElementById(weId + '_clientname')?.value?.trim() || '',
+            presence: document.getElementById(weId + '_present')?.checked ? 'present' : 'absent',
+        });
+    }
+    data.weData = weData;
+    const valResult = computeValidationScore();
+    if (valResult) {
+        data.validation_score = valResult.score;
+        data.validation_details = valResult.items.map(i => `${i.label}: ${i.detail}`).join(' | ');
+    }
+    return data;
+}
+
+async function handleSubmit() {
+    if (!validate()) return;
+    const valResult = computeValidationScore();
+    if (valResult && valResult.score < 90) {
+        const emoji = valResult.score < 70 ? '\uD83D\uDD34' : '\uD83D\uDFE1';
+        const msg = t('valLowScoreMsg').replace('{score}', valResult.score);
+        document.getElementById('scoreWarningTitle').textContent = `${emoji} ${t('valLowScoreTitle')} (${valResult.score}%)`;
+        document.getElementById('scoreWarningMsg').textContent = msg;
+        document.getElementById('scoreWarningModal').classList.add('show');
+        return;
+    }
+    doSubmit();
+}
+
+async function doSubmit() {
+    const formData = collectFormData();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = t('sending');
+
+    if (navigator.onLine) {
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(formData) });
+            saveSubmission(formData);
+            document.getElementById('successModal').classList.add('show');
+            setTimeout(() => { document.getElementById('successModal').classList.remove('show'); resetForm(); }, 2500);
+        } catch(e) {
+            formData.pendingSync = true;
+            saveSubmission(formData);
+            showAlert(t('connError'), 'warning');
+        }
+    } else {
+        formData.pendingSync = true;
+        saveSubmission(formData);
+        showAlert(t('savedOffline'), 'warning');
+        setTimeout(resetForm, 1500);
+    }
+    btn.disabled = false; btn.textContent = t('sendBtn');
+}
+
+// ============================================
+// INDEXEDDB
+// ============================================
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('FieldReportWC', 1);
+        req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('submissions')) e.target.result.createObjectStore('submissions', {keyPath:'timestamp'}); };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e);
+    });
+}
+
+async function saveSubmission(data) {
+    const db = await openDB();
+    const tx = db.transaction(['submissions'], 'readwrite');
+    tx.objectStore('submissions').add(data);
+    state.submissions.push(data);
+}
+
+async function loadSubmissions() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readonly');
+        const req = tx.objectStore('submissions').getAll();
+        req.onsuccess = () => { state.submissions = req.result || []; };
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// PIN & AUTH
+// ============================================
+async function loadConfig() {
+    try {
+        const resp = await fetch(GOOGLE_SCRIPT_URL + '?action=getConfig');
+        const data = await resp.json();
+        if (data.teams && data.teams.length > 0) {
+            state.teams = {};
+            state.teamConfig = data.teams.filter(team => {
+                const cl = (team.client || '').toLowerCase();
+                return cl.includes('westconnect');
+            });
+            data.teams.forEach(team => {
+                let cl = (team.client || '').toLowerCase().trim();
+                if (!cl.includes('westconnect')) return;
+                cl = 'westconnect';
+                state.teams[team.pin] = { name:team.name, client:cl, members:team.members || [] };
+            });
+            state.configLoaded = true;
+            if (Object.keys(state.teams).length === 0) fallbackTeams();
+        } else { fallbackTeams(); }
+    } catch(e) { fallbackTeams(); }
+}
+
+function fallbackTeams() {
+    state.teams = {
+        '2345': { name:'West-001', client:'westconnect', members:['Alejandro Herrera','Alexander Herrera'] },
+        '3456': { name:'West-002', client:'westconnect', members:['Juan Correa','Eddier Aldana'] },
+        '4567': { name:'West-003', client:'westconnect', members:['Jaime Guzman'] },
+        '5678': { name:'West-004', client:'westconnect', members:['Michel Matos'] },
+    };
+    state.configLoaded = true;
+}
+
+function handleKey(key) {
+    if (key === 'del') { state.pin = state.pin.slice(0, -1); }
+    else if (state.pin.length < 4) { state.pin += key; }
+    updatePinDisplay();
+    if (state.pin.length === 4) setTimeout(submitPin, 300);
+}
+
+function updatePinDisplay() {
+    document.querySelectorAll('.pin-digit').forEach((d, i) => {
+        d.value = i < state.pin.length ? '\u25CF' : '';
+        d.classList.toggle('filled', i < state.pin.length);
+    });
+}
+
+function submitPin() {
+    if (!state.configLoaded) { setTimeout(submitPin, 500); return; }
+    const team = state.teams[state.pin];
+    if (!team) { showAlert(t('invalidPin'), 'error'); state.pin = ''; updatePinDisplay(); return; }
+    state.currentTeam = team;
+    if (team.members && team.members.length > 0) { showMemberScreen(team); }
+    else { enterForm(); }
+}
+
+function showMemberScreen(team) {
+    document.getElementById('memberTeamName').textContent = team.name;
+    const list = document.getElementById('memberList');
+    list.innerHTML = '';
+    team.members.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'member-btn'; btn.textContent = m;
+        btn.onclick = () => { state.currentTechnician = m; enterForm(); };
+        list.appendChild(btn);
+    });
+    showScreen('memberScreen');
+}
+
+function enterForm() {
+    const team = state.currentTeam;
+    document.getElementById('teamDisplay').textContent = team.name;
+    if (state.currentTechnician) {
+        document.getElementById('techDisplay').textContent = state.currentTechnician;
+        document.getElementById('technicianGroup').style.display = 'block';
+    }
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    populateSupportTeams();
+    handleStatusChange();
+    showScreen('formScreen');
+    document.getElementById('bottomActions').classList.remove('hidden');
+    document.getElementById('langToggle').style.display = 'flex';
+}
+
+function populateSupportTeams() {
+    const sel = document.getElementById('supportTeam');
+    sel.innerHTML = `<option value="">${t('noSupport')}</option>`;
+    const current = state.currentTeam;
+    (state.teamConfig.length > 0 ? state.teamConfig : Object.entries(state.teams).map(([k,v]) => v)).forEach(t => {
+        if (t.name !== current.name) {
+            sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+        }
+    });
+}
+
+// ============================================
+// NAVIGATION & UI
+// ============================================
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const ba = document.getElementById('bottomActions');
+    ba.classList.toggle('hidden', id !== 'formScreen');
+}
+
+function showHistory() {
+    const list = document.getElementById('historyList');
+    if (state.submissions.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:40px 0;">\uD83D\uDCCB No hay envios aun</div>';
+    } else {
+        list.innerHTML = state.submissions.map(s => {
+            return `<div style="padding:12px;background:var(--gray-light);border-radius:8px;margin-bottom:8px;">
+                <div style="font-weight:600;">${s.ha || '\u2014'}</div>
+                <div style="font-size:13px;color:var(--text-secondary);">${s.startTime} - ${s.endTime} | ${s.workStatus}</div>
+            </div>`;
+        }).join('');
+    }
+    showScreen('historyScreen');
+}
+
+function resetForm() {
+    document.getElementById('fieldForm').reset();
+    state.photos = {};
+    state.photoQuality = {};
+    state.currentTechnician = '';
+    document.querySelectorAll('.photo-preview-container').forEach(c => c.innerHTML = '');
+    document.getElementById('wcPhotosContainer').innerHTML = '';
+    document.getElementById('apPhotosContainer').innerHTML = '';
+    document.getElementById('apSection').style.display = 'none';
+    document.getElementById('evidenceSection').style.display = 'none';
+    document.getElementById('validationCard').style.display = 'none';
+    document.getElementById('successModal').classList.remove('show');
+    if (state.currentTeam) enterForm();
+}
+
+function showAlert(msg, type) {
+    const c = document.getElementById('alertContainer');
+    const el = document.createElement('div');
+    el.className = `alert alert-${type}`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+}
+
+function updateConnectionStatus() {
+    const ind = document.getElementById('connectionIndicator');
+    const txt = document.getElementById('statusText');
+    ind.classList.toggle('offline', !navigator.onLine);
+    txt.textContent = navigator.onLine ? t('online') : t('offline');
+}
+
+// ============================================
+// INIT
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(e => console.log('SW fail:', e));
+
+    document.getElementById('pinKeypad').addEventListener('click', e => {
+        const btn = e.target.closest('.key-btn');
+        if (btn) handleKey(btn.dataset.key);
+    });
+
+    updateConnectionStatus();
+    window.addEventListener('online', () => { updateConnectionStatus(); syncPending(); });
+    window.addEventListener('offline', updateConnectionStatus);
+
+    loadSubmissions();
+    loadConfig();
+});
+
+async function syncPending() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readwrite');
+        const store = tx.objectStore('submissions');
+        const req = store.getAll();
+        req.onsuccess = () => {
+            const pending = (req.result || []).filter(s => s.pendingSync);
+            if (pending.length > 0) {
+                showAlert(`\uD83D\uDD04 Sincronizando ${pending.length} envio(s)...`, 'info');
+                pending.forEach(s => {
+                    s.pendingSync = false;
+                    fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(s) }).catch(() => {});
+                });
+            }
+        };
+    } catch(e) {}
+}
+</script>
+</body>
+</html>

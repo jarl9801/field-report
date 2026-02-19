@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Field Report - Glasfaser Plus">
+    <meta name="theme-color" content="#00C853">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FR GFP">
+    <title>Field Report - Glasfaser Plus</title>
+    <link rel="manifest" href="manifest-gfp.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%2300C853' width='192' height='192' rx='32'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-weight='bold'>GFP</text></svg>">
+    <style>
+        :root {
+            --primary: #00C853;
+            --primary-dark: #00B846;
+            --primary-light: #4DE580;
+            --secondary: #1976D2;
+            --danger: #D32F2F;
+            --warning: #F57C00;
+            --success: #388E3C;
+            --gray-light: #F5F5F5;
+            --gray-medium: #E0E0E0;
+            --gray-dark: #424242;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-light); color: var(--text-primary);
+            line-height: 1.5; overflow-x: hidden; width: 100%;
+            min-height: 100vh; min-height: -webkit-fill-available;
+        }
+        html { height: -webkit-fill-available; }
+        .app-container { display:flex; flex-direction:column; width:100%; min-height:100vh; background:white; }
+
+        /* Status Bar */
+        .status-bar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color:white; padding:12px 16px; font-size:14px;
+            display:flex; justify-content:space-between; align-items:center;
+            position:sticky; top:0; z-index:100; box-shadow:0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-info { display:flex; gap:8px; align-items:center; }
+        .connection-indicator {
+            display:inline-block; width:10px; height:10px; border-radius:50%;
+            background:#4CAF50; animation:pulse 2s infinite;
+        }
+        .connection-indicator.offline { background:#FF9800; animation:none; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+        .lang-btn {
+            background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5);
+            color:white; padding:4px 10px; border-radius:4px; font-size:12px;
+            font-weight:600; cursor:pointer;
+        }
+        .lang-btn.active { background:rgba(255,255,255,0.9); color:var(--primary); }
+
+        /* Main Content */
+        .main-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:80px; }
+        .screen { display:none; padding:16px; animation:fadeIn 0.3s ease; }
+        .screen.active { display:flex; flex-direction:column; }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+        /* PIN Screen */
+        .pin-screen { justify-content:flex-start; align-items:center; gap:16px; padding-top:20px; }
+        .logo { width:50px; height:50px; margin:0 auto 8px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; }
+        .logo-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
+        .logo-subtitle { font-size:12px; color:var(--text-secondary); text-align:center; }
+        .pin-digits { display:flex; gap:12px; justify-content:center; margin:16px 0; }
+        .pin-digit { width:48px; height:56px; text-align:center; font-size:24px; border:2px solid var(--gray-medium); border-radius:8px; background:white; pointer-events:none; }
+        .pin-digit.filled { border-color:var(--primary); background:var(--gray-light); }
+        .pin-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:280px; margin:0 auto; }
+        .key-btn { height:56px; font-size:22px; font-weight:600; border:1px solid var(--gray-medium); border-radius:8px; background:white; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .key-btn:active { background:var(--gray-light); }
+        .key-btn.delete { font-size:18px; }
+
+        /* Form */
+        .form-section { background:white; border:1px solid var(--gray-medium); border-radius:var(--border-radius); padding:16px; margin-bottom:12px; }
+        .section-title { font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+        .section-counter { font-size:12px; font-weight:600; padding:2px 8px; border-radius:10px; background:var(--gray-light); color:var(--text-secondary); }
+        .section-counter.complete { background:#E8F5E9; color:var(--success); }
+        .form-group { margin-bottom:12px; }
+        .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+        .form-label.required::after { content:' *'; color:var(--danger); }
+        .form-input, .form-select, .form-textarea {
+            width:100%; padding:10px 12px; border:1px solid var(--gray-medium);
+            border-radius:6px; font-size:15px; background:white; -webkit-appearance:none;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--primary); }
+        .form-textarea { min-height:80px; resize:vertical; }
+        .time-inputs { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .error-message { font-size:12px; color:var(--danger); margin-top:4px; display:none; }
+
+        /* Collapsible */
+        .section-collapsible { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; -webkit-tap-highlight-color:transparent; }
+        .collapse-icon { transition:transform 0.3s; font-size:12px; }
+        .section-collapsible.collapsed .collapse-icon { transform:rotate(0deg); }
+        .section-collapsible:not(.collapsed) .collapse-icon { transform:rotate(90deg); }
+        .section-collapsible.collapsed + .section-content { display:none; }
+
+        /* Photos */
+        .photo-section { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f0f0f0; }
+        .photo-section:last-child { border-bottom:none; margin-bottom:0; }
+        .photo-label { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px; display:block; }
+        .photo-label.required::after { content:' *'; color:var(--danger); }
+        .photo-label.optional::after { content:' (opcional)'; color:var(--text-secondary); font-weight:400; font-size:11px; }
+        .upload-btn {
+            display:inline-flex; align-items:center; gap:4px; padding:8px 16px;
+            background:var(--gray-light); border:1px dashed var(--gray-medium);
+            border-radius:6px; font-size:13px; cursor:pointer; min-height:44px;
+        }
+        .upload-btn:active { background:var(--gray-medium); }
+        .photo-file-input { display:none; }
+        .photo-preview-container { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .photo-preview { position:relative; width:64px; height:64px; border-radius:6px; overflow:hidden; border:1px solid var(--gray-medium); }
+        .photo-preview img { width:100%; height:100%; object-fit:cover; }
+        .photo-preview.photo-warn { border:2px solid var(--warning); }
+        .photo-warning { position:absolute; bottom:0; left:0; right:0; background:rgba(245,124,0,0.85); color:white; font-size:9px; font-weight:600; text-align:center; padding:2px; line-height:1.2; }
+        .photo-remove { position:absolute; top:2px; right:2px; width:20px; height:20px; background:var(--danger); color:white; border:none; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+        /* Progress */
+        .progress-bar { height:4px; background:var(--gray-medium); border-radius:2px; margin-bottom:12px; overflow:hidden; }
+        .progress-fill { height:100%; background:var(--primary); transition:width 0.3s; }
+
+        /* Alerts */
+        .alert { padding:12px 16px; border-radius:6px; margin-bottom:8px; font-size:13px; animation:fadeIn 0.3s; }
+        .alert-error { background:#FFEBEE; color:var(--danger); border:1px solid #FFCDD2; }
+        .alert-warning { background:#FFF3E0; color:var(--warning); border:1px solid #FFE0B2; }
+        .alert-info { background:#E3F2FD; color:var(--secondary); border:1px solid #BBDEFB; }
+        .alert-success { background:#E8F5E9; color:var(--success); border:1px solid #C8E6C9; }
+
+        /* Bottom Actions */
+        .bottom-actions { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--gray-medium); padding:12px 16px; z-index:50; }
+        .bottom-actions.hidden { display:none; }
+        .fab-group { display:flex; gap:12px; }
+        .fab { flex:1; padding:14px; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; min-height:48px; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:disabled { background:var(--gray-medium); color:var(--text-secondary); }
+        .btn-secondary { background:var(--gray-light); color:var(--text-primary); border:1px solid var(--gray-medium); }
+
+        /* Modal */
+        .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal-overlay.show { display:flex; }
+        .modal { background:white; padding:32px 24px; border-radius:12px; text-align:center; max-width:320px; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .modal-icon { font-size:48px; margin-bottom:16px; }
+        .modal-title { font-size:18px; font-weight:700; margin-bottom:12px; }
+        .modal-message { font-size:14px; color:var(--text-secondary); margin-bottom:24px; }
+        .modal-button { width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+
+        /* Member */
+        .member-btn { width:100%; padding:14px; background:white; border:2px solid var(--gray-medium); border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; text-align:center; }
+        .member-btn:active { border-color:var(--primary); background:#E8F5E9; }
+
+        @media (prefers-reduced-motion: reduce) { * { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-info">
+            <span class="connection-indicator" id="connectionIndicator"></span>
+            <span id="statusText">Online</span>
+        </div>
+        <div style="display:flex;gap:8px;" id="langToggle">
+            <button class="lang-btn active" onclick="setLang('es')">ES</button>
+            <button class="lang-btn" onclick="setLang('de')">DE</button>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <!-- PIN Screen -->
+        <div class="screen pin-screen active" id="pinScreen">
+            <div>
+                <div class="logo">GFP</div>
+                <div class="logo-title">Field Report</div>
+                <div class="logo-subtitle">Glasfaser Plus</div>
+            </div>
+            <div style="width:100%;max-width:320px;">
+                <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:8px;" id="pinLabel">Ingrese PIN (4 digitos)</div>
+                <div class="pin-digits" id="pinDigits">
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                </div>
+                <div class="pin-keypad" id="pinKeypad">
+                    <button class="key-btn" data-key="1">1</button>
+                    <button class="key-btn" data-key="2">2</button>
+                    <button class="key-btn" data-key="3">3</button>
+                    <button class="key-btn" data-key="4">4</button>
+                    <button class="key-btn" data-key="5">5</button>
+                    <button class="key-btn" data-key="6">6</button>
+                    <button class="key-btn" data-key="7">7</button>
+                    <button class="key-btn" data-key="8">8</button>
+                    <button class="key-btn" data-key="9">9</button>
+                    <button class="key-btn delete" data-key="del">&#x232B;</button>
+                    <button class="key-btn" data-key="0">0</button>
+                    <button class="key-btn" data-key="" style="visibility:hidden"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Selection -->
+        <div class="screen" id="memberScreen">
+            <div style="text-align:center;padding-top:40px;">
+                <div style="font-size:48px;margin-bottom:12px;">&#x1F477;</div>
+                <h2 id="memberTeamName" style="color:var(--primary);margin-bottom:4px;">Equipo</h2>
+                <p style="color:var(--text-secondary);font-size:14px;" data-t="selectMember">Seleccione su nombre</p>
+            </div>
+            <div id="memberList" style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:16px auto 0;"></div>
+        </div>
+
+        <!-- Form Screen -->
+        <div class="screen" id="formScreen">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            <div id="alertContainer"></div>
+            <form id="fieldForm" onsubmit="return false;">
+                <input type="hidden" id="client" value="glasfaser-plus">
+
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <div class="section-title" data-t="sectionBasic">Informacion Basica</div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblTeam">Equipo</label>
+                        <div class="form-input" id="teamDisplay" style="background:var(--gray-light);font-weight:600;">&#x2014;</div>
+                    </div>
+                    <div class="form-group" id="technicianGroup" style="display:none;">
+                        <label class="form-label" data-t="lblTech">Tecnico</label>
+                        <div class="form-input" id="techDisplay" style="background:var(--gray-light);font-weight:600;">&#x2014;</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblSupport">Equipo de Apoyo</label>
+                        <select class="form-select" id="supportTeam"><option value="" data-t="noSupport">Sin equipo de apoyo</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblDate">Fecha</label>
+                        <input type="date" class="form-input" id="date" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblSchedule">Horario</label>
+                        <div class="time-inputs">
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblStart">Inicio</label><input type="time" class="form-input" id="startTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblEnd">Fin</label><input type="time" class="form-input" id="endTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblStatus">Estado del Trabajo</label>
+                        <select class="form-select" id="workStatus" onchange="handleStatusChange()">
+                            <option value="" data-t="selectStatus">Seleccionar estado...</option>
+                            <option value="completed-ok" data-t="statusOk">Finalizada OK</option>
+                            <option value="client-absent" data-t="statusAbsent">Cliente Ausente</option>
+                            <option value="previous-states" data-t="statusPrevious">Cliente Estados Previos</option>
+                            <option value="client-reschedule" data-t="statusReschedule">Cliente Recitar</option>
+                            <option value="on-hold" data-t="statusHold">Paralizada</option>
+                            <option value="preinstalled" data-t="statusPreinstalled">Orden Preinstalada</option>
+                            <option value="completed-not-ok" data-t="statusNotOk">Finalizada No OK</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="commentsLabel" data-t="lblComments">Observaciones</label>
+                        <textarea class="form-textarea" id="comments" placeholder="Agregue observaciones..." data-t-ph="phComments"></textarea>
+                    </div>
+                </div>
+
+                <!-- GLASFASER PLUS DATA -->
+                <div id="gfpSection" style="display:none;">
+                    <div class="form-section">
+                        <div class="section-title" data-t="gfpData">Datos de Orden - Glasfaser Plus</div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblOrder">N&#xBA; Orden</label>
+                            <input type="text" class="form-input" id="orderNumber" placeholder="Ej: 2051504">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblBuildType">Tipo de Edificio</label>
+                            <select class="form-select" id="buildingType" onchange="updateGfpPhotos()">
+                                <option value="" data-t="selectOpt">Seleccionar...</option>
+                                <option value="sdu1-ap-ta" data-t="sdu1simple">SDU(1): AP/TA - 1 vivienda simple</option>
+                                <option value="sdu1-ap+ta" data-t="sdu1apTa">SDU(1): AP + TA - 1 vivienda con AP separado</option>
+                                <option value="sdu2" data-t="sdu2">SDU(2): 2 viviendas</option>
+                                <option value="mdu3" data-t="mdu3">MDU(3+): 3 o mas viviendas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- GFP photos generated dynamically -->
+                    <div id="gfpPhotosContainer"></div>
+                </div>
+
+                <!-- Evidence (non-OK statuses) -->
+                <div class="form-section" id="evidenceSection" style="display:none;">
+                    <div class="section-title" data-t="evidenceTitle">Foto de Evidencia (Obligatoria)</div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;" data-t="evidenceHint">Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)</p>
+                    <div id="evidencePhotos"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- History -->
+        <div class="screen" id="historyScreen">
+            <div style="padding:16px 0;">
+                <h2 style="font-size:18px;margin-bottom:16px;" data-t="histTitle">Envios de Hoy</h2>
+                <div id="historyList"><div style="text-align:center;color:var(--text-secondary);padding:40px 0;" data-t="histEmpty">&#x1F4CB; No hay envios aun</div></div>
+                <button style="width:100%;padding:12px;margin-top:16px;background:var(--gray-light);border:1px solid var(--gray-medium);border-radius:8px;font-size:15px;cursor:pointer;" onclick="showScreen('formScreen')" data-t="histBack">&#x2190; Volver al formulario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions hidden" id="bottomActions">
+        <div class="fab-group">
+            <button class="fab btn-secondary" id="historyBtn" onclick="showHistory()">&#x1F4CB; Historial</button>
+            <button class="fab btn-primary" id="submitBtn" onclick="handleSubmit()">&#x2713; Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal">
+        <div class="modal-icon">&#x2705;</div>
+        <div class="modal-title" id="modalTitle">Enviado con Exito</div>
+        <div class="modal-message" id="modalMsg">Los datos se han registrado correctamente.</div>
+        <button class="modal-button" onclick="resetForm()" data-t="newForm">Nuevo Formulario</button>
+    </div>
+</div>
+
+<script>
+// ============================================
+// CONFIG & STATE
+// ============================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec';
+
+const state = {
+    lang: 'es',
+    pin: '',
+    teams: {},
+    teamConfig: [],
+    configLoaded: false,
+    currentTeam: null,
+    currentTechnician: '',
+    photos: {},
+    photoQuality: {},
+    submissions: [],
+};
+
+// ============================================
+// I18N
+// ============================================
+const T = {
+    es: {
+        online:'En linea', offline:'Sin conexion', pinLabel:'Ingrese PIN (4 digitos)', invalidPin:'PIN invalido',
+        sendBtn:'\u2713 Enviar', sending:'\u23F3 Enviando...', histBtn:'\uD83D\uDCCB Historial',
+        successTitle:'Enviado con Exito', successMsg:'Los datos se han registrado correctamente.', newForm:'Nuevo Formulario',
+        savedOffline:'\uD83D\uDCF1 Guardado localmente. Se enviara cuando haya conexion.', connError:'\u26A0\uFE0F Error de conexion. Guardado localmente.',
+        fillRequired:'Complete todos los campos obligatorios', timeError:'Hora fin debe ser posterior a inicio',
+        needComments:'Se requieren observaciones para este estado', needEvidence:'Se requiere al menos 1 foto de evidencia',
+        needPhotos:'Faltan fotos obligatorias', needOrder:'Ingrese el N\u00BA de Orden', needBuilding:'Seleccione el tipo de edificio',
+        sectionBasic:'Informacion Basica', lblTeam:'Equipo', lblTech:'Tecnico',
+        lblSupport:'Equipo de Apoyo', noSupport:'Sin equipo de apoyo', lblDate:'Fecha', lblSchedule:'Horario',
+        lblStart:'Inicio', lblEnd:'Fin', lblStatus:'Estado del Trabajo', selectStatus:'Seleccionar estado...',
+        statusOk:'Finalizada OK', statusAbsent:'Cliente Ausente', statusPrevious:'Cliente Estados Previos',
+        statusReschedule:'Cliente Recitar', statusHold:'Paralizada', statusPreinstalled:'Orden Preinstalada', statusNotOk:'Finalizada No OK',
+        lblComments:'Observaciones', phComments:'Agregue observaciones...',
+        selectOpt:'Seleccionar...', lblOrder:'N\u00BA Orden', lblBuildType:'Tipo de Edificio',
+        sdu1simple:'SDU(1): AP/TA - 1 vivienda simple', sdu1apTa:'SDU(1): AP + TA - 1 vivienda con AP separado',
+        sdu2:'SDU(2): 2 viviendas', mdu3:'MDU(3+): 3 o mas viviendas',
+        gfpData:'Datos de Orden - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        evidenceTitle:'Foto de Evidencia (Obligatoria)', evidenceHint:'Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)',
+        evidencePhoto:'Foto de Evidencia', evidenceExtra:'Foto Adicional',
+        histTitle:'Envios de Hoy', histEmpty:'\uD83D\uDCCB No hay envios aun', histBack:'\u2190 Volver al formulario',
+        selectMember:'Seleccione su nombre',
+        photoBlurry:'Foto borrosa', photoDark:'Foto oscura', photoOverexposed:'Foto sobreexpuesta', photoQuality:'Calidad de fotos',
+    },
+    de: {
+        online:'Online', offline:'Keine Verbindung', pinLabel:'PIN eingeben (4 Ziffern)', invalidPin:'Ungultige PIN',
+        sendBtn:'\u2713 Einreichen', sending:'\u23F3 Senden...', histBtn:'\uD83D\uDCCB Verlauf',
+        successTitle:'Erfolgreich gesendet', successMsg:'Daten korrekt registriert.', newForm:'Neues Formular',
+        savedOffline:'\uD83D\uDCF1 Lokal gespeichert.', connError:'\u26A0\uFE0F Verbindungsfehler. Lokal gespeichert.',
+        fillRequired:'Bitte alle Pflichtfelder ausfullen', timeError:'Endzeit muss nach Startzeit liegen',
+        needComments:'Anmerkungen fur diesen Status erforderlich', needEvidence:'Mindestens 1 Beweisfoto erforderlich',
+        needPhotos:'Pflichtfotos fehlen', needOrder:'Auftragsnummer eingeben', needBuilding:'Gebaudetyp auswahlen',
+        sectionBasic:'Grundinformationen', lblTeam:'Team', lblTech:'Techniker',
+        lblSupport:'Unterstutzungsteam', noSupport:'Kein Unterstutzungsteam', lblDate:'Datum', lblSchedule:'Zeitplan',
+        lblStart:'Start', lblEnd:'Ende', lblStatus:'Arbeitsstatus', selectStatus:'Status auswahlen...',
+        statusOk:'Abgeschlossen OK', statusAbsent:'Kunde Abwesend', statusPrevious:'Vorherige Zustande',
+        statusReschedule:'Kunde Umterminierung', statusHold:'Pausiert', statusPreinstalled:'Vorinstalliert', statusNotOk:'Abgeschlossen Nicht OK',
+        lblComments:'Anmerkungen', phComments:'Wichtige Anmerkungen...',
+        selectOpt:'Auswahlen...', lblOrder:'Auftragsnr.', lblBuildType:'Gebaudetyp',
+        sdu1simple:'SDU(1): AP/TA - 1 Wohnung einfach', sdu1apTa:'SDU(1): AP + TA - 1 Wohnung mit separatem AP',
+        sdu2:'SDU(2): 2 Wohnungen', mdu3:'MDU(3+): 3 oder mehr Wohnungen',
+        gfpData:'Auftragsdaten - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        evidenceTitle:'Beweisfoto (Pflicht)', evidenceHint:'Mindestens 1 Foto als Nachweis (Briefkasten, Wohnung, Flyer, Problem, etc.)',
+        evidencePhoto:'Beweisfoto', evidenceExtra:'Zusatzliches Foto',
+        histTitle:'Heutige Einreichungen', histEmpty:'\uD83D\uDCCB Noch keine Einreichungen', histBack:'\u2190 Zuruck zum Formular',
+        selectMember:'Wahlen Sie Ihren Namen',
+        photoBlurry:'Foto unscharf', photoDark:'Foto zu dunkel', photoOverexposed:'Foto uberbelichtet', photoQuality:'Fotoqualitat',
+    }
+};
+
+function t(key) { return (T[state.lang] && T[state.lang][key]) || T.es[key] || key; }
+
+function setLang(lang) {
+    state.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
+    document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-ph]').forEach(el => {
+        const key = el.getAttribute('data-t-ph');
+        if (T[lang] && T[lang][key]) el.placeholder = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-opt]').forEach(el => {
+        const key = el.getAttribute('data-t-opt');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.getElementById('pinLabel').textContent = t('pinLabel');
+    document.getElementById('submitBtn').textContent = t('sendBtn');
+    document.getElementById('historyBtn').textContent = t('histBtn');
+    document.getElementById('modalTitle').textContent = t('successTitle');
+    document.getElementById('modalMsg').textContent = t('successMsg');
+    handleStatusChange();
+    updateConnectionStatus();
+}
+
+// ============================================
+// PHOTO HELPERS
+// ============================================
+function createPhotoField(id, label, required) {
+    const inputId = 'photo_' + id;
+    const previewId = 'preview_' + id;
+    return `<div class="photo-section">
+        <label class="photo-label ${required ? 'required' : 'optional'}">${label}</label>
+        <div><button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">\uD83D\uDCF7 Foto</button></div>
+        <input type="file" class="photo-file-input" id="${inputId}" accept="image/*" capture="environment" multiple onchange="handlePhoto(this,'${id}')">
+        <div class="photo-preview-container" id="${previewId}"></div>
+    </div>`;
+}
+
+function compressPhoto(file, maxW, quality) {
+    maxW = maxW || 1280; quality = quality || 0.7;
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================
+// PHOTO QUALITY DETECTION
+// ============================================
+function toGrayscale(imageData) {
+    const d = imageData.data, len = d.length / 4;
+    const gray = new Float32Array(len);
+    for (let i = 0; i < len; i++) gray[i] = 0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2];
+    return gray;
+}
+
+function laplacianVariance(gray, w, h) {
+    let sum = 0, sum2 = 0, n = 0;
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const val = -4 * gray[y*w+x] + gray[(y-1)*w+x] + gray[(y+1)*w+x] + gray[y*w+x-1] + gray[y*w+x+1];
+            sum += val; sum2 += val * val; n++;
+        }
+    }
+    if (n === 0) return 999;
+    const mean = sum / n;
+    return (sum2 / n) - (mean * mean);
+}
+
+function averageBrightness(gray) {
+    let sum = 0;
+    for (let i = 0; i < gray.length; i++) sum += gray[i];
+    return gray.length > 0 ? sum / gray.length : 128;
+}
+
+function checkPhotoQuality(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const scale = Math.min(200 / img.width, 200 / img.height, 1);
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const gray = toGrayscale(imageData);
+            const blur = laplacianVariance(gray, canvas.width, canvas.height);
+            const brightness = averageBrightness(gray);
+            const warnings = [];
+            if (blur < 100) warnings.push(t('photoBlurry'));
+            if (brightness < 40) warnings.push(t('photoDark'));
+            if (brightness > 240) warnings.push(t('photoOverexposed'));
+            resolve({ isBlurry: blur < 100, isDark: brightness < 40, isOverexposed: brightness > 240, blurScore: blur, brightness, warnings });
+        };
+        img.onerror = () => resolve({ isBlurry:false, isDark:false, isOverexposed:false, blurScore:999, brightness:128, warnings:[] });
+        img.src = dataUrl;
+    });
+}
+
+function renderPhotoWarning(previewDiv, quality) {
+    if (quality.warnings.length > 0) {
+        previewDiv.classList.add('photo-warn');
+        const warn = document.createElement('div');
+        warn.className = 'photo-warning';
+        warn.textContent = '\u26A0\uFE0F ' + quality.warnings.join(', ');
+        previewDiv.appendChild(warn);
+    }
+}
+
+function handlePhoto(input, fieldId) {
+    if (!input.files || !input.files.length) return;
+    Array.from(input.files).forEach(file => {
+        compressPhoto(file).then(async dataUrl => {
+            if (!state.photos[fieldId]) state.photos[fieldId] = [];
+            if (!state.photoQuality[fieldId]) state.photoQuality[fieldId] = [];
+            state.photos[fieldId].push(dataUrl);
+            const quality = await checkPhotoQuality(dataUrl);
+            state.photoQuality[fieldId].push(quality);
+            const preview = document.getElementById('preview_' + fieldId);
+            if (preview) {
+                const div = document.createElement('div');
+                div.className = 'photo-preview';
+                div.innerHTML = `<img src="${dataUrl}"><button type="button" class="photo-remove" onclick="removePhoto('${fieldId}',this)">\u00D7</button>`;
+                renderPhotoWarning(div, quality);
+                preview.appendChild(div);
+            }
+            updateSectionCounters();
+        }).catch(err => console.error('Photo error:', err));
+    });
+    input.value = '';
+}
+
+function removePhoto(fieldId, btn) {
+    const container = btn.closest('.photo-preview-container');
+    const idx = Array.from(container.children).indexOf(btn.closest('.photo-preview'));
+    if (state.photos[fieldId]) state.photos[fieldId].splice(idx, 1);
+    if (state.photoQuality[fieldId]) state.photoQuality[fieldId].splice(idx, 1);
+    btn.closest('.photo-preview').remove();
+    updateSectionCounters();
+}
+
+function hasPhoto(fieldId) { return state.photos[fieldId] && state.photos[fieldId].length > 0; }
+
+// ============================================
+// GFP PHOTO DEFINITIONS
+// ============================================
+const GFP_PHOTOS = {
+    always: [
+        { id:'gfp_ta_entrada', label:'4.1 ONT/TA Abierta - Entrada cable' },
+        { id:'gfp_ta_fusion', label:'4.2 ONT/TA Abierta - Bandeja Fusion' },
+        { id:'gfp_ta_cerrada', label:'4.3 ONT/TA Cerrada + Etiqueta Home ID (QR)' },
+        { id:'gfp_activacion', label:'6.1 Captura Activacion en App Cliente' },
+        { id:'gfp_patch_nvt', label:'7.1 Patch en POP/NVT' },
+        { id:'gfp_luz_roja', label:'8.1 Luz Roja - Fibras NVT a OTB/AP' },
+        { id:'gfp_fusion_dp', label:'9.1 Fusion DP/NVT - Bandeja + Etiqueta' },
+    ],
+    obraCivil: [
+        { id:'gfp_pre_ext', label:'1.1 Previo trabajos - Pasamuros Exterior' },
+        { id:'gfp_pre_int', label:'1.2 Previo trabajos - Pasamuros Interior' },
+        { id:'gfp_post_ext', label:'2.1 Post trabajos - Pasamuros Exterior' },
+        { id:'gfp_post_int', label:'2.2 Post trabajos - Pasamuros Interior' },
+    ],
+    otbAp: [
+        { id:'gfp_otb_entrada', label:'3.1 OTB/AP Abierta - Entrada cable + splitter' },
+        { id:'gfp_otb_fusion', label:'3.2 OTB/AP Abierta - Bandeja Fusion' },
+        { id:'gfp_otb_cerrada', label:'3.3 OTB/AP Cerrada + Etiqueta KLS ID' },
+    ],
+    interiorSdu2: [
+        { id:'gfp_canal_ap_entrada', label:'5.1 Canalizado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+    interiorSdu1: [
+        { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+    interiorMdu: [
+        { id:'gfp_canal_ap_sp', label:'5.2 Canalizado: OTB/AP a SammelPunkt' },
+        { id:'gfp_canal_sp_entrada', label:'5.3 Canalizado: SammelPunkt a Entrada Vivienda' },
+        { id:'gfp_cable_ap_sp', label:'5.5 Cableado: OTB/AP a SammelPunkt' },
+        { id:'gfp_cable_sp_entrada', label:'5.6 Cableado: SammelPunkt a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+};
+
+function getGfpRequiredPhotos(buildingType) {
+    let photos = [...GFP_PHOTOS.always];
+    if (['sdu1-ap+ta','sdu2','mdu3'].includes(buildingType)) {
+        photos = [...GFP_PHOTOS.obraCivil, ...GFP_PHOTOS.otbAp, ...photos];
+    }
+    if (buildingType === 'sdu2') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu2);
+    else if (buildingType === 'sdu1-ap+ta') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu1);
+    else if (buildingType === 'mdu3') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorMdu);
+    return photos;
+}
+
+function updateGfpPhotos() {
+    const container = document.getElementById('gfpPhotosContainer');
+    const bt = document.getElementById('buildingType').value;
+    const status = document.getElementById('workStatus').value;
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    if (!bt || !isFinalized) { container.innerHTML = ''; return; }
+
+    const photos = getGfpRequiredPhotos(bt);
+    let html = '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('gfpPhotos')} <span class="section-counter" id="gfpCounter">0/${photos.length}</span></div>`;
+    html += '<div class="collapse-icon">\u25B6</div></div><div class="section-content">';
+    photos.forEach(p => { html += createPhotoField(p.id, p.label, true); });
+    html += '</div></div>';
+    container.innerHTML = html;
+    updateSectionCounters();
+}
+
+// ============================================
+// STATUS CHANGE
+// ============================================
+function handleStatusChange() {
+    const status = document.getElementById('workStatus').value;
+    const needsEvidence = ['client-absent','previous-states','client-reschedule','on-hold','completed-not-ok'].includes(status);
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    // Comments required for non-OK
+    const label = document.getElementById('commentsLabel');
+    label.className = needsEvidence ? 'form-label required' : 'form-label';
+
+    // Evidence section
+    const evSection = document.getElementById('evidenceSection');
+    if (needsEvidence) {
+        evSection.style.display = 'block';
+        const evPhotos = document.getElementById('evidencePhotos');
+        evPhotos.innerHTML = createPhotoField('evidence_1', t('evidencePhoto'), true) + createPhotoField('evidence_2', t('evidenceExtra'), false);
+    } else {
+        evSection.style.display = 'none';
+    }
+
+    // Show GFP section for finalized or always (need order + building type)
+    document.getElementById('gfpSection').style.display = 'block';
+    updateGfpPhotos();
+}
+
+// ============================================
+// SECTION COUNTERS
+// ============================================
+function updateSectionCounters() {
+    const bt = document.getElementById('buildingType')?.value;
+    if (bt) {
+        const photos = getGfpRequiredPhotos(bt);
+        const filled = photos.filter(p => hasPhoto(p.id)).length;
+        const counter = document.getElementById('gfpCounter');
+        if (counter) {
+            counter.textContent = `${filled}/${photos.length}`;
+            counter.className = 'section-counter' + (filled === photos.length ? ' complete' : '');
+        }
+    }
+}
+
+// ============================================
+// VALIDATION
+// ============================================
+function validate() {
+    const status = document.getElementById('workStatus').value;
+    const start = document.getElementById('startTime').value;
+    const end = document.getElementById('endTime').value;
+    const comments = document.getElementById('comments').value;
+
+    if (!status || !start || !end || !document.getElementById('date').value) {
+        showAlert(t('fillRequired'), 'error'); return false;
+    }
+    if (start >= end) { showAlert(t('timeError'), 'error'); return false; }
+
+    const needsEvidence = ['client-absent','previous-states','client-reschedule','on-hold','completed-not-ok'].includes(status);
+    if (needsEvidence && !comments.trim()) { showAlert(t('needComments'), 'error'); return false; }
+    if (needsEvidence && !hasPhoto('evidence_1')) { showAlert(t('needEvidence'), 'error'); return false; }
+
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    if (!document.getElementById('orderNumber').value) { showAlert(t('needOrder'), 'error'); return false; }
+    const bt = document.getElementById('buildingType').value;
+    if (!bt) { showAlert(t('needBuilding'), 'error'); return false; }
+    if (isFinalized) {
+        const photos = getGfpRequiredPhotos(bt);
+        const missing = photos.filter(p => !hasPhoto(p.id));
+        if (missing.length > 0) {
+            showAlert(t('needPhotos') + ': ' + missing[0].label, 'error'); return false;
+        }
+    }
+
+    return true;
+}
+
+// ============================================
+// SUBMIT
+// ============================================
+function collectFormData() {
+    return {
+        timestamp: new Date().toISOString(),
+        team: state.currentTeam?.name || '',
+        technician: state.currentTechnician || '',
+        client: 'glasfaser-plus',
+        date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        workStatus: document.getElementById('workStatus').value,
+        comments: document.getElementById('comments').value,
+        supportTeam: document.getElementById('supportTeam').value,
+        orderNumber: document.getElementById('orderNumber').value,
+        buildingType: document.getElementById('buildingType').value,
+        photos: state.photos,
+    };
+}
+
+async function handleSubmit() {
+    if (!validate()) return;
+    doSubmit();
+}
+
+async function doSubmit() {
+    const formData = collectFormData();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = t('sending');
+
+    if (navigator.onLine) {
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(formData) });
+            saveSubmission(formData);
+            document.getElementById('successModal').classList.add('show');
+            setTimeout(() => { document.getElementById('successModal').classList.remove('show'); resetForm(); }, 2500);
+        } catch(e) {
+            formData.pendingSync = true;
+            saveSubmission(formData);
+            showAlert(t('connError'), 'warning');
+        }
+    } else {
+        formData.pendingSync = true;
+        saveSubmission(formData);
+        showAlert(t('savedOffline'), 'warning');
+        setTimeout(resetForm, 1500);
+    }
+    btn.disabled = false; btn.textContent = t('sendBtn');
+}
+
+// ============================================
+// INDEXEDDB
+// ============================================
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('FieldReportGFP', 1);
+        req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('submissions')) e.target.result.createObjectStore('submissions', {keyPath:'timestamp'}); };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e);
+    });
+}
+
+async function saveSubmission(data) {
+    const db = await openDB();
+    const tx = db.transaction(['submissions'], 'readwrite');
+    tx.objectStore('submissions').add(data);
+    state.submissions.push(data);
+}
+
+async function loadSubmissions() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readonly');
+        const req = tx.objectStore('submissions').getAll();
+        req.onsuccess = () => { state.submissions = req.result || []; };
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// PIN & AUTH
+// ============================================
+async function loadConfig() {
+    try {
+        const resp = await fetch(GOOGLE_SCRIPT_URL + '?action=getConfig');
+        const data = await resp.json();
+        if (data.teams && data.teams.length > 0) {
+            state.teams = {};
+            state.teamConfig = data.teams.filter(team => {
+                const cl = (team.client || '').toLowerCase();
+                return cl.includes('glasfaser');
+            });
+            data.teams.forEach(team => {
+                let cl = (team.client || '').toLowerCase().trim();
+                if (!cl.includes('glasfaser')) return;
+                cl = 'glasfaser-plus';
+                state.teams[team.pin] = { name:team.name, client:cl, members:team.members || [] };
+            });
+            state.configLoaded = true;
+            if (Object.keys(state.teams).length === 0) fallbackTeams();
+        } else { fallbackTeams(); }
+    } catch(e) { fallbackTeams(); }
+}
+
+function fallbackTeams() {
+    state.teams = {
+        '1234': { name:'Plus-001', client:'glasfaser-plus', members:['Erick Flores'] },
+    };
+    state.configLoaded = true;
+}
+
+function handleKey(key) {
+    if (key === 'del') { state.pin = state.pin.slice(0, -1); }
+    else if (state.pin.length < 4) { state.pin += key; }
+    updatePinDisplay();
+    if (state.pin.length === 4) setTimeout(submitPin, 300);
+}
+
+function updatePinDisplay() {
+    document.querySelectorAll('.pin-digit').forEach((d, i) => {
+        d.value = i < state.pin.length ? '\u25CF' : '';
+        d.classList.toggle('filled', i < state.pin.length);
+    });
+}
+
+function submitPin() {
+    if (!state.configLoaded) { setTimeout(submitPin, 500); return; }
+    const team = state.teams[state.pin];
+    if (!team) { showAlert(t('invalidPin'), 'error'); state.pin = ''; updatePinDisplay(); return; }
+    state.currentTeam = team;
+    if (team.members && team.members.length > 0) { showMemberScreen(team); }
+    else { enterForm(); }
+}
+
+function showMemberScreen(team) {
+    document.getElementById('memberTeamName').textContent = team.name;
+    const list = document.getElementById('memberList');
+    list.innerHTML = '';
+    team.members.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'member-btn'; btn.textContent = m;
+        btn.onclick = () => { state.currentTechnician = m; enterForm(); };
+        list.appendChild(btn);
+    });
+    showScreen('memberScreen');
+}
+
+function enterForm() {
+    const team = state.currentTeam;
+    document.getElementById('teamDisplay').textContent = team.name;
+    if (state.currentTechnician) {
+        document.getElementById('techDisplay').textContent = state.currentTechnician;
+        document.getElementById('technicianGroup').style.display = 'block';
+    }
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    populateSupportTeams();
+    handleStatusChange();
+    showScreen('formScreen');
+    document.getElementById('bottomActions').classList.remove('hidden');
+    document.getElementById('langToggle').style.display = 'flex';
+}
+
+function populateSupportTeams() {
+    const sel = document.getElementById('supportTeam');
+    sel.innerHTML = `<option value="">${t('noSupport')}</option>`;
+    const current = state.currentTeam;
+    (state.teamConfig.length > 0 ? state.teamConfig : Object.entries(state.teams).map(([k,v]) => v)).forEach(t => {
+        if (t.name !== current.name) {
+            sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+        }
+    });
+}
+
+// ============================================
+// NAVIGATION & UI
+// ============================================
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const ba = document.getElementById('bottomActions');
+    ba.classList.toggle('hidden', id !== 'formScreen');
+}
+
+function showHistory() {
+    const list = document.getElementById('historyList');
+    if (state.submissions.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:40px 0;">\uD83D\uDCCB No hay envios aun</div>';
+    } else {
+        list.innerHTML = state.submissions.map(s => {
+            return `<div style="padding:12px;background:var(--gray-light);border-radius:8px;margin-bottom:8px;">
+                <div style="font-weight:600;">${s.orderNumber || '\u2014'}</div>
+                <div style="font-size:13px;color:var(--text-secondary);">${s.startTime} - ${s.endTime} | ${s.workStatus}</div>
+            </div>`;
+        }).join('');
+    }
+    showScreen('historyScreen');
+}
+
+function resetForm() {
+    document.getElementById('fieldForm').reset();
+    state.photos = {};
+    state.photoQuality = {};
+    state.currentTechnician = '';
+    document.querySelectorAll('.photo-preview-container').forEach(c => c.innerHTML = '');
+    document.getElementById('gfpPhotosContainer').innerHTML = '';
+    document.getElementById('evidenceSection').style.display = 'none';
+    document.getElementById('successModal').classList.remove('show');
+    if (state.currentTeam) enterForm();
+}
+
+function showAlert(msg, type) {
+    const c = document.getElementById('alertContainer');
+    const el = document.createElement('div');
+    el.className = `alert alert-${type}`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+}
+
+function updateConnectionStatus() {
+    const ind = document.getElementById('connectionIndicator');
+    const txt = document.getElementById('statusText');
+    ind.classList.toggle('offline', !navigator.onLine);
+    txt.textContent = navigator.onLine ? t('online') : t('offline');
+}
+
+// ============================================
+// INIT
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(e => console.log('SW fail:', e));
+
+    document.getElementById('pinKeypad').addEventListener('click', e => {
+        const btn = e.target.closest('.key-btn');
+        if (btn) handleKey(btn.dataset.key);
+    });
+
+    updateConnectionStatus();
+    window.addEventListener('online', () => { updateConnectionStatus(); syncPending(); });
+    window.addEventListener('offline', updateConnectionStatus);
+
+    loadSubmissions();
+    loadConfig();
+});
+
+async function syncPending() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readwrite');
+        const store = tx.objectStore('submissions');
+        const req = store.getAll();
+        req.onsuccess = () => {
+            const pending = (req.result || []).filter(s => s.pendingSync);
+            if (pending.length > 0) {
+                showAlert(`\uD83D\uDD04 Sincronizando ${pending.length} envio(s)...`, 'info');
+                pending.forEach(s => {
+                    s.pendingSync = false;
+                    fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(s) }).catch(() => {});
+                });
+            }
+        };
+    } catch(e) {}
+}
+</script>
+</body>
+</html>

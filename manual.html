@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Field Report - Umtelkomd</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#212121; line-height:1.7; background:#fff; }
+        .container { max-width:800px; margin:0 auto; padding:24px 20px; }
+        .cover { text-align:center; padding:60px 20px; background:linear-gradient(135deg,#00C853,#00B846); color:white; border-radius:12px; margin-bottom:40px; }
+        .cover h1 { font-size:32px; margin-bottom:8px; }
+        .cover h2 { font-size:18px; font-weight:400; color:#fff; margin-bottom:24px; text-shadow:0 1px 2px rgba(0,0,0,0.2); }
+        .cover .version { font-size:14px; opacity:0.7; }
+        .cover .logo { font-size:64px; margin-bottom:16px; }
+        .toc { background:#F5F5F5; border-radius:8px; padding:24px; margin-bottom:32px; }
+        .toc h2 { font-size:18px; margin-bottom:12px; color:#00B846; }
+        .toc ol { padding-left:20px; }
+        .toc li { margin-bottom:6px; }
+        .toc a { color:#1976D2; text-decoration:none; }
+        h2 { font-size:24px; color:#00B846; margin:40px 0 16px; padding-bottom:8px; border-bottom:2px solid #E0E0E0; }
+        h3 { font-size:18px; color:#424242; margin:24px 0 12px; }
+        p { margin-bottom:12px; }
+        ul, ol { margin-bottom:12px; padding-left:24px; }
+        li { margin-bottom:4px; }
+        .step { display:flex; gap:16px; margin-bottom:20px; padding:16px; background:#F5F5F5; border-radius:8px; border-left:4px solid #00C853; }
+        .step-num { min-width:36px; height:36px; background:#00C853; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; flex-shrink:0; }
+        .step-content { flex:1; }
+        .step-content strong { display:block; margin-bottom:4px; }
+        table { width:100%; border-collapse:collapse; margin-bottom:16px; font-size:14px; }
+        th { background:#00C853; color:white; padding:10px 12px; text-align:left; font-weight:600; }
+        td { padding:8px 12px; border-bottom:1px solid #E0E0E0; }
+        tr:nth-child(even) { background:#F5F5F5; }
+        .alert { padding:12px 16px; border-radius:8px; margin-bottom:16px; font-size:14px; }
+        .alert-warning { background:#FFF3E0; border-left:4px solid #F57C00; }
+        .alert-info { background:#E3F2FD; border-left:4px solid #1976D2; }
+        .alert-success { background:#E8F5E9; border-left:4px solid #388E3C; }
+        .alert-danger { background:#FFEBEE; border-left:4px solid #D32F2F; }
+        code { background:#F5F5F5; padding:2px 6px; border-radius:4px; font-size:14px; font-weight:600; }
+        .photo-list { display:grid; gap:8px; margin-bottom:16px; }
+        .photo-item { display:flex; align-items:flex-start; gap:8px; padding:8px 12px; background:#F5F5F5; border-radius:6px; font-size:13px; }
+        .photo-item .num { min-width:24px; height:24px; background:#00C853; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+        .photo-item.optional .num { background:#9E9E9E; }
+        .badge { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+        .badge-green { background:#E8F5E9; color:#388E3C; }
+        .badge-red { background:#FFEBEE; color:#D32F2F; }
+        .badge-orange { background:#FFF3E0; color:#F57C00; }
+        .badge-blue { background:#E3F2FD; color:#1976D2; }
+        hr { border:none; border-top:1px solid #E0E0E0; margin:32px 0; }
+        .lang-bar { position:sticky; top:0; z-index:100; background:#fff; padding:12px 0; border-bottom:1px solid #E0E0E0; text-align:center; }
+        .lang-bar button { padding:6px 16px; border:2px solid #E0E0E0; border-radius:6px; background:white; font-size:14px; font-weight:600; cursor:pointer; margin:0 4px; }
+        .lang-bar button.active { border-color:#00C853; background:#E8F5E9; color:#00B846; }
+        [data-de] { display:none; }
+        body.de [data-de] { display:block; }
+        body.de [data-es] { display:none; }
+        body.es [data-es] { display:block; }
+        body.es [data-de] { display:none; }
+        /* inline spans */
+        span[data-de] { display:none; }
+        span[data-es] { display:inline; }
+        body.de span[data-de] { display:inline; }
+        body.de span[data-es] { display:none; }
+        /* table rows with lang */
+        tr[data-de] { display:none; }
+        body.de tr[data-de] { display:table-row; }
+        body.de tr[data-es] { display:none; }
+        @media print { .lang-bar { display:none; } h2 { break-before:page; } .step,.photo-item { break-inside:avoid; } }
+    </style>
+</head>
+<body class="es">
+<div class="lang-bar">
+    <button class="active" id="btnEs" onclick="setLang('es')">🇪🇸 Español</button>
+    <button id="btnDe" onclick="setLang('de')">🇩🇪 Deutsch</button>
+</div>
+<script>
+function setLang(l){
+    document.body.className=l;
+    document.getElementById('btnEs').classList.toggle('active',l==='es');
+    document.getElementById('btnDe').classList.toggle('active',l==='de');
+    document.documentElement.lang=l;
+}
+</script>
+<div class="container">
+
+<!-- ==================== COVER ==================== -->
+<div class="cover">
+    <div class="logo">📋</div>
+    <h1>Manual Field Report</h1>
+    <h2 data-es>Aplicación de Registro de Trabajos FTTH</h2>
+    <h2 data-de>FTTH-Arbeitsbericht-Anwendung</h2>
+    <p>Umtelkomd — Glasfaser Plus & Westconnect</p>
+    <div class="version" data-es>Versión 2.0 — Febrero 2026</div>
+    <div class="version" data-de>Version 2.0 — Februar 2026</div>
+</div>
+
+<!-- ==================== TOC ==================== -->
+<div class="toc">
+    <h2 data-es>Contenido</h2><h2 data-de>Inhalt</h2>
+    <ol data-es>
+        <li><a href="#s1">Instalación en el Teléfono</a></li>
+        <li><a href="#s2">Acceso con PIN</a></li>
+        <li><a href="#s3">Cómo Llenar el Formulario</a></li>
+        <li><a href="#s4">Estados de Trabajo</a></li>
+        <li><a href="#s5">Glasfaser Plus — Fotos por Tipo de Edificio</a></li>
+        <li><a href="#s6">Westconnect — Protocolos y Fotos por Vivienda</a></li>
+        <li><a href="#s7">Cómo Tomar Buenas Fotos</a></li>
+        <li><a href="#s8">Modo Offline</a></li>
+        <li><a href="#s9">Solución de Problemas</a></li>
+        <li><a href="#s10">Tabla de PINs y Equipos</a></li>
+        <li><a href="#s11">Checklist NE4 — Documentación Westconnect</a></li>
+    </ol>
+    <ol data-de>
+        <li><a href="#s1">Installation auf dem Telefon</a></li>
+        <li><a href="#s2">Zugang mit PIN</a></li>
+        <li><a href="#s3">Formular ausfüllen</a></li>
+        <li><a href="#s4">Arbeitsstatus</a></li>
+        <li><a href="#s5">Glasfaser Plus — Fotos nach Gebäudetyp</a></li>
+        <li><a href="#s6">Westconnect — Protokolle und Fotos pro Wohnung</a></li>
+        <li><a href="#s7">Gute Fotos machen</a></li>
+        <li><a href="#s8">Offline-Modus</a></li>
+        <li><a href="#s9">Fehlerbehebung</a></li>
+        <li><a href="#s10">PIN- und Team-Tabelle</a></li>
+        <li><a href="#s11">Checkliste NE4 — Westconnect-Dokumentation</a></li>
+    </ol>
+</div>
+
+<!-- ==================== 1. INSTALLATION ==================== -->
+<h2 id="s1"><span data-es>1. Instalación en el Teléfono</span><span data-de>1. Installation auf dem Telefon</span></h2>
+
+<h3><span data-es>Android (Chrome) — Recomendado para técnicos</span><span data-de>Android (Chrome) — Empfohlen für Techniker</span></h3>
+
+<div class="step"><div class="step-num">1</div><div class="step-content">
+    <strong data-es>Abrir el enlace en Chrome</strong><strong data-de>Link in Chrome öffnen</strong>
+    <span data-es>Ir a:</span><span data-de>Gehe zu:</span> <code>https://jarl9801.github.io/field-report/</code>
+</div></div>
+
+<div class="step"><div class="step-num">2</div><div class="step-content">
+    <strong data-es>Instalar como aplicación</strong><strong data-de>Als App installieren</strong>
+    <span data-es>Tocar los 3 puntos (⋮) → <b>"Instalar aplicación"</b> o "Agregar a pantalla de inicio"</span>
+    <span data-de>Auf die 3 Punkte (⋮) tippen → <b>"App installieren"</b> oder "Zum Startbildschirm hinzufügen"</span>
+</div></div>
+
+<div class="step"><div class="step-num">3</div><div class="step-content">
+    <strong data-es>Listo</strong><strong data-de>Fertig</strong>
+    <span data-es>Aparecerá el icono <b>"Field Report"</b> en la pantalla de inicio. Abrir desde ahí.</span>
+    <span data-de>Das Symbol <b>"Field Report"</b> erscheint auf dem Startbildschirm. Von dort öffnen.</span>
+</div></div>
+
+<div class="alert alert-warning">
+    <span data-es>⚠️ <b>Importante:</b> Asegúrese de dar permisos de <b>cámara</b> y <b>ubicación GPS</b> a Chrome/la app.</span>
+    <span data-de>⚠️ <b>Wichtig:</b> Stellen Sie sicher, dass Sie Chrome/der App <b>Kamera</b>- und <b>GPS-Standort</b>-Berechtigungen erteilen.</span>
+</div>
+
+<h3>iPhone (Safari)</h3>
+
+<div class="step"><div class="step-num">1</div><div class="step-content">
+    <strong data-es>Abrir en Safari (NO Chrome)</strong><strong data-de>In Safari öffnen (NICHT Chrome)</strong>
+    <span data-es>Ir a:</span><span data-de>Gehe zu:</span> <code>https://jarl9801.github.io/field-report/</code>
+</div></div>
+
+<div class="step"><div class="step-num">2</div><div class="step-content">
+    <strong data-es>Tocar el botón Compartir (↗)</strong><strong data-de>Teilen-Button (↗) antippen</strong>
+    <span data-es>→ <b>"Agregar a pantalla de inicio"</b></span>
+    <span data-de>→ <b>"Zum Home-Bildschirm"</b></span>
+</div></div>
+
+<div class="step"><div class="step-num">3</div><div class="step-content">
+    <strong data-es>Nombrar "Field Report" y confirmar. Listo.</strong>
+    <strong data-de>"Field Report" benennen und bestätigen. Fertig.</strong>
+</div></div>
+
+<hr>
+
+<!-- ==================== 2. PIN ==================== -->
+<h2 id="s2"><span data-es>2. Acceso con PIN</span><span data-de>2. Zugang mit PIN</span></h2>
+
+<p data-es>Al abrir la app se muestra un teclado numérico. Cada equipo tiene un <b>PIN de 4 dígitos</b> asignado.</p>
+<p data-de>Beim Öffnen der App erscheint ein Nummernblock. Jedes Team hat eine zugewiesene <b>4-stellige PIN</b>.</p>
+
+<div class="step"><div class="step-num">1</div><div class="step-content">
+    <strong data-es>Ingrese su PIN de 4 dígitos</strong><strong data-de>Geben Sie Ihre 4-stellige PIN ein</strong>
+    <span data-es>El PIN identifica automáticamente su equipo y el cliente (Glasfaser Plus o Westconnect).</span>
+    <span data-de>Die PIN identifiziert automatisch Ihr Team und den Kunden (Glasfaser Plus oder Westconnect).</span>
+</div></div>
+
+<div class="step"><div class="step-num">2</div><div class="step-content">
+    <strong data-es>Seleccione su nombre</strong><strong data-de>Wählen Sie Ihren Namen</strong>
+    <span data-es>Esto identifica quién realizó el trabajo.</span>
+    <span data-de>So wird festgestellt, wer die Arbeit durchgeführt hat.</span>
+</div></div>
+
+<div class="step"><div class="step-num">3</div><div class="step-content">
+    <strong data-es>Se abre el formulario</strong><strong data-de>Das Formular wird geöffnet</strong>
+    <span data-es>El cliente y equipo se pre-llenan automáticamente.</span>
+    <span data-de>Kunde und Team werden automatisch vorausgefüllt.</span>
+</div></div>
+
+<div class="alert alert-info">
+    <span data-es>💡 Si ingresa un PIN incorrecto, aparece un mensaje de error. Si no conoce su PIN, consulte a su supervisor.</span>
+    <span data-de>💡 Bei falscher PIN erscheint eine Fehlermeldung. Wenn Sie Ihre PIN nicht kennen, fragen Sie Ihren Vorgesetzten.</span>
+</div>
+
+<hr>
+
+<!-- ==================== 3. FORMULARIO ==================== -->
+<h2 id="s3"><span data-es>3. Cómo Llenar el Formulario</span><span data-de>3. Formular ausfüllen</span></h2>
+
+<h3><span data-es>Campos obligatorios (todos los reportes)</span><span data-de>Pflichtfelder (alle Berichte)</span></h3>
+
+<table data-es>
+    <tr><th>Campo</th><th>Descripción</th></tr>
+    <tr><td><b>Cliente/Operador</b></td><td>Se llena automático según PIN</td></tr>
+    <tr><td><b>Equipo</b></td><td>Se llena automático según PIN</td></tr>
+    <tr><td><b>Equipo de Apoyo</b></td><td>Opcional — si otro equipo ayudó</td></tr>
+    <tr><td><b>Fecha</b></td><td>Se llena con la fecha de hoy (se puede cambiar)</td></tr>
+    <tr><td><b>Hora Inicio</b></td><td>Hora en que comenzó el trabajo</td></tr>
+    <tr><td><b>Hora Fin</b></td><td>Hora en que terminó el trabajo</td></tr>
+    <tr><td><b>Estado del Trabajo</b></td><td>Ver sección 4 — Estados</td></tr>
+    <tr><td><b>Observaciones</b></td><td>Obligatorio para ciertos estados</td></tr>
+</table>
+<table data-de>
+    <tr><th>Feld</th><th>Beschreibung</th></tr>
+    <tr><td><b>Kunde/Betreiber</b></td><td>Wird automatisch nach PIN ausgefüllt</td></tr>
+    <tr><td><b>Team</b></td><td>Wird automatisch nach PIN ausgefüllt</td></tr>
+    <tr><td><b>Unterstützungsteam</b></td><td>Optional — wenn ein anderes Team geholfen hat</td></tr>
+    <tr><td><b>Datum</b></td><td>Wird mit dem heutigen Datum ausgefüllt (änderbar)</td></tr>
+    <tr><td><b>Startzeit</b></td><td>Uhrzeit des Arbeitsbeginns</td></tr>
+    <tr><td><b>Endzeit</b></td><td>Uhrzeit des Arbeitsendes</td></tr>
+    <tr><td><b>Arbeitsstatus</b></td><td>Siehe Abschnitt 4 — Status</td></tr>
+    <tr><td><b>Anmerkungen</b></td><td>Pflicht für bestimmte Status</td></tr>
+</table>
+
+<h3><span data-es>Campos adicionales según cliente</span><span data-de>Zusätzliche Felder nach Kunde</span></h3>
+
+<table data-es>
+    <tr><th>Glasfaser Plus</th><th>Westconnect</th></tr>
+    <tr><td>Nº de Orden</td><td>Nº HA</td></tr>
+    <tr><td>Tipo de Edificio (SDU/MDU)</td><td>Unidades de Vivienda (WE)</td></tr>
+    <tr><td>—</td><td>Variante de Ejecución</td></tr>
+    <tr><td>—</td><td>4 Protocolos</td></tr>
+</table>
+<table data-de>
+    <tr><th>Glasfaser Plus</th><th>Westconnect</th></tr>
+    <tr><td>Auftragsnr.</td><td>HA-Nr.</td></tr>
+    <tr><td>Gebäudetyp (SDU/MDU)</td><td>Wohneinheiten (WE)</td></tr>
+    <tr><td>—</td><td>Ausführungsvariante</td></tr>
+    <tr><td>—</td><td>4 Protokolle</td></tr>
+</table>
+
+<hr>
+
+<!-- ==================== 4. ESTADOS ==================== -->
+<h2 id="s4"><span data-es>4. Estados de Trabajo</span><span data-de>4. Arbeitsstatus</span></h2>
+
+<table data-es>
+    <tr><th>Estado</th><th>Cuándo usar</th><th>Requiere</th></tr>
+    <tr><td><span class="badge badge-green">Finalizada OK</span></td><td>Trabajo completado exitosamente</td><td>TODAS las fotos obligatorias según cliente</td></tr>
+    <tr><td><span class="badge badge-blue">Orden Preinstalada</span></td><td>Se hizo la preinstalación, falta activación</td><td>Mismas fotos que Finalizada OK</td></tr>
+    <tr><td><span class="badge badge-orange">Cliente Ausente</span></td><td>El cliente no estaba en casa</td><td>1 foto (flyer en buzón/puerta) + comentario</td></tr>
+    <tr><td><span class="badge badge-orange">Cliente Estados Previos</span></td><td>No se puede trabajar (falta soplado, topo, etc.)</td><td>1 foto del problema + comentario</td></tr>
+    <tr><td><span class="badge badge-orange">Cliente Recitar</span></td><td>El cliente pide otra cita</td><td>1 foto (buzón/vivienda) + comentario</td></tr>
+    <tr><td><span class="badge badge-orange">Paralizada</span></td><td>No se puede finalizar, hay que volver</td><td>1 foto + comentario</td></tr>
+    <tr><td><span class="badge badge-red">Finalizada No OK</span></td><td>Se instaló pero no funciona (sincronismo, etc.)</td><td>Fotos del problema + comentario detallado</td></tr>
+</table>
+<table data-de>
+    <tr><th>Status</th><th>Wann verwenden</th><th>Erfordert</th></tr>
+    <tr><td><span class="badge badge-green">Abgeschlossen OK</span></td><td>Arbeit erfolgreich abgeschlossen</td><td>ALLE Pflichtfotos nach Kunde</td></tr>
+    <tr><td><span class="badge badge-blue">Vorinstalliert</span></td><td>Vorinstallation durchgeführt, Aktivierung steht aus</td><td>Gleiche Fotos wie Abgeschlossen OK</td></tr>
+    <tr><td><span class="badge badge-orange">Kunde Abwesend</span></td><td>Kunde war nicht zu Hause</td><td>1 Foto (Flyer am Briefkasten/Tür) + Kommentar</td></tr>
+    <tr><td><span class="badge badge-orange">Vorherige Zustände</span></td><td>Arbeit nicht möglich (fehlende Einblasung, etc.)</td><td>1 Foto des Problems + Kommentar</td></tr>
+    <tr><td><span class="badge badge-orange">Kunde Umterminierung</span></td><td>Kunde bittet um neuen Termin</td><td>1 Foto (Briefkasten/Wohnung) + Kommentar</td></tr>
+    <tr><td><span class="badge badge-orange">Pausiert</span></td><td>Kann nicht abgeschlossen werden, Rückkehr nötig</td><td>1 Foto + Kommentar</td></tr>
+    <tr><td><span class="badge badge-red">Abgeschlossen Nicht OK</span></td><td>Installiert aber funktioniert nicht (Synchronisierung, etc.)</td><td>Fotos des Problems + detaillierter Kommentar</td></tr>
+</table>
+
+<div class="alert alert-danger">
+    <span data-es>🚫 <b>Sin foto y comentario no se puede enviar.</b> La app no permite avanzar si faltan los requisitos del estado seleccionado.</span>
+    <span data-de>🚫 <b>Ohne Foto und Kommentar kann nicht gesendet werden.</b> Die App lässt nicht fortfahren, wenn die Anforderungen des gewählten Status fehlen.</span>
+</div>
+
+<hr>
+
+<!-- ==================== 5. GFP ==================== -->
+<h2 id="s5"><span data-es>5. Glasfaser Plus — Fotos por Tipo de Edificio</span><span data-de>5. Glasfaser Plus — Fotos nach Gebäudetyp</span></h2>
+
+<p data-es>Al seleccionar <b>"Finalizada OK"</b> o <b>"Orden Preinstalada"</b>, la app pide fotos según el tipo de edificio seleccionado.</p>
+<p data-de>Bei Auswahl von <b>"Abgeschlossen OK"</b> oder <b>"Vorinstalliert"</b> fordert die App Fotos je nach Gebäudetyp an.</p>
+
+<h3><span data-es>Tipos de Edificio</span><span data-de>Gebäudetypen</span></h3>
+<table data-es>
+    <tr><th>Tipo</th><th>Descripción</th></tr>
+    <tr><td><b>SDU(1): AP/TA</b></td><td>1 vivienda simple — solo ONT/TA</td></tr>
+    <tr><td><b>SDU(1): AP + TA</b></td><td>1 vivienda con AP separado</td></tr>
+    <tr><td><b>SDU(2)</b></td><td>2 viviendas</td></tr>
+    <tr><td><b>MDU(3+)</b></td><td>3 o más viviendas (multifamiliar)</td></tr>
+</table>
+<table data-de>
+    <tr><th>Typ</th><th>Beschreibung</th></tr>
+    <tr><td><b>SDU(1): AP/TA</b></td><td>1 Wohnung einfach — nur ONT/TA</td></tr>
+    <tr><td><b>SDU(1): AP + TA</b></td><td>1 Wohnung mit separatem AP</td></tr>
+    <tr><td><b>SDU(2)</b></td><td>2 Wohnungen</td></tr>
+    <tr><td><b>MDU(3+)</b></td><td>3 oder mehr Wohnungen (Mehrfamilienhaus)</td></tr>
+</table>
+
+<h3><span data-es>Fotos siempre obligatorias (todos los tipos)</span><span data-de>Immer Pflichtfotos (alle Typen)</span></h3>
+<div class="photo-list">
+    <div class="photo-item"><div class="num">1</div>4.1 ONT/TA <span data-es>Abierta — Entrada cable</span><span data-de>Geöffnet — Kabeleinführung</span></div>
+    <div class="photo-item"><div class="num">2</div>4.2 ONT/TA <span data-es>Abierta — Bandeja Fusión</span><span data-de>Geöffnet — Spleißkassette</span></div>
+    <div class="photo-item"><div class="num">3</div>4.3 ONT/TA <span data-es>Cerrada + Etiqueta Home ID (QR)</span><span data-de>Geschlossen + Home-ID-Aufkleber (QR)</span></div>
+    <div class="photo-item"><div class="num">4</div>6.1 <span data-es>Captura Activación en App Cliente</span><span data-de>Screenshot Aktivierung in Kunden-App</span></div>
+    <div class="photo-item"><div class="num">5</div>7.1 Patch <span data-es>en</span><span data-de>im</span> POP/NVT</div>
+    <div class="photo-item"><div class="num">6</div>8.1 <span data-es>Luz Roja — Fibras NVT a OTB/AP</span><span data-de>Rotlicht — Fasern NVT zu OTB/AP</span></div>
+    <div class="photo-item"><div class="num">7</div>9.1 <span data-es>Fusión DP/NVT — Bandeja + Etiqueta</span><span data-de>Spleiß DP/NVT — Kassette + Beschriftung</span></div>
+</div>
+
+<h3><span data-es>Fotos adicionales — SDU(1) AP+TA, SDU(2), MDU(3+)</span><span data-de>Zusätzliche Fotos — SDU(1) AP+TA, SDU(2), MDU(3+)</span></h3>
+<p data-es>Estos tipos requieren además documentar la <b>Obra Civil</b> y <b>OTB/AP</b>:</p>
+<p data-de>Diese Typen erfordern zusätzlich die Dokumentation von <b>Tiefbau</b> und <b>OTB/AP</b>:</p>
+<div class="photo-list">
+    <div class="photo-item"><div class="num">+</div>1.1 <span data-es>Previo trabajos — Pasamuros Exterior</span><span data-de>Vor Arbeiten — Wanddurchführung Außen</span></div>
+    <div class="photo-item"><div class="num">+</div>1.2 <span data-es>Previo trabajos — Pasamuros Interior</span><span data-de>Vor Arbeiten — Wanddurchführung Innen</span></div>
+    <div class="photo-item"><div class="num">+</div>2.1 <span data-es>Post trabajos — Pasamuros Exterior</span><span data-de>Nach Arbeiten — Wanddurchführung Außen</span></div>
+    <div class="photo-item"><div class="num">+</div>2.2 <span data-es>Post trabajos — Pasamuros Interior</span><span data-de>Nach Arbeiten — Wanddurchführung Innen</span></div>
+    <div class="photo-item"><div class="num">+</div>3.1 OTB/AP <span data-es>Abierta — Entrada cable + splitter</span><span data-de>Geöffnet — Kabeleinführung + Splitter</span></div>
+    <div class="photo-item"><div class="num">+</div>3.2 OTB/AP <span data-es>Abierta — Bandeja Fusión</span><span data-de>Geöffnet — Spleißkassette</span></div>
+    <div class="photo-item"><div class="num">+</div>3.3 OTB/AP <span data-es>Cerrada + Etiqueta KLS ID</span><span data-de>Geschlossen + KLS-ID-Aufkleber</span></div>
+</div>
+
+<h3><span data-es>Fotos de cableado interior (según tipo)</span><span data-de>Fotos der Innenverkabelung (nach Typ)</span></h3>
+<table>
+    <tr><th>Foto</th><th>SDU(1) AP+TA</th><th>SDU(2)</th><th>MDU(3+)</th></tr>
+    <tr><td>5.1 <span data-es>Canalizado OTB/AP → Entrada Vivienda</span><span data-de>Kanalführung OTB/AP → Wohnungseingang</span></td><td>—</td><td>✅</td><td>—</td></tr>
+    <tr><td>5.2 <span data-es>Canalizado OTB/AP → SammelPunkt</span><span data-de>Kanalführung OTB/AP → Sammelpunkt</span></td><td>—</td><td>—</td><td>✅</td></tr>
+    <tr><td>5.3 <span data-es>Canalizado SammelPunkt → Entrada</span><span data-de>Kanalführung Sammelpunkt → Eingang</span></td><td>—</td><td>—</td><td>✅</td></tr>
+    <tr><td>5.4 <span data-es>Cableado OTB/AP → Entrada Vivienda</span><span data-de>Verkabelung OTB/AP → Wohnungseingang</span></td><td>✅</td><td>✅</td><td>—</td></tr>
+    <tr><td>5.5 <span data-es>Cableado OTB/AP → SammelPunkt</span><span data-de>Verkabelung OTB/AP → Sammelpunkt</span></td><td>—</td><td>—</td><td>✅</td></tr>
+    <tr><td>5.6 <span data-es>Cableado SammelPunkt → Entrada</span><span data-de>Verkabelung Sammelpunkt → Eingang</span></td><td>—</td><td>—</td><td>✅</td></tr>
+    <tr><td>5.7 <span data-es>Cableado Entrada → ONT/TA</span><span data-de>Verkabelung Eingang → ONT/TA</span></td><td>✅</td><td>✅</td><td>✅</td></tr>
+</table>
+
+<hr>
+
+<!-- ==================== 6. WESTCONNECT ==================== -->
+<h2 id="s6"><span data-es>6. Westconnect — Protocolos y Fotos por Vivienda</span><span data-de>6. Westconnect — Protokolle und Fotos pro Wohnung</span></h2>
+
+<h3><span data-es>Datos Obligatorios</span><span data-de>Pflichtdaten</span></h3>
+<ul data-es>
+    <li><b>Nº HA</b> — Número de la Hausanschluss</li>
+    <li><b>Unidades de Vivienda (WE)</b> — Cuántas viviendas tiene el edificio</li>
+    <li><b>Variante de Ejecución</b> — Cómo se hizo la instalación:
+        <ul><li>Tuberías vacías / Conductos chimenea</li><li>Montante interior / vivienda</li><li>Montante de pasillo</li><li>Montante exterior fachada</li></ul>
+    </li>
+</ul>
+<ul data-de>
+    <li><b>HA-Nr.</b> — Nummer des Hausanschlusses</li>
+    <li><b>Wohneinheiten (WE)</b> — Anzahl der Wohnungen im Gebäude</li>
+    <li><b>Ausführungsvariante</b> — Art der Installation:
+        <ul><li>Leerrohre / Schornsteinzüge</li><li>Innensteigleitung / Wohnungssteigleitung</li><li>Flursteigleitung</li><li>Außensteigleitung Fassade</li></ul>
+    </li>
+</ul>
+
+<h3><span data-es>4 Protocolos (OBLIGATORIOS para Finalizada OK)</span><span data-de>4 Protokolle (PFLICHT für Abgeschlossen OK)</span></h3>
+
+<div class="alert alert-danger">
+    <span data-es>🚫 Los 4 protocolos deben estar marcados como completados. Sin los 4, no se puede enviar el reporte.</span>
+    <span data-de>🚫 Alle 4 Protokolle müssen als abgeschlossen markiert sein. Ohne alle 4 kann der Bericht nicht gesendet werden.</span>
+</div>
+
+<table data-es>
+    <tr><th>#</th><th>Protocolo</th><th>Debe incluir</th></tr>
+    <tr><td>1</td><td><b>Auskundungsprotokoll</b><br>(Exploración)</td><td>Firmado por técnico responsable y propietario. Claro y legible. Todas las fechas y medidas.</td></tr>
+    <tr><td>2</td><td><b>Installationsprotokoll</b><br>(Instalación)</td><td>Nº contrato (Vertragsnummer), pegatina Home-ID, serial ONT correcto, fibra asignada por WE, GV-Port (½, ¾, etc.)</td></tr>
+    <tr><td>3</td><td><b>Messprotokoll</b><br>(Mediciones)</td><td>Mediciones de TODAS las WE, incluso las conectadas directo al APL. GE: mediciones de ambas fibras.</td></tr>
+    <tr><td>4</td><td><b>Farbcodierungsprotokoll</b><br>(Código de colores)</td><td>Todas las WE documentadas. WE: Rot + reserva en Weiß. GE: Rot / Grün. Cantidad correcta de WE y GE.</td></tr>
+</table>
+<table data-de>
+    <tr><th>#</th><th>Protokoll</th><th>Muss enthalten</th></tr>
+    <tr><td>1</td><td><b>Auskundungsprotokoll</b><br>(Erkundung)</td><td>Unterschrieben von verantwortlichem Techniker und Eigentümer. Klar und leserlich. Alle Daten und Maße.</td></tr>
+    <tr><td>2</td><td><b>Installationsprotokoll</b></td><td>Vertragsnummer, Home-ID-Aufkleber, korrekte ONT-Seriennummer, zugewiesene Faser pro WE, GV-Port (½, ¾, etc.)</td></tr>
+    <tr><td>3</td><td><b>Messprotokoll</b></td><td>Messungen ALLER WE, auch die direkt am APL angeschlossenen. GE: Messungen beider Fasern.</td></tr>
+    <tr><td>4</td><td><b>Farbcodierungsprotokoll</b></td><td>Alle WE dokumentiert. WE: Rot + Reserve in Weiß. GE: Rot / Grün. Korrekte Anzahl WE und GE.</td></tr>
+</table>
+
+<h3><span data-es>Fotos Sótano (Keller) — 10 obligatorias + 1 opcional</span><span data-de>Fotos Keller — 10 Pflicht + 1 optional</span></h3>
+<div class="photo-list">
+    <div class="photo-item"><div class="num">1</div><span data-es>Conexión GF-AP / GF-GV (patchkabel en canal)</span><span data-de>Anschluss GF-AP / GF-GV (Patchkabel im Kanal)</span></div>
+    <div class="photo-item"><div class="num">2</div><span data-es>Canal/Tubo entre GF-AP y GF-GV</span><span data-de>Kanal/Rohr zwischen GF-AP und GF-GV</span></div>
+    <div class="photo-item"><div class="num">3</div><span data-es>GF-AP Abierto ANTES de trabajos NE4</span><span data-de>GF-AP Geöffnet VOR NE4-Arbeiten</span></div>
+    <div class="photo-item"><div class="num">4</div><span data-es>GF-AP Abierto DESPUÉS de trabajos NE4</span><span data-de>GF-AP Geöffnet NACH NE4-Arbeiten</span></div>
+    <div class="photo-item"><div class="num">5</div><span data-es>GF-AP Cerrado y Precintado</span><span data-de>GF-AP Geschlossen und Versiegelt</span></div>
+    <div class="photo-item"><div class="num">6</div><span data-es>Interior GF-GV — Cable Patch desde GF-AP</span><span data-de>Innenansicht GF-GV — Patchkabel von GF-AP</span></div>
+    <div class="photo-item"><div class="num">7</div><span data-es>Interior GF-GV — Acoplamientos fibra operativa</span><span data-de>Innenansicht GF-GV — Betriebsfaser-Kupplungen</span></div>
+    <div class="photo-item"><div class="num">8</div><span data-es>Interior GF-GV — Empalme (crimp) y bandejas</span><span data-de>Innenansicht GF-GV — Spleiß (Crimp) und Kassetten</span></div>
+    <div class="photo-item"><div class="num">9</div><span data-es>Interior GF-GV — Salida de puertos (1,3,5,7...)</span><span data-de>Innenansicht GF-GV — Portausgang (1,3,5,7...)</span></div>
+    <div class="photo-item"><div class="num">10</div><span data-es>GF-GV Cerrado con canal saliente</span><span data-de>GF-GV Geschlossen mit ausgehendem Kanal</span></div>
+    <div class="photo-item optional"><div class="num">○</div><span data-es>Sello Cortafuegos sótano (si se instaló)</span><span data-de>Brandschutzversiegelung Keller (falls installiert)</span></div>
+</div>
+
+<h3><span data-es>Fotos por cada Vivienda (WE) — 6 obligatorias + 1 opcional</span><span data-de>Fotos pro Wohnung (WE) — 6 Pflicht + 1 optional</span></h3>
+<p data-es>La app genera pestañas <b>WE-01, WE-02, WE-03...</b> según el número de unidades. Cada vivienda necesita:</p>
+<p data-de>Die App generiert Tabs <b>WE-01, WE-02, WE-03...</b> nach Anzahl der Einheiten. Jede Wohnung benötigt:</p>
+<div class="photo-list">
+    <div class="photo-item"><div class="num">1</div><span data-es>GF-TA con pegatinas Home ID + publicidad</span><span data-de>GF-TA mit Home-ID-Aufklebern + Werbung</span></div>
+    <div class="photo-item"><div class="num">2</div><span data-es>Cable patch GF-TA ↔ ONT</span><span data-de>Patchkabel GF-TA ↔ ONT</span></div>
+    <div class="photo-item"><div class="num">3</div><span data-es>ONT funcionando (LEDs visibles)</span><span data-de>ONT in Betrieb (LEDs sichtbar)</span></div>
+    <div class="photo-item"><div class="num">4</div><span data-es>Canal superficial hasta GF-TA</span><span data-de>Aufputzkanal bis GF-TA</span></div>
+    <div class="photo-item"><div class="num">5</div><span data-es>Nº Serie ONT (empieza por ALCL...)</span><span data-de>ONT-Seriennr. (beginnt mit ALCL...)</span></div>
+    <div class="photo-item"><div class="num">6</div><span data-es>Medición de fibra</span><span data-de>Fasermessung</span></div>
+    <div class="photo-item optional"><div class="num">○</div><span data-es>Sobrelongitudes (si hubo cable extra o altura >2.65m)</span><span data-de>Überlängen (bei zusätzlichem Kabel oder Höhe >2,65m)</span></div>
+</div>
+
+<div class="alert alert-warning">
+    <span data-es>⚠️ <b>Cada WE debe tener sus propias fotos.</b> La pestaña de cada WE cambia a verde ✅ cuando todas las fotos obligatorias están cargadas.</span>
+    <span data-de>⚠️ <b>Jede WE muss eigene Fotos haben.</b> Der Tab jeder WE wird grün ✅, wenn alle Pflichtfotos hochgeladen sind.</span>
+</div>
+
+<h3><span data-es>Fotos Exterior/Pasillo — 1 obligatoria + 1 opcional</span><span data-de>Fotos Außen/Flur — 1 Pflicht + 1 optional</span></h3>
+<div class="photo-list">
+    <div class="photo-item"><div class="num">1</div><span data-es>Canal en pasillo / escalera / exterior</span><span data-de>Kanal im Flur / Treppenhaus / Außenbereich</span></div>
+    <div class="photo-item optional"><div class="num">○</div><span data-es>Sello Cortafuegos exterior (si se instaló)</span><span data-de>Brandschutzversiegelung Außen (falls installiert)</span></div>
+</div>
+
+<h3><span data-es>Resumen: Total de fotos Westconnect (Finalizada OK)</span><span data-de>Zusammenfassung: Gesamtfotos Westconnect (Abgeschlossen OK)</span></h3>
+<div class="alert alert-info">
+    <span data-es>📸 Para un edificio con 5 WE: <b>10 (sótano) + 30 (6×5 WE) + 1 (exterior) = 41 fotos obligatorias</b></span>
+    <span data-de>📸 Für ein Gebäude mit 5 WE: <b>10 (Keller) + 30 (6×5 WE) + 1 (Außen) = 41 Pflichtfotos</b></span>
+</div>
+
+<hr>
+
+<!-- ==================== 7. FOTOS ==================== -->
+<h2 id="s7"><span data-es>7. Cómo Tomar Buenas Fotos</span><span data-de>7. Gute Fotos machen</span></h2>
+
+<div class="alert alert-success">
+    <span data-es>✅ <b>Regla de oro:</b> Una buena foto en alta resolución puede cubrir varios criterios. Calidad > cantidad.</span>
+    <span data-de>✅ <b>Goldene Regel:</b> Ein gutes hochauflösendes Foto kann mehrere Kriterien abdecken. Qualität > Quantität.</span>
+</div>
+
+<h3><span data-es>Requisitos de fotos</span><span data-de>Fotoanforderungen</span></h3>
+<ul data-es>
+    <li>📷 <b>Usar la cámara del teléfono</b> a través de la app (botón "📷 Foto")</li>
+    <li>🔍 <b>Nítidas y bien enfocadas</b> — se deben leer etiquetas y números de serie</li>
+    <li>💡 <b>Buena iluminación</b> — usar linterna si es necesario en sótanos</li>
+    <li>📐 <b>Mostrar el trabajo completo</b> — no solo un detalle</li>
+    <li>🏷️ <b>Etiquetas legibles</b> — Home ID, KLS ID, serial ONT deben leerse en la foto</li>
+    <li>📍 <b>GPS activo</b> — la app registra la ubicación automáticamente</li>
+</ul>
+<ul data-de>
+    <li>📷 <b>Telefonkamera verwenden</b> über die App (Button "📷 Foto")</li>
+    <li>🔍 <b>Scharf und gut fokussiert</b> — Aufkleber und Seriennummern müssen lesbar sein</li>
+    <li>💡 <b>Gute Beleuchtung</b> — Taschenlampe im Keller verwenden wenn nötig</li>
+    <li>📐 <b>Gesamte Arbeit zeigen</b> — nicht nur ein Detail</li>
+    <li>🏷️ <b>Lesbare Beschriftungen</b> — Home-ID, KLS-ID, ONT-Seriennr. müssen auf dem Foto lesbar sein</li>
+    <li>📍 <b>GPS aktiv</b> — die App erfasst den Standort automatisch</li>
+</ul>
+
+<div class="alert alert-danger">
+    <span data-es>🚫 <b>NO usar:</b> Capturas de pantalla · Fotos de WhatsApp (pierden GPS) · Fotos borrosas o muy oscuras</span>
+    <span data-de>🚫 <b>NICHT verwenden:</b> Screenshots · WhatsApp-Fotos (verlieren GPS) · Unscharfe oder zu dunkle Fotos</span>
+</div>
+
+<h3><span data-es>Consejos extra</span><span data-de>Zusätzliche Tipps</span></h3>
+<ul data-es>
+    <li>Hacer fotos de más por si hay reclamaciones de roturas</li>
+    <li>Si algo estaba roto AL LLEGAR, fotografiar antes de tocar nada</li>
+    <li>Documentar canaletas, sellos cortafuegos y pasamuros con detalle</li>
+    <li>Los LEDs del ONT deben ser visibles en la foto</li>
+</ul>
+<ul data-de>
+    <li>Zusätzliche Fotos machen für mögliche Schadensreklamationen</li>
+    <li>Wenn etwas BEI ANKUNFT beschädigt war, vor dem Anfassen fotografieren</li>
+    <li>Kabelkanäle, Brandschutzversiegelungen und Wanddurchführungen detailliert dokumentieren</li>
+    <li>ONT-LEDs müssen auf dem Foto sichtbar sein</li>
+</ul>
+
+<hr>
+
+<!-- ==================== 8. OFFLINE ==================== -->
+<h2 id="s8"><span data-es>8. Modo Offline</span><span data-de>8. Offline-Modus</span></h2>
+
+<p data-es>La app funciona <b>sin conexión a internet</b>:</p>
+<p data-de>Die App funktioniert <b>ohne Internetverbindung</b>:</p>
+<ul>
+    <li>🟢 <span data-es>Indicador verde = Online</span><span data-de>Grüner Indikator = Online</span></li>
+    <li>🟠 <span data-es>Indicador naranja = Sin conexión</span><span data-de>Orangener Indikator = Keine Verbindung</span></li>
+</ul>
+
+<h3><span data-es>¿Qué pasa si no hay internet?</span><span data-de>Was passiert ohne Internet?</span></h3>
+
+<div class="step"><div class="step-num">1</div><div class="step-content">
+    <strong data-es>Llene el formulario normalmente</strong><strong data-de>Füllen Sie das Formular normal aus</strong>
+    <span data-es>Todo funciona igual — fotos, campos, validación.</span>
+    <span data-de>Alles funktioniert gleich — Fotos, Felder, Validierung.</span>
+</div></div>
+
+<div class="step"><div class="step-num">2</div><div class="step-content">
+    <strong data-es>Pulse "Enviar"</strong><strong data-de>Drücken Sie "Einreichen"</strong>
+    <span data-es>La app guarda todo <b>localmente</b> en el teléfono.</span>
+    <span data-de>Die App speichert alles <b>lokal</b> auf dem Telefon.</span>
+</div></div>
+
+<div class="step"><div class="step-num">3</div><div class="step-content">
+    <strong data-es>Cuando vuelva la conexión</strong><strong data-de>Wenn die Verbindung zurückkehrt</strong>
+    <span data-es>Los datos se envían automáticamente al servidor. Verá un mensaje de sincronización.</span>
+    <span data-de>Die Daten werden automatisch an den Server gesendet. Sie sehen eine Synchronisierungsmeldung.</span>
+</div></div>
+
+<div class="alert alert-info">
+    <span data-es>💡 Puede seguir llenando nuevos reportes sin esperar conexión. Todos se guardan y envían cuando hay internet.</span>
+    <span data-de>💡 Sie können weiter neue Berichte ausfüllen, ohne auf Verbindung zu warten. Alle werden gespeichert und bei Internet gesendet.</span>
+</div>
+
+<hr>
+
+<!-- ==================== 9. PROBLEMAS ==================== -->
+<h2 id="s9"><span data-es>9. Solución de Problemas</span><span data-de>9. Fehlerbehebung</span></h2>
+
+<table data-es>
+    <tr><th>Problema</th><th>Solución</th></tr>
+    <tr><td>No puedo tomar fotos</td><td>Verificar permisos de cámara en Ajustes → Chrome/Safari → Cámara</td></tr>
+    <tr><td>El PIN no funciona</td><td>Verificar que usa el PIN correcto. Si cambió, consulte al supervisor.</td></tr>
+    <tr><td>No me deja enviar</td><td>Revise los campos en rojo. Faltan fotos o datos obligatorios.</td></tr>
+    <tr><td>La app va lenta</td><td>Muchas fotos en memoria. Envíe el reporte y empiece uno nuevo.</td></tr>
+    <tr><td>Hora no se puede seleccionar</td><td>Toque directamente sobre el campo. En iPhone, toque y mantenga.</td></tr>
+    <tr><td>No carga la página</td><td>Verificar internet. Si sigue: Ajustes → Chrome → Borrar caché</td></tr>
+    <tr><td>Dice "Enviado" pero no aparece en la hoja</td><td>Si estaba offline, espere a tener conexión. Se sincroniza automáticamente.</td></tr>
+</table>
+<table data-de>
+    <tr><th>Problem</th><th>Lösung</th></tr>
+    <tr><td>Ich kann keine Fotos machen</td><td>Kameraberechtigungen prüfen: Einstellungen → Chrome/Safari → Kamera</td></tr>
+    <tr><td>Die PIN funktioniert nicht</td><td>Prüfen Sie die korrekte PIN. Bei Änderung den Vorgesetzten fragen.</td></tr>
+    <tr><td>Senden nicht möglich</td><td>Rote Felder prüfen. Es fehlen Pflichtfotos oder -daten.</td></tr>
+    <tr><td>Die App ist langsam</td><td>Viele Fotos im Speicher. Bericht senden und neuen beginnen.</td></tr>
+    <tr><td>Uhrzeit lässt sich nicht auswählen</td><td>Direkt auf das Feld tippen. Auf iPhone: tippen und halten.</td></tr>
+    <tr><td>Seite lädt nicht</td><td>Internet prüfen. Falls weiterhin: Einstellungen → Chrome → Cache leeren</td></tr>
+    <tr><td>"Gesendet" aber nicht in der Tabelle</td><td>Bei Offline-Nutzung auf Verbindung warten. Wird automatisch synchronisiert.</td></tr>
+</table>
+
+<hr>
+
+<!-- ==================== 10. PINS ==================== -->
+<h2 id="s10"><span data-es>10. Tabla de PINs y Equipos</span><span data-de>10. PIN- und Team-Tabelle</span></h2>
+
+<div class="alert alert-warning">
+    <span data-es>⚠️ Los PINs se configuran desde Google Sheets. Esta tabla muestra los PINs por defecto. Su supervisor puede haber configurado otros.</span>
+    <span data-de>⚠️ Die PINs werden über Google Sheets konfiguriert. Diese Tabelle zeigt die Standard-PINs. Ihr Vorgesetzter kann andere konfiguriert haben.</span>
+</div>
+
+<table>
+    <tr><th>PIN</th><th><span data-es>Equipo</span><span data-de>Team</span></th><th><span data-es>Cliente</span><span data-de>Kunde</span></th></tr>
+    <tr><td><code>1234</code></td><td>Plus-001</td><td>Glasfaser Plus</td></tr>
+    <tr><td><code>2345</code></td><td>West-001</td><td>Westconnect</td></tr>
+    <tr><td><code>3456</code></td><td>West-002</td><td>Westconnect</td></tr>
+    <tr><td><code>4567</code></td><td>West-003</td><td>Westconnect</td></tr>
+    <tr><td><code>5678</code></td><td>West-004</td><td>Westconnect</td></tr>
+</table>
+
+<hr>
+
+<!-- ==================== 11. NE4 CHECKLIST ==================== -->
+<h2 id="s11"><span data-es>11. Checklist NE4 — Documentación Westconnect</span><span data-de>11. Checkliste NE4 — Westconnect-Dokumentation</span></h2>
+
+<div class="alert alert-danger">
+    <span data-es>🚫 <b>Obligatorio para Westconnect "Finalizada OK".</b> La app incluye un checklist NE4 con 19 puntos que deben marcarse antes de enviar. Un trabajo mal documentado será devuelto y retrasa la facturación.</span>
+    <span data-de>🚫 <b>Pflicht für Westconnect "Abgeschlossen OK".</b> Die App enthält eine NE4-Checkliste mit 19 Punkten, die vor dem Senden abgehakt werden müssen. Schlecht dokumentierte Arbeit wird zurückgeschickt und verzögert die Abrechnung.</span>
+</div>
+
+<h3><span data-es>🔶 Installationsprotokoll (6 puntos)</span><span data-de>🔶 Installationsprotokoll (6 Punkte)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>1</td><td><b>Nº Contrato</b></td><td>Vertragsnummer incluido y correcto en el protocolo</td></tr>
+    <tr data-de><td>1</td><td><b>Vertragsnr.</b></td><td>Vertragsnummer korrekt im Protokoll eingetragen</td></tr>
+    <tr data-es><td>2</td><td><b>HOME-ID pegada</b></td><td>Etiqueta HOME-ID visible y pegada en la GFTA</td></tr>
+    <tr data-de><td>2</td><td><b>HOME-ID aufgeklebt</b></td><td>HOME-ID-Aufkleber sichtbar auf der GFTA angebracht</td></tr>
+    <tr data-es><td>3</td><td><b>Serial ONT</b></td><td>Número de serie del ONT registrado correctamente (ALCL...)</td></tr>
+    <tr data-de><td>3</td><td><b>ONT-Seriennr.</b></td><td>ONT-Seriennummer korrekt erfasst (ALCL...)</td></tr>
+    <tr data-es><td>4</td><td><b>Fibra por WE</b></td><td>Cada WE tiene su fibra asignada con nombre del residente o unidad</td></tr>
+    <tr data-de><td>4</td><td><b>Faser pro WE</b></td><td>Jede WE hat zugewiesene Faser mit Bewohnername oder Einheit</td></tr>
+    <tr data-es><td>5</td><td><b>GV-Port para GE</b></td><td>Puerto GV indicado correctamente (ej: ½, ¾)</td></tr>
+    <tr data-de><td>5</td><td><b>GV-Port für GE</b></td><td>GV-Port korrekt angegeben (z.B. ½, ¾)</td></tr>
+    <tr data-es><td>6</td><td><b>Firma del técnico</b></td><td>El protocolo <b>siempre</b> debe estar firmado</td></tr>
+    <tr data-de><td>6</td><td><b>Techniker-Unterschrift</b></td><td>Das Protokoll muss <b>immer</b> unterschrieben sein</td></tr>
+</table>
+
+<div class="alert alert-warning">
+    <span data-es>⚠️ <b>Observaciones obligatorias si aplica:</b> No se instalaron tomas de corriente · GFTA y ONT montados a distinta altura (indicar motivo) · No hay APL disponible · Cualquier situación fuera de lo normal.</span>
+    <span data-de>⚠️ <b>Pflicht-Anmerkungen falls zutreffend:</b> Keine Steckdosen installiert · GFTA und ONT auf verschiedener Höhe montiert (Grund angeben) · Kein APL vorhanden · Jede ungewöhnliche Situation.</span>
+</div>
+
+<h3><span data-es>🔵 Messprotokoll (3 puntos)</span><span data-de>🔵 Messprotokoll (3 Punkte)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>7</td><td><b>Mediciones TODAS las WE</b></td><td>Incluso si están conectadas directo al APL — anotarlo por escrito</td></tr>
+    <tr data-de><td>7</td><td><b>Messungen ALLER WE</b></td><td>Auch wenn direkt am APL angeschlossen — schriftlich vermerken</td></tr>
+    <tr data-es><td>8</td><td><b>GE: ambas fibras</b></td><td>Las unidades comerciales necesitan medición de ambas fibras</td></tr>
+    <tr data-de><td>8</td><td><b>GE: beide Fasern</b></td><td>Gewerbeeinheiten benötigen Messung beider Fasern</td></tr>
+    <tr data-es><td>9</td><td><b>Formato UG-WE</b></td><td>Para WE en sótano usar formato: <code>A.-0X.00X</code></td></tr>
+    <tr data-de><td>9</td><td><b>UG-WE Format</b></td><td>Für WE im Keller Format verwenden: <code>A.-0X.00X</code></td></tr>
+</table>
+
+<h3><span data-es>🟢 Farbcodierung (3 puntos)</span><span data-de>🟢 Farbcodierung (3 Punkte)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>10</td><td><b>WE: Rot + Weiß</b></td><td>Fibra operativa Rojo + reserva en <b>Blanco</b> (NO dejar verde por defecto)</td></tr>
+    <tr data-de><td>10</td><td><b>WE: Rot + Weiß</b></td><td>Betriebsfaser Rot + Reserve in <b>Weiß</b> (NICHT Standard Grün lassen)</td></tr>
+    <tr data-es><td>11</td><td><b>GE: Rot / Grün</b></td><td>Unidades comerciales documentadas con Rojo / Verde</td></tr>
+    <tr data-de><td>11</td><td><b>GE: Rot / Grün</b></td><td>Gewerbeeinheiten mit Rot / Grün dokumentiert</td></tr>
+    <tr data-es><td>12</td><td><b>Cantidad WE/GE</b></td><td>Verificar que el número total de WE y GE sea correcto</td></tr>
+    <tr data-de><td>12</td><td><b>Anzahl WE/GE</b></td><td>Korrekte Gesamtanzahl WE und GE überprüfen</td></tr>
+</table>
+
+<h3><span data-es>🟣 Baumappe / DBM (2 puntos)</span><span data-de>🟣 Baumappe / DBM (2 Punkte)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>13</td><td><b>Hochzeit indicada</b></td><td>Indicar siempre si se realizó la conexión APL-GV</td></tr>
+    <tr data-de><td>13</td><td><b>Hochzeit vermerkt</b></td><td>Immer angeben ob APL-GV-Verbindung hergestellt wurde</td></tr>
+    <tr data-es><td>14</td><td><b>Leistungspositionen</b></td><td>Posiciones correctas según tipo: #100 + #200 (normal), #210 (sótano completo), #110 (Steiger ≥4 pisos), #180 (canal metálico ≤3 pisos)</td></tr>
+    <tr data-de><td>14</td><td><b>Leistungspositionen</b></td><td>Korrekte Positionen je Typ: #100 + #200 (normal), #210 (komplett Keller), #110 (Steiger ≥4 Etagen), #180 (Metallkanal ≤3 Etagen)</td></tr>
+</table>
+
+<h3><span data-es>🔴 Fotos (4 puntos)</span><span data-de>🔴 Fotos (4 Punkte)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>15</td><td><b>APL-GV conexión</b></td><td>Patchkabel completamente en canal, sin cables visibles. La etiqueta ONT del sótano va sobre el APL.</td></tr>
+    <tr data-de><td>15</td><td><b>APL-GV Verbindung</b></td><td>Patchkabel vollständig im Kanal, keine sichtbaren Kabel. ONT-Aufkleber vom Keller auf dem APL.</td></tr>
+    <tr data-es><td>16</td><td><b>GV / Kassette</b></td><td>Foto clara de cada casete, con todos los patchkabel visibles</td></tr>
+    <tr data-de><td>16</td><td><b>GV / Kassette</b></td><td>Klares Foto jeder Kassette, alle Patchkabel sichtbar</td></tr>
+    <tr data-es><td>17</td><td><b>GFTA + ONT</b></td><td>HOME-ID legible, ONT encendido, misma altura, rectos, no cerca del suelo. Si el montaje es diferente → indicar motivo.</td></tr>
+    <tr data-de><td>17</td><td><b>GFTA + ONT</b></td><td>HOME-ID lesbar, ONT an, gleiche Höhe, gerade, nicht bodennah. Bei abweichender Montage → Grund angeben.</td></tr>
+    <tr data-es><td>18</td><td><b>1 foto por fibra medida</b></td><td>Una foto por cada fibra medida, incluyendo GE. No olvidar ninguna medición.</td></tr>
+    <tr data-de><td>18</td><td><b>1 Foto pro Faser</b></td><td>Ein Foto pro gemessener Faser, inkl. GE. Keine Messung vergessen.</td></tr>
+</table>
+
+<h3><span data-es>🧹 Limpieza (1 punto)</span><span data-de>🧹 Sauberkeit (1 Punkt)</span></h3>
+<table>
+    <tr><th>#</th><th><span data-es>Verificación</span><span data-de>Prüfpunkt</span></th><th><span data-es>Detalle</span><span data-de>Detail</span></th></tr>
+    <tr data-es><td>19</td><td><b>Lugar de trabajo limpio</b></td><td>Dejar el sitio ordenado y limpio. El cliente debe recibir su espacio en mejores condiciones.</td></tr>
+    <tr data-de><td>19</td><td><b>Arbeitsplatz sauber</b></td><td>Arbeitsplatz ordentlich und sauber hinterlassen. Der Kunde soll seinen Bereich in besserem Zustand vorfinden.</td></tr>
+</table>
+
+<div class="alert alert-success">
+    <span data-es>✅ <b>Recuerda:</b> Un trabajo bien documentado se factura rápido. Un trabajo mal documentado se devuelve y retrasa el pago de todos.</span>
+    <span data-de>✅ <b>Denken Sie daran:</b> Gut dokumentierte Arbeit wird schnell abgerechnet. Schlecht dokumentierte Arbeit wird zurückgeschickt und verzögert die Bezahlung aller.</span>
+</div>
+
+<hr>
+
+<div style="text-align:center;padding:32px 0;color:#999;">
+    <p><b>Umtelkomd Field Report v2.0</b></p>
+    <p data-es>Febrero 2026</p><p data-de>Februar 2026</p>
+    <p style="margin-top:16px;">🔗 <code>https://jarl9801.github.io/field-report/</code></p>
+    <p style="margin-top:8px;">📖 <code>https://jarl9801.github.io/field-report/manual.html</code></p>
+</div>
+
+</div>
+</body>
+</html>

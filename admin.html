@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field Report — Admin Dashboard</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a1a2e">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --bg:#0f0f1a; --bg2:#1a1a2e; --bg3:#252540; --bg4:#2d2d4a;
+            --green:#00C853; --green-bg:rgba(0,200,83,0.12); --red:#ff5252; --red-bg:rgba(255,82,82,0.12);
+            --orange:#ffab40; --orange-bg:rgba(255,171,64,0.12); --blue:#448aff; --blue-bg:rgba(68,138,255,0.12);
+            --purple:#b388ff; --text:#e8e8f0; --text2:#9898b8; --text3:#6868a0;
+            --border:#2a2a4a; --radius:10px;
+        }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+        /* Top bar */
+        .topbar { background:var(--bg2); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+        .topbar h1 { font-size:18px; font-weight:700; }
+        .topbar h1 span { color:var(--green); }
+        .topbar-right { display:flex; gap:8px; align-items:center; }
+        .btn { padding:8px 16px; border-radius:var(--radius); border:none; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+        .btn-sm { padding:6px 12px; font-size:12px; }
+        .btn-green { background:var(--green); color:#000; }
+        .btn-green:hover { background:#00e65c; }
+        .btn-outline { background:transparent; border:1px solid var(--border); color:var(--text2); }
+        .btn-outline:hover { border-color:var(--green); color:var(--green); }
+        .btn-outline.active { border-color:var(--green); color:var(--green); background:var(--green-bg); }
+
+        /* Layout */
+        .container { max-width:1200px; margin:0 auto; padding:20px; }
+
+        /* KPI Cards */
+        .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:24px; }
+        .kpi { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+        .kpi-value { font-size:28px; font-weight:800; margin-bottom:4px; }
+        .kpi-label { font-size:12px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; }
+        .kpi-sub { font-size:11px; color:var(--text3); margin-top:4px; }
+        .kpi-green .kpi-value { color:var(--green); }
+        .kpi-red .kpi-value { color:var(--red); }
+        .kpi-orange .kpi-value { color:var(--orange); }
+        .kpi-blue .kpi-value { color:var(--blue); }
+        .kpi-purple .kpi-value { color:var(--purple); }
+
+        /* Filters */
+        .filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; align-items:center; }
+        .filter-group { display:flex; align-items:center; gap:6px; }
+        .filter-label { font-size:12px; color:var(--text3); }
+        .filter-select, .filter-input { background:var(--bg3); border:1px solid var(--border); color:var(--text); padding:6px 10px; border-radius:6px; font-size:13px; }
+        .filter-select:focus, .filter-input:focus { outline:none; border-color:var(--green); }
+
+        /* Charts area */
+        .charts-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+        @media(max-width:768px) { .charts-row { grid-template-columns:1fr; } }
+        .chart-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
+        .chart-title { font-size:14px; font-weight:600; margin-bottom:12px; color:var(--text2); }
+        .bar-chart { display:flex; flex-direction:column; gap:6px; }
+        .bar-row { display:flex; align-items:center; gap:8px; font-size:12px; }
+        .bar-label { min-width:80px; color:var(--text2); text-align:right; }
+        .bar-track { flex:1; height:24px; background:var(--bg); border-radius:4px; overflow:hidden; position:relative; }
+        .bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; display:flex; align-items:center; padding-left:8px; font-size:11px; font-weight:600; color:#000; }
+        .bar-fill.green { background:var(--green); }
+        .bar-fill.red { background:var(--red); color:#fff; }
+        .bar-fill.orange { background:var(--orange); }
+        .bar-fill.blue { background:var(--blue); color:#fff; }
+
+        /* Donut */
+        .donut-container { display:flex; align-items:center; gap:20px; }
+        .donut-svg { width:120px; height:120px; }
+        .donut-legend { display:flex; flex-direction:column; gap:6px; }
+        .donut-item { display:flex; align-items:center; gap:6px; font-size:12px; }
+        .donut-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+        /* Table */
+        .table-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:24px; }
+        .table-header { padding:16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .table-header h3 { font-size:15px; }
+        .table-scroll { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { padding:10px 12px; text-align:left; color:var(--text3); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid var(--border); background:var(--bg3); position:sticky; top:0; }
+        td { padding:10px 12px; border-bottom:1px solid var(--border); }
+        tr:hover { background:var(--bg3); }
+        .badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; white-space:nowrap; }
+        .badge-ok { background:var(--green-bg); color:var(--green); }
+        .badge-absent { background:var(--orange-bg); color:var(--orange); }
+        .badge-hold { background:var(--orange-bg); color:var(--orange); }
+        .badge-notok { background:var(--red-bg); color:var(--red); }
+        .badge-pre { background:var(--blue-bg); color:var(--blue); }
+        .badge-gfp { background:var(--green-bg); color:var(--green); }
+        .badge-wc { background:var(--blue-bg); color:var(--blue); }
+
+        /* Team perf */
+        .team-card { display:flex; align-items:center; gap:12px; padding:12px; background:var(--bg3); border-radius:8px; }
+        .team-avatar { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#000; }
+        .team-info { flex:1; }
+        .team-name { font-size:14px; font-weight:600; }
+        .team-stats { font-size:11px; color:var(--text2); }
+        .team-count { font-size:20px; font-weight:800; color:var(--green); }
+
+        /* Loading */
+        .loading { text-align:center; padding:60px 20px; color:var(--text2); }
+        .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* Empty */
+        .empty { text-align:center; padding:40px; color:var(--text3); }
+        .empty-icon { font-size:48px; margin-bottom:12px; }
+
+        /* Responsive */
+        @media(max-width:600px) {
+            .kpi-grid { grid-template-columns:repeat(2,1fr); }
+            .filters { flex-direction:column; align-items:stretch; }
+            .topbar { flex-direction:column; gap:8px; }
+        }
+
+        /* Tabs */
+        .tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--bg2); border-radius:var(--radius); padding:4px; border:1px solid var(--border); }
+        .tab { flex:1; padding:10px; text-align:center; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:var(--text2); transition:all 0.2s; }
+        .tab.active { background:var(--green); color:#000; }
+        .tab:hover:not(.active) { background:var(--bg3); }
+
+        /* Photo count indicator */
+        .photo-indicator { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--text3); }
+        .photo-indicator span { color:var(--green); font-weight:600; }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <h1>📊 Field Report <span>Admin</span></h1>
+        <div class="topbar-right">
+            <button class="btn btn-outline btn-sm" onclick="exportCSV()">📥 CSV</button>
+            <button class="btn btn-green btn-sm" onclick="loadData()">🔄 Actualizar</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('overview')">📊 Resumen</div>
+            <div class="tab" onclick="switchTab('reports')">📋 Reportes</div>
+            <div class="tab" onclick="switchTab('teams')">👥 Equipos</div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <span class="filter-label">Periodo:</span>
+                <select class="filter-select" id="filterPeriod" onchange="applyFilters()">
+                    <option value="today">Hoy</option>
+                    <option value="week" selected>Esta semana</option>
+                    <option value="month">Este mes</option>
+                    <option value="all">Todo</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+            <div class="filter-group" id="customDates" style="display:none;">
+                <input type="date" class="filter-input" id="filterFrom" onchange="applyFilters()">
+                <span class="filter-label">→</span>
+                <input type="date" class="filter-input" id="filterTo" onchange="applyFilters()">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Cliente:</span>
+                <select class="filter-select" id="filterClient" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                    <option value="glasfaser-plus">Glasfaser Plus</option>
+                    <option value="westconnect">Westconnect</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Equipo:</span>
+                <select class="filter-select" id="filterTeam" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Estado:</span>
+                <select class="filter-select" id="filterStatus" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                    <option value="completed-ok">Finalizada OK</option>
+                    <option value="client-absent">Cliente Ausente</option>
+                    <option value="previous-states">Estados Previos</option>
+                    <option value="client-reschedule">Recitar</option>
+                    <option value="on-hold">Paralizada</option>
+                    <option value="preinstalled">Preinstalada</option>
+                    <option value="completed-not-ok">No OK</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="tab-overview">
+            <div class="kpi-grid" id="kpiGrid"></div>
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-title">📈 Reportes por Día</div>
+                    <div class="bar-chart" id="chartDaily"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">📊 Estados</div>
+                    <div class="donut-container" id="chartStatus"></div>
+                </div>
+            </div>
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-title">👥 Por Equipo</div>
+                    <div class="bar-chart" id="chartTeams"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">⏱ Tiempo Promedio por Estado</div>
+                    <div class="bar-chart" id="chartTime"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="tab-reports" style="display:none;">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>📋 Todos los Reportes</h3>
+                    <span id="reportCount" style="font-size:13px;color:var(--text3);"></span>
+                </div>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Equipo</th>
+                                <th>Técnico</th>
+                                <th>Cliente</th>
+                                <th>Estado</th>
+                                <th>Orden/HA</th>
+                                <th>Horario</th>
+                                <th>Duración</th>
+                                <th>📷</th>
+                                <th>📁</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teams Tab -->
+        <div id="tab-teams" style="display:none;">
+            <div class="kpi-grid" id="teamCards"></div>
+            <div class="table-card" style="margin-top:16px;">
+                <div class="table-header"><h3>👤 Detalle por Técnico</h3></div>
+                <div class="table-scroll">
+                    <table>
+                        <thead><tr><th>Técnico</th><th>Equipo</th><th>Reportes</th><th>OK</th><th>No OK</th><th>Tasa Éxito</th><th>Tiempo Prom.</th></tr></thead>
+                        <tbody id="techTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loadingState" style="display:none;">
+            <div class="spinner"></div>
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+<script>
+// ===== CONFIG =====
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec';
+
+let allData = [];
+let filteredData = [];
+
+// ===== STATUS MAP =====
+const STATUS_MAP = {
+    'completed-ok': { label:'Finalizada OK', badge:'ok', color:'var(--green)' },
+    'client-absent': { label:'Cliente Ausente', badge:'absent', color:'var(--orange)' },
+    'previous-states': { label:'Estados Previos', badge:'hold', color:'var(--orange)' },
+    'client-reschedule': { label:'Recitar', badge:'absent', color:'var(--orange)' },
+    'on-hold': { label:'Paralizada', badge:'hold', color:'var(--orange)' },
+    'preinstalled': { label:'Preinstalada', badge:'pre', color:'var(--blue)' },
+    'completed-not-ok': { label:'No OK', badge:'notok', color:'var(--red)' },
+};
+
+// ===== DATA LOADING =====
+async function loadData() {
+    document.getElementById('loadingState').style.display = 'block';
+    try {
+        const resp = await fetch(SCRIPT_URL + '?action=getReports');
+        const json = await resp.json();
+        const raw = json.reports || json.data || json || [];
+        allData = raw.map(r => ({
+            ...r,
+            date: r.date || (r.timestamp ? r.timestamp.split('T')[0] : ''),
+            startTime: parseTime(r.startTime),
+            endTime: parseTime(r.endTime),
+            duration: calcDuration(parseTime(r.startTime), parseTime(r.endTime)),
+            photoCount: r.photoCount || 0,
+        }));
+        console.log(`✅ Loaded ${allData.length} reports from Google Sheets`);
+        if (allData.length === 0) {
+            console.log('No reports yet — showing empty state');
+        }
+        populateTeamFilter();
+        applyFilters();
+    } catch(e) {
+        console.error('Load error:', e);
+        showAlert('⚠️ Error cargando datos: ' + e.message);
+        allData = [];
+        applyFilters();
+    }
+    document.getElementById('loadingState').style.display = 'none';
+}
+
+function showAlert(msg) {
+    const el = document.createElement('div');
+    el.style.cssText = 'position:fixed;top:60px;right:20px;padding:12px 20px;background:#252540;border:1px solid #2a2a4a;border-radius:10px;color:#fbbf24;font-size:13px;z-index:999;';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+}
+
+// No demo data — live connection only
+
+function parseTime(val) {
+    if (!val) return '';
+    // Handle Google Sheets date-time format: "1899-12-30T07:00:00.000Z"
+    if (typeof val === 'string' && val.includes('1899')) {
+        const m = val.match(/T(\d{2}:\d{2})/);
+        return m ? m[1] : '';
+    }
+    // Already HH:MM
+    if (typeof val === 'string' && /^\d{2}:\d{2}/.test(val)) return val.substring(0,5);
+    return String(val);
+}
+
+function calcDuration(start, end) {
+    if (!start || !end) return 0;
+    const [sh,sm] = start.split(':').map(Number);
+    const [eh,em] = end.split(':').map(Number);
+    return (eh*60+em) - (sh*60+sm);
+}
+
+function formatDuration(mins) {
+    if (!mins || mins <= 0) return '—';
+    const h = Math.floor(mins/60), m = mins%60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+// ===== FILTERS =====
+function populateTeamFilter() {
+    const teams = [...new Set(allData.map(r => r.team).filter(Boolean))].sort();
+    const sel = document.getElementById('filterTeam');
+    sel.innerHTML = '<option value="">Todos</option>' + teams.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function applyFilters() {
+    const period = document.getElementById('filterPeriod').value;
+    const client = document.getElementById('filterClient').value;
+    const team = document.getElementById('filterTeam').value;
+    const status = document.getElementById('filterStatus').value;
+
+    document.getElementById('customDates').style.display = period === 'custom' ? 'flex' : 'none';
+
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    filteredData = allData.filter(r => {
+        if (client && r.client !== client) return false;
+        if (team && r.team !== team) return false;
+        if (status && r.workStatus !== status) return false;
+
+        if (period === 'today') return r.date === today;
+        if (period === 'week') {
+            const d = new Date(r.date);
+            const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
+            return d >= weekAgo;
+        }
+        if (period === 'month') {
+            const d = new Date(r.date);
+            const monthAgo = new Date(now); monthAgo.setDate(monthAgo.getDate()-30);
+            return d >= monthAgo;
+        }
+        if (period === 'custom') {
+            const from = document.getElementById('filterFrom').value;
+            const to = document.getElementById('filterTo').value;
+            if (from && r.date < from) return false;
+            if (to && r.date > to) return false;
+        }
+        return true;
+    });
+
+    filteredData.sort((a,b) => (b.timestamp||b.date).localeCompare(a.timestamp||a.date));
+    render();
+}
+
+// ===== RENDER =====
+function render() {
+    renderKPIs();
+    renderDailyChart();
+    renderStatusChart();
+    renderTeamChart();
+    renderTimeChart();
+    renderTable();
+    renderTeams();
+}
+
+function renderKPIs() {
+    const total = filteredData.length;
+    const ok = filteredData.filter(r => r.workStatus === 'completed-ok').length;
+    const notOk = filteredData.filter(r => r.workStatus === 'completed-not-ok').length;
+    const absent = filteredData.filter(r => r.workStatus === 'client-absent').length;
+    const preinstalled = filteredData.filter(r => r.workStatus === 'preinstalled').length;
+    const avgDuration = total > 0 ? Math.round(filteredData.reduce((s,r) => s + (r.duration||0), 0) / total) : 0;
+    const successRate = total > 0 ? Math.round((ok + preinstalled) / total * 100) : 0;
+    const uniqueDays = new Set(filteredData.map(r => r.date)).size;
+    const avgPerDay = uniqueDays > 0 ? (total / uniqueDays).toFixed(1) : 0;
+
+    document.getElementById('kpiGrid').innerHTML = `
+        <div class="kpi kpi-green"><div class="kpi-value">${total}</div><div class="kpi-label">Total Reportes</div><div class="kpi-sub">${avgPerDay}/día promedio</div></div>
+        <div class="kpi kpi-green"><div class="kpi-value">${ok}</div><div class="kpi-label">Finalizadas OK</div><div class="kpi-sub">${preinstalled} preinstaladas</div></div>
+        <div class="kpi kpi-orange"><div class="kpi-value">${absent}</div><div class="kpi-label">Ausentes</div><div class="kpi-sub">${notOk} No OK</div></div>
+        <div class="kpi kpi-blue"><div class="kpi-value">${successRate}%</div><div class="kpi-label">Tasa de Éxito</div><div class="kpi-sub">OK + Preinstaladas</div></div>
+        <div class="kpi kpi-purple"><div class="kpi-value">${formatDuration(avgDuration)}</div><div class="kpi-label">Duración Prom.</div><div class="kpi-sub">${uniqueDays} días con actividad</div></div>
+    `;
+}
+
+function renderDailyChart() {
+    const byday = {};
+    filteredData.forEach(r => { byday[r.date] = (byday[r.date]||0)+1; });
+    const days = Object.keys(byday).sort().slice(-7);
+    const max = Math.max(...days.map(d => byday[d]), 1);
+
+    document.getElementById('chartDaily').innerHTML = days.map(d => {
+        const pct = (byday[d]/max*100).toFixed(0);
+        const dayName = new Date(d+'T12:00:00').toLocaleDateString('es',{weekday:'short',day:'numeric'});
+        return `<div class="bar-row"><div class="bar-label">${dayName}</div><div class="bar-track"><div class="bar-fill green" style="width:${pct}%">${byday[d]}</div></div></div>`;
+    }).join('') || '<div class="empty">Sin datos</div>';
+}
+
+function renderStatusChart() {
+    const counts = {};
+    filteredData.forEach(r => { const s = r.workStatus||'unknown'; counts[s]=(counts[s]||0)+1; });
+    const total = filteredData.length || 1;
+    const colors = { 'completed-ok':'var(--green)', 'preinstalled':'var(--blue)', 'client-absent':'var(--orange)', 'on-hold':'#ffab40', 'previous-states':'#ff9800', 'client-reschedule':'#ffd54f', 'completed-not-ok':'var(--red)' };
+
+    // SVG donut
+    let offset = 0;
+    const segments = Object.entries(counts).map(([s,c]) => {
+        const pct = c/total*100;
+        const dash = `${pct} ${100-pct}`;
+        const seg = `<circle cx="60" cy="60" r="45" fill="none" stroke="${colors[s]||'#666'}" stroke-width="20" stroke-dasharray="${dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 60 60)"/>`;
+        offset += pct;
+        return seg;
+    });
+
+    const legend = Object.entries(counts).map(([s,c]) => {
+        const info = STATUS_MAP[s] || {label:s, color:'#666'};
+        return `<div class="donut-item"><div class="donut-dot" style="background:${colors[s]||'#666'}"></div>${info.label}: <strong>${c}</strong> (${(c/total*100).toFixed(0)}%)</div>`;
+    }).join('');
+
+    document.getElementById('chartStatus').innerHTML = `
+        <svg class="donut-svg" viewBox="0 0 120 120">${segments.join('')}<text x="60" y="60" text-anchor="middle" dominant-baseline="central" fill="var(--text)" font-size="20" font-weight="800">${filteredData.length}</text></svg>
+        <div class="donut-legend">${legend}</div>
+    `;
+}
+
+function renderTeamChart() {
+    const byteam = {};
+    filteredData.forEach(r => { const t = r.team||'Sin equipo'; byteam[t]=(byteam[t]||0)+1; });
+    const entries = Object.entries(byteam).sort((a,b) => b[1]-a[1]);
+    const max = Math.max(...entries.map(e => e[1]), 1);
+    const teamColors = { 'CON_01':'green', 'Team 1':'blue', 'Team 2':'orange', 'Team 3':'green' };
+
+    document.getElementById('chartTeams').innerHTML = entries.map(([team,count]) => {
+        const pct = (count/max*100).toFixed(0);
+        const c = teamColors[team] || 'blue';
+        return `<div class="bar-row"><div class="bar-label">${team}</div><div class="bar-track"><div class="bar-fill ${c}" style="width:${pct}%">${count}</div></div></div>`;
+    }).join('') || '<div class="empty">Sin datos</div>';
+}
+
+function renderTimeChart() {
+    const byStatus = {};
+    filteredData.forEach(r => {
+        const s = r.workStatus || 'unknown';
+        if (!byStatus[s]) byStatus[s] = { total:0, count:0 };
+        byStatus[s].total += r.duration || 0;
+        byStatus[s].count++;
+    });
+    const entries = Object.entries(byStatus).map(([s,v]) => ({ status:s, avg: Math.round(v.total/v.count) })).sort((a,b) => b.avg-a.avg);
+    const max = Math.max(...entries.map(e => e.avg), 1);
+
+    document.getElementById('chartTime').innerHTML = entries.map(e => {
+        const info = STATUS_MAP[e.status] || {label:e.status};
+        const pct = (e.avg/max*100).toFixed(0);
+        return `<div class="bar-row"><div class="bar-label">${info.label}</div><div class="bar-track"><div class="bar-fill blue" style="width:${pct}%">${formatDuration(e.avg)}</div></div></div>`;
+    }).join('') || '<div class="empty">Sin datos</div>';
+}
+
+function renderTable() {
+    const tbody = document.getElementById('reportTable');
+    document.getElementById('reportCount').textContent = `${filteredData.length} reportes`;
+
+    tbody.innerHTML = filteredData.slice(0, 100).map(r => {
+        const info = STATUS_MAP[r.workStatus] || {label:r.workStatus||'—', badge:'hold'};
+        const order = r.orderNumber || r.ha || '—';
+        const clientBadge = r.client === 'glasfaser-plus' ? '<span class="badge badge-gfp">GFP</span>' : '<span class="badge badge-wc">WC</span>';
+        return `<tr>
+            <td>${r.date}</td>
+            <td>${r.team||'—'}</td>
+            <td>${r.technician||'—'}</td>
+            <td>${clientBadge}</td>
+            <td><span class="badge badge-${info.badge}">${info.label}</span></td>
+            <td style="font-family:monospace;font-size:12px;">${order}</td>
+            <td>${r.startTime||'—'} → ${r.endTime||'—'}</td>
+            <td>${formatDuration(r.duration)}</td>
+            <td><span class="photo-indicator">📷 <span>${r.photoCount||0}</span></span></td>
+            <td>${r.driveUrl ? `<a href="${r.driveUrl}" target="_blank" style="color:var(--green);text-decoration:none;">📁</a>` : '—'}</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="9" class="empty"><div class="empty-icon">📋</div>Sin reportes</td></tr>';
+}
+
+function renderTeams() {
+    const byteam = {};
+    filteredData.forEach(r => {
+        const t = r.team || 'Sin equipo';
+        if (!byteam[t]) byteam[t] = { total:0, ok:0, notOk:0, techs:{}, totalTime:0 };
+        byteam[t].total++;
+        if (r.workStatus === 'completed-ok' || r.workStatus === 'preinstalled') byteam[t].ok++;
+        if (r.workStatus === 'completed-not-ok') byteam[t].notOk++;
+        byteam[t].totalTime += r.duration || 0;
+        const tech = r.technician || 'Sin nombre';
+        if (!byteam[t].techs[tech]) byteam[t].techs[tech] = { total:0, ok:0, notOk:0, totalTime:0 };
+        byteam[t].techs[tech].total++;
+        if (r.workStatus === 'completed-ok' || r.workStatus === 'preinstalled') byteam[t].techs[tech].ok++;
+        if (r.workStatus === 'completed-not-ok') byteam[t].techs[tech].notOk++;
+        byteam[t].techs[tech].totalTime += r.duration || 0;
+    });
+
+    const colors = ['var(--green)','var(--blue)','var(--orange)','var(--purple)','var(--red)'];
+    document.getElementById('teamCards').innerHTML = Object.entries(byteam).map(([name,d],i) => {
+        const rate = d.total > 0 ? Math.round(d.ok/d.total*100) : 0;
+        return `<div class="kpi"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">${name}</div>
+            <div style="font-size:24px;font-weight:800;color:${colors[i%colors.length]}">${d.total}</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);">✅ ${d.ok} OK · ❌ ${d.notOk} No OK · 📊 ${rate}% éxito</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">⏱ ${formatDuration(Math.round(d.totalTime/d.total))} prom · 👤 ${Object.keys(d.techs).length} técnicos</div></div>`;
+    }).join('');
+
+    // Tech detail table
+    const allTechs = [];
+    Object.entries(byteam).forEach(([team,d]) => {
+        Object.entries(d.techs).forEach(([tech,td]) => {
+            allTechs.push({ tech, team, ...td, avg: Math.round(td.totalTime/td.total), rate: td.total > 0 ? Math.round(td.ok/td.total*100) : 0 });
+        });
+    });
+    allTechs.sort((a,b) => b.total - a.total);
+
+    document.getElementById('techTable').innerHTML = allTechs.map(t => `
+        <tr><td>${t.tech}</td><td>${t.team}</td><td><strong>${t.total}</strong></td><td style="color:var(--green)">${t.ok}</td><td style="color:var(--red)">${t.notOk}</td>
+        <td><span class="badge ${t.rate>=80?'badge-ok':t.rate>=50?'badge-absent':'badge-notok'}">${t.rate}%</span></td><td>${formatDuration(t.avg)}</td></tr>
+    `).join('');
+}
+
+// ===== TABS =====
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    ['overview','reports','teams'].forEach(t => {
+        document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
+    });
+}
+
+// ===== EXPORT =====
+function exportCSV() {
+    const headers = ['Fecha','Equipo','Técnico','Cliente','Estado','Orden/HA','Inicio','Fin','Duración (min)','Comentarios'];
+    const rows = filteredData.map(r => [
+        r.date, r.team, r.technician, r.client,
+        (STATUS_MAP[r.workStatus]||{}).label || r.workStatus,
+        r.orderNumber || r.ha || '', r.startTime, r.endTime, r.duration, `"${(r.comments||'').replace(/"/g,'""')}"`
+    ]);
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `field-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+}
+
+// ===== INIT =====
+loadData();
+</script>
+</body>
+</html>

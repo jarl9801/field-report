@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Umtelkomd Field Report - PWA para técnicos de fibra óptica">
+    <meta name="theme-color" content="#00C853">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Field Report">
+    <title>Umtelkomd Field Report</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%2300C853' width='192' height='192'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='80' fill='white' font-weight='bold'>FR</text></svg>">
+    <style>
+        :root {
+            --primary: #00C853;
+            --primary-dark: #00B846;
+            --primary-light: #4DE580;
+            --secondary: #1976D2;
+            --danger: #D32F2F;
+            --warning: #F57C00;
+            --success: #388E3C;
+            --gray-light: #F5F5F5;
+            --gray-medium: #E0E0E0;
+            --gray-dark: #424242;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-light); color: var(--text-primary);
+            line-height: 1.5; overflow-x: hidden; width: 100%;
+            min-height: 100vh; min-height: -webkit-fill-available;
+        }
+        html { height: -webkit-fill-available; }
+        .app-container { display:flex; flex-direction:column; width:100%; min-height:100vh; background:white; }
+
+        /* Status Bar */
+        .status-bar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color:white; padding:12px 16px; font-size:14px;
+            display:flex; justify-content:space-between; align-items:center;
+            position:sticky; top:0; z-index:100; box-shadow:0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-info { display:flex; gap:8px; align-items:center; }
+        .connection-indicator {
+            display:inline-block; width:10px; height:10px; border-radius:50%;
+            background:#4CAF50; animation:pulse 2s infinite;
+        }
+        .connection-indicator.offline { background:#FF9800; animation:none; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+        .lang-btn {
+            background:rgba(255,255,255,0.2); border:1px solid rgba(255,255,255,0.5);
+            color:white; padding:4px 10px; border-radius:4px; font-size:12px;
+            font-weight:600; cursor:pointer;
+        }
+        .lang-btn.active { background:rgba(255,255,255,0.9); color:var(--primary); }
+
+        /* Main Content */
+        .main-content { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:80px; }
+        .screen { display:none; padding:16px; animation:fadeIn 0.3s ease; }
+        .screen.active { display:flex; flex-direction:column; }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+        /* PIN Screen */
+        .pin-screen { justify-content:flex-start; align-items:center; gap:16px; padding-top:20px; }
+        .logo { width:50px; height:50px; margin:0 auto 8px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; font-size:28px; font-weight:bold; }
+        .logo-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
+        .logo-subtitle { font-size:12px; color:var(--text-secondary); text-align:center; }
+        .pin-digits { display:flex; gap:12px; justify-content:center; margin:16px 0; }
+        .pin-digit { width:48px; height:56px; text-align:center; font-size:24px; border:2px solid var(--gray-medium); border-radius:8px; background:white; pointer-events:none; }
+        .pin-digit.filled { border-color:var(--primary); background:var(--gray-light); }
+        .pin-keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; max-width:280px; margin:0 auto; }
+        .key-btn { height:56px; font-size:22px; font-weight:600; border:1px solid var(--gray-medium); border-radius:8px; background:white; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+        .key-btn:active { background:var(--gray-light); }
+        .key-btn.delete { font-size:18px; }
+
+        /* Form */
+        .form-section { background:white; border:1px solid var(--gray-medium); border-radius:var(--border-radius); padding:16px; margin-bottom:12px; }
+        .section-title { font-size:15px; font-weight:700; color:var(--primary-dark); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+        .section-counter { font-size:12px; font-weight:600; padding:2px 8px; border-radius:10px; background:var(--gray-light); color:var(--text-secondary); }
+        .section-counter.complete { background:#E8F5E9; color:var(--success); }
+        .form-group { margin-bottom:12px; }
+        .form-label { display:block; font-size:13px; font-weight:600; color:var(--text-secondary); margin-bottom:4px; }
+        .form-label.required::after { content:' *'; color:var(--danger); }
+        .form-input, .form-select, .form-textarea {
+            width:100%; padding:10px 12px; border:1px solid var(--gray-medium);
+            border-radius:6px; font-size:15px; background:white; -webkit-appearance:none;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--primary); }
+        .form-textarea { min-height:80px; resize:vertical; }
+        .time-inputs { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .error-message { font-size:12px; color:var(--danger); margin-top:4px; display:none; }
+
+        /* Collapsible */
+        .section-collapsible { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:4px 0; -webkit-tap-highlight-color:transparent; }
+        .collapse-icon { transition:transform 0.3s; font-size:12px; }
+        .section-collapsible.collapsed .collapse-icon { transform:rotate(0deg); }
+        .section-collapsible:not(.collapsed) .collapse-icon { transform:rotate(90deg); }
+        .section-collapsible.collapsed + .section-content { display:none; }
+
+        /* Photos */
+        .photo-section { margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid #f0f0f0; }
+        .photo-section:last-child { border-bottom:none; margin-bottom:0; }
+        .photo-label { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px; display:block; }
+        .photo-label.required::after { content:' *'; color:var(--danger); }
+        .photo-label.optional::after { content:' (opcional)'; color:var(--text-secondary); font-weight:400; font-size:11px; }
+        .upload-btn {
+            display:inline-flex; align-items:center; gap:4px; padding:8px 16px;
+            background:var(--gray-light); border:1px dashed var(--gray-medium);
+            border-radius:6px; font-size:13px; cursor:pointer; min-height:44px;
+        }
+        .upload-btn:active { background:var(--gray-medium); }
+        .photo-file-input { display:none; }
+        .photo-preview-container { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+        .photo-preview { position:relative; width:64px; height:64px; border-radius:6px; overflow:hidden; border:1px solid var(--gray-medium); }
+        .photo-preview img { width:100%; height:100%; object-fit:cover; }
+        .photo-preview.photo-warn { border:2px solid var(--warning); }
+        .photo-warning { position:absolute; bottom:0; left:0; right:0; background:rgba(245,124,0,0.85); color:white; font-size:9px; font-weight:600; text-align:center; padding:2px; line-height:1.2; }
+        .photo-remove { position:absolute; top:2px; right:2px; width:20px; height:20px; background:var(--danger); color:white; border:none; border-radius:50%; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+        /* Checkbox */
+        .checkbox-group { display:flex; flex-direction:column; gap:8px; }
+        .checkbox-item { display:flex; align-items:flex-start; gap:10px; padding:10px; background:var(--gray-light); border-radius:6px; }
+        .checkbox-item input[type="checkbox"] { width:20px; height:20px; margin-top:2px; accent-color:var(--primary); }
+        .checkbox-label { font-size:14px; }
+
+        /* Progress */
+        .progress-bar { height:4px; background:var(--gray-medium); border-radius:2px; margin-bottom:12px; overflow:hidden; }
+        .progress-fill { height:100%; background:var(--primary); transition:width 0.3s; }
+
+        /* Alerts */
+        .alert { padding:12px 16px; border-radius:6px; margin-bottom:8px; font-size:13px; animation:fadeIn 0.3s; }
+        .alert-error { background:#FFEBEE; color:var(--danger); border:1px solid #FFCDD2; }
+        .alert-warning { background:#FFF3E0; color:var(--warning); border:1px solid #FFE0B2; }
+        .alert-info { background:#E3F2FD; color:var(--secondary); border:1px solid #BBDEFB; }
+        .alert-success { background:#E8F5E9; color:var(--success); border:1px solid #C8E6C9; }
+
+        /* Bottom Actions */
+        .bottom-actions { position:fixed; bottom:0; left:0; right:0; background:white; border-top:1px solid var(--gray-medium); padding:12px 16px; z-index:50; }
+        .bottom-actions.hidden { display:none; }
+        .fab-group { display:flex; gap:12px; }
+        .fab { flex:1; padding:14px; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; min-height:48px; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-primary:disabled { background:var(--gray-medium); color:var(--text-secondary); }
+        .btn-secondary { background:var(--gray-light); color:var(--text-primary); border:1px solid var(--gray-medium); }
+
+        /* Modal */
+        .modal-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal-overlay.show { display:flex; }
+        .modal { background:white; padding:32px 24px; border-radius:12px; text-align:center; max-width:320px; box-shadow:0 10px 40px rgba(0,0,0,0.3); }
+        .modal-icon { font-size:48px; margin-bottom:16px; }
+        .modal-title { font-size:18px; font-weight:700; margin-bottom:12px; }
+        .modal-message { font-size:14px; color:var(--text-secondary); margin-bottom:24px; }
+        .modal-button { width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+
+        /* Member */
+        .member-btn { width:100%; padding:14px; background:white; border:2px solid var(--gray-medium); border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; text-align:center; }
+        .member-btn:active { border-color:var(--primary); background:#E8F5E9; }
+
+        /* WE tabs */
+        .we-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+        .we-tab { padding:6px 14px; border:2px solid var(--gray-medium); border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; background:white; }
+        .we-tab.active { border-color:var(--primary); background:#E8F5E9; color:var(--primary-dark); }
+        .we-tab.complete { border-color:var(--success); background:#E8F5E9; }
+        .we-panel { display:none; }
+        .we-panel.active { display:block; }
+
+        /* Validation Score Card */
+        .validation-card { background:white; border:2px solid var(--gray-medium); border-radius:var(--border-radius); padding:16px; margin-bottom:12px; transition:border-color 0.3s; }
+        .validation-card.score-high { border-color:var(--success); }
+        .validation-card.score-mid { border-color:var(--warning); }
+        .validation-card.score-low { border-color:var(--danger); }
+        .validation-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .validation-score-display { font-size:22px; font-weight:700; }
+        .validation-score-display.high { color:var(--success); }
+        .validation-score-display.mid { color:var(--warning); }
+        .validation-score-display.low { color:var(--danger); }
+        .validation-items { font-size:13px; line-height:2; font-family:monospace; }
+        .validation-items .v-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--gray-light); }
+        .validation-items .v-row:last-child { border-bottom:none; }
+        .v-label { color:var(--text-secondary); }
+        .v-value { font-weight:600; }
+        .v-ok { color:var(--success); }
+        .v-warn { color:var(--warning); }
+        .v-fail { color:var(--danger); }
+        .ha-format-hint { font-size:11px; color:var(--warning); margin-top:2px; display:none; }
+
+        /* Score Warning Modal */
+        .modal-overlay#scoreWarningModal .modal { max-width:340px; }
+        .modal-actions { display:flex; gap:10px; margin-top:16px; }
+        .modal-actions button { flex:1; padding:12px; border:none; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; }
+        .modal-btn-back { background:var(--gray-light); color:var(--text-primary); }
+        .modal-btn-proceed { background:var(--warning); color:white; }
+
+        @media (prefers-reduced-motion: reduce) { * { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-info">
+            <span class="connection-indicator" id="connectionIndicator"></span>
+            <span id="statusText">Online</span>
+        </div>
+        <div style="display:flex;gap:8px;" id="langToggle">
+            <button class="lang-btn active" onclick="setLang('es')">ES</button>
+            <button class="lang-btn" onclick="setLang('de')">DE</button>
+        </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <!-- PIN Screen -->
+        <div class="screen pin-screen active" id="pinScreen">
+            <div>
+                <div class="logo">FR</div>
+                <div class="logo-title">Field Report</div>
+                <div class="logo-subtitle">Umtelkomd</div>
+            </div>
+            <div style="width:100%;max-width:320px;">
+                <div style="text-align:center;font-size:14px;color:var(--text-secondary);margin-bottom:8px;" id="pinLabel">Ingrese PIN (4 dígitos)</div>
+                <div class="pin-digits" id="pinDigits">
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                    <input type="text" class="pin-digit" maxlength="1" readonly>
+                </div>
+                <div class="pin-keypad" id="pinKeypad">
+                    <button class="key-btn" data-key="1">1</button>
+                    <button class="key-btn" data-key="2">2</button>
+                    <button class="key-btn" data-key="3">3</button>
+                    <button class="key-btn" data-key="4">4</button>
+                    <button class="key-btn" data-key="5">5</button>
+                    <button class="key-btn" data-key="6">6</button>
+                    <button class="key-btn" data-key="7">7</button>
+                    <button class="key-btn" data-key="8">8</button>
+                    <button class="key-btn" data-key="9">9</button>
+                    <button class="key-btn delete" data-key="del">⌫</button>
+                    <button class="key-btn" data-key="0">0</button>
+                    <button class="key-btn" data-key="" style="visibility:hidden"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Member Selection -->
+        <div class="screen" id="memberScreen">
+            <div style="text-align:center;padding-top:40px;">
+                <div style="font-size:48px;margin-bottom:12px;">👷</div>
+                <h2 id="memberTeamName" style="color:var(--primary);margin-bottom:4px;">Equipo</h2>
+                <p style="color:var(--text-secondary);font-size:14px;" data-t="selectMember">Seleccione su nombre</p>
+            </div>
+            <div id="memberList" style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:16px auto 0;"></div>
+        </div>
+
+        <!-- Form Screen -->
+        <div class="screen" id="formScreen">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+            <div id="alertContainer"></div>
+            <form id="fieldForm" onsubmit="return false;">
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <div class="section-title" data-t="sectionBasic">Información Básica</div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblClient">Cliente/Operador</label>
+                        <select class="form-select" id="client" disabled>
+                            <option value="" data-t="selectOpt">Seleccionar...</option>
+                            <option value="glasfaser-plus">Glasfaser Plus</option>
+                            <option value="westconnect">Westconnect</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblTeam">Equipo</label>
+                        <div class="form-input" id="teamDisplay" style="background:var(--gray-light);font-weight:600;">—</div>
+                    </div>
+                    <div class="form-group" id="technicianGroup" style="display:none;">
+                        <label class="form-label" data-t="lblTech">Técnico</label>
+                        <div class="form-input" id="techDisplay" style="background:var(--gray-light);font-weight:600;">—</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" data-t="lblSupport">Equipo de Apoyo</label>
+                        <select class="form-select" id="supportTeam"><option value="" data-t="noSupport">Sin equipo de apoyo</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblDate">Fecha</label>
+                        <input type="date" class="form-input" id="date" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblSchedule">Horario</label>
+                        <div class="time-inputs">
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblStart">Inicio</label><input type="time" class="form-input" id="startTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                            <div><label class="form-label required" style="font-size:12px;" data-t="lblEnd">Fin</label><input type="time" class="form-input" id="endTime" style="-webkit-appearance:none;min-height:44px;" onclick="this.showPicker?this.showPicker():this.focus()"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required" data-t="lblStatus">Estado del Trabajo</label>
+                        <select class="form-select" id="workStatus" onchange="handleStatusChange()">
+                            <option value="" data-t="selectStatus">Seleccionar estado...</option>
+                            <option value="completed-ok" data-t="statusOk">Finalizada OK</option>
+                            <option value="client-absent" data-t="statusAbsent">Cliente Ausente</option>
+                            <option value="previous-states" data-t="statusPrevious">Cliente Estados Previos</option>
+                            <option value="client-reschedule" data-t="statusReschedule">Cliente Recitar</option>
+                            <option value="on-hold" data-t="statusHold">Paralizada</option>
+                            <option value="preinstalled" data-t="statusPreinstalled">Orden Preinstalada</option>
+                            <option value="completed-not-ok" data-t="statusNotOk">Finalizada No OK</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" id="commentsLabel" data-t="lblComments">Observaciones</label>
+                        <textarea class="form-textarea" id="comments" placeholder="Agregue observaciones..." data-t-ph="phComments"></textarea>
+                    </div>
+                </div>
+
+                <!-- GLASFASER PLUS -->
+                <div id="gfpSection" style="display:none;">
+                    <div class="form-section">
+                        <div class="section-title" data-t="gfpData">Datos de Orden - Glasfaser Plus</div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblOrder">Nº Orden</label>
+                            <input type="text" class="form-input" id="orderNumber" placeholder="Ej: 2051504">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblBuildType">Tipo de Edificio</label>
+                            <select class="form-select" id="buildingType" onchange="updateGfpPhotos()">
+                                <option value="" data-t="selectOpt">Seleccionar...</option>
+                                <option value="sdu1-ap-ta" data-t="sdu1simple">SDU(1): AP/TA - 1 vivienda simple</option>
+                                <option value="sdu1-ap+ta" data-t="sdu1apTa">SDU(1): AP + TA - 1 vivienda con AP separado</option>
+                                <option value="sdu2" data-t="sdu2">SDU(2): 2 viviendas</option>
+                                <option value="mdu3" data-t="mdu3">MDU(3+): 3 o más viviendas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- GFP photos generated dynamically -->
+                    <div id="gfpPhotosContainer"></div>
+                </div>
+
+                <!-- WESTCONNECT -->
+                <div id="wcSection" style="display:none;">
+                    <div class="form-section">
+                        <div class="section-title" data-t="wcData">Datos HA - Westconnect</div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblHA">Nº HA</label>
+                            <input type="text" class="form-input" id="ha" placeholder="Ej: HA898706">
+                            <div class="ha-format-hint" id="haFormatHint" data-t="valHaFormatHint">HA debe empezar con "HA" seguido de números</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblUnits">Unidades de Vivienda (WE)</label>
+                            <input type="number" class="form-input" id="units" min="1" max="50" placeholder="WE" onchange="updateWcWePhotos()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required" data-t="lblVariant">Variante de Ejecución</label>
+                            <select class="form-select" id="variant">
+                                <option value="" data-t="selectOpt">Seleccionar variante...</option>
+                                <option value="empty-pipes" data-t="varEmpty">Tuberías vacías / Conductos chimenea</option>
+                                <option value="interior-riser" data-t="varInterior">Montante interior / vivienda</option>
+                                <option value="corridor-riser" data-t="varCorridor">Montante de pasillo</option>
+                                <option value="exterior-riser" data-t="varExterior">Montante exterior fachada</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Protocols -->
+                    <div class="form-section" id="wcProtocols" style="display:none;">
+                        <div class="section-title" data-t="protocols">Protocolos (4/4 obligatorios)</div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_auskundung">
+                                <label class="checkbox-label" for="prot_auskundung"><strong>Auskundungsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Protocolo de exploración — firmado por técnico y propietario</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_installation">
+                                <label class="checkbox-label" for="prot_installation"><strong>Installationsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Nº contrato, Home-ID, serial ONT, fibra por WE, GV-Port</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_mess">
+                                <label class="checkbox-label" for="prot_mess"><strong>Messprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Mediciones de TODAS las WE (incluso las del APL)</span></label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="prot_farb">
+                                <label class="checkbox-label" for="prot_farb"><strong>Farbcodierungsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)">Asignación de fibras — Rot + Reserva en Weiß por WE</span></label>
+                            </div>
+                        </div>
+                        <div id="protocolUploads" style="margin-top:12px;"></div>
+                    </div>
+
+                    <!-- NE4 Documentation Checklist -->
+                    <div class="form-section" id="wcChecklist" style="display:none;">
+                        <div class="section-title"><span data-t="checklistTitle">📋 Checklist Documentación NE4</span> <span class="section-counter" id="checklistCounter">0/0</span></div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_contract">
+                                <label class="checkbox-label" for="chk_inst_contract"><strong data-t="chkContract">Nº Contrato en Installationsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkContractDesc">Vertragsnummer incluido y correcto</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_homeid">
+                                <label class="checkbox-label" for="chk_inst_homeid"><strong data-t="chkHomeId">HOME-ID pegada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHomeIdDesc">Etiqueta HOME-ID visible y pegada en GFTA</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_ont">
+                                <label class="checkbox-label" for="chk_inst_ont"><strong data-t="chkOntSerial">Serial ONT correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkOntSerialDesc">Número de serie ONT registrado correctamente</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_fiber">
+                                <label class="checkbox-label" for="chk_inst_fiber"><strong data-t="chkFiberWe">Fibra asignada por WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFiberWeDesc">Cada WE tiene fibra asignada con nombre/unidad</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_gvport">
+                                <label class="checkbox-label" for="chk_inst_gvport"><strong data-t="chkGvPort">GV-Port para GE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkGvPortDesc">Puerto GV indicado (ej: ½, ¾)</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
+                                <input type="checkbox" id="chk_inst_sign">
+                                <label class="checkbox-label" for="chk_inst_sign"><strong data-t="chkSignature">Protocolo firmado</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkSignatureDesc">Installationsprotokoll firmado por técnico</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--secondary);">
+                                <input type="checkbox" id="chk_mess_allwe">
+                                <label class="checkbox-label" for="chk_mess_allwe"><strong data-t="chkMessAll">Mediciones de TODAS las WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessAllDesc">Incluso las conectadas directo al APL (anotarlo)</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--secondary);">
+                                <input type="checkbox" id="chk_mess_ge">
+                                <label class="checkbox-label" for="chk_mess_ge"><strong data-t="chkMessGe">GE: ambas fibras medidas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessGeDesc">Documentar mediciones de ambas fibras para GE</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--secondary);">
+                                <input type="checkbox" id="chk_mess_ugformat">
+                                <label class="checkbox-label" for="chk_mess_ugformat"><strong data-t="chkUgFormat">Formato UG-WE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkUgFormatDesc">Formato: A.-0X.00X</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_we">
+                                <label class="checkbox-label" for="chk_farb_we"><strong data-t="chkFarbWe">WE: Rot + reserva Weiß</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbWeDesc">NO dejar verde por defecto — WE = Rojo + Blanco</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_ge">
+                                <label class="checkbox-label" for="chk_farb_ge"><strong data-t="chkFarbGe">GE: Rot / Grün</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbGeDesc">Unidades comerciales con Rojo / Verde</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
+                                <input type="checkbox" id="chk_farb_count">
+                                <label class="checkbox-label" for="chk_farb_count"><strong data-t="chkFarbCount">Cantidad WE/GE correcta</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbCountDesc">Verificar número correcto de WE y GE registradas</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
+                                <input type="checkbox" id="chk_baumappe_hochzeit">
+                                <label class="checkbox-label" for="chk_baumappe_hochzeit"><strong data-t="chkHochzeit">Hochzeit indicada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHochzeitDesc">Indicar si se realizó la conexión APL-GV</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
+                                <input type="checkbox" id="chk_baumappe_lp">
+                                <label class="checkbox-label" for="chk_baumappe_lp"><strong data-t="chkLp">Leistungspositionen correctas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkLpDesc">#100, #200, #210, #110, #180 según corresponda</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_apl">
+                                <label class="checkbox-label" for="chk_fotos_apl"><strong data-t="chkFotoApl">Foto APL-GV conexión clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoAplDesc">Patchkabel en canal, sin cables visibles</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_kassette">
+                                <label class="checkbox-label" for="chk_fotos_kassette"><strong data-t="chkFotoKassette">Foto cada Kassette clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoKassetteDesc">Cada casete con patchkabel visibles</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_gfta">
+                                <label class="checkbox-label" for="chk_fotos_gfta"><strong data-t="chkFotoGfta">GFTA+ONT: HOME-ID legible, ONT encendido</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoGftaDesc">Misma altura, rectos, no cerca del suelo</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
+                                <input type="checkbox" id="chk_fotos_medicion">
+                                <label class="checkbox-label" for="chk_fotos_medicion"><strong data-t="chkFotoMedicion">1 foto por cada fibra medida</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoMedicionDesc">Incluir GE — no olvidar ninguna</span></label>
+                            </div>
+                            <div class="checkbox-item" style="background:#E0F2F1;border-left:3px solid #009688;">
+                                <input type="checkbox" id="chk_sauberkeit">
+                                <label class="checkbox-label" for="chk_sauberkeit"><strong data-t="chkClean">🧹 Lugar de trabajo limpio</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkCleanDesc">Sitio ordenado y limpio al terminar</span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WC photos generated dynamically -->
+                    <div id="wcPhotosContainer"></div>
+                </div>
+
+                <!-- Validation Score Card (Westconnect finalized) -->
+                <div class="form-section validation-card" id="validationCard" style="display:none;">
+                    <div class="validation-header">
+                        <span style="font-size:15px;font-weight:700;color:var(--primary-dark);" data-t="valTitle">📊 Score de Documentación</span>
+                        <span class="validation-score-display" id="valScoreDisplay">0%</span>
+                    </div>
+                    <div class="validation-items" id="valItems"></div>
+                </div>
+
+                <!-- Evidence (non-OK statuses) -->
+                <div class="form-section" id="evidenceSection" style="display:none;">
+                    <div class="section-title" data-t="evidenceTitle">Foto de Evidencia (Obligatoria)</div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;" data-t="evidenceHint">Tome al menos 1 foto como evidencia (buzón, vivienda, flyer, problema, etc.)</p>
+                    <div id="evidencePhotos"></div>
+                </div>
+            </form>
+        </div>
+
+        <!-- History -->
+        <div class="screen" id="historyScreen">
+            <div style="padding:16px 0;">
+                <h2 style="font-size:18px;margin-bottom:16px;" data-t="histTitle">Envíos de Hoy</h2>
+                <div id="historyList"><div style="text-align:center;color:var(--text-secondary);padding:40px 0;" data-t="histEmpty">📋 No hay envíos aún</div></div>
+                <button style="width:100%;padding:12px;margin-top:16px;background:var(--gray-light);border:1px solid var(--gray-medium);border-radius:8px;font-size:15px;cursor:pointer;" onclick="showScreen('formScreen')" data-t="histBack">← Volver al formulario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Actions -->
+    <div class="bottom-actions hidden" id="bottomActions">
+        <div class="fab-group">
+            <button class="fab btn-secondary" id="historyBtn" onclick="showHistory()">📋 Historial</button>
+            <button class="fab btn-primary" id="submitBtn" onclick="handleSubmit()">✓ Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal">
+        <div class="modal-icon">✅</div>
+        <div class="modal-title" id="modalTitle">Enviado con Éxito</div>
+        <div class="modal-message" id="modalMsg">Los datos se han registrado correctamente.</div>
+        <button class="modal-button" onclick="resetForm()" data-t="newForm">Nuevo Formulario</button>
+    </div>
+</div>
+
+<!-- Score Warning Modal -->
+<div class="modal-overlay" id="scoreWarningModal">
+    <div class="modal">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-title" id="scoreWarningTitle">Score bajo</div>
+        <div class="modal-message" id="scoreWarningMsg">El score de documentación es bajo. ¿Enviar de todas formas?</div>
+        <div class="modal-actions">
+            <button class="modal-btn-back" onclick="closeScoreWarning()" data-t="valGoBack">← Revisar</button>
+            <button class="modal-btn-proceed" onclick="forceSubmit()" data-t="valSendAnyway">Enviar →</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================
+// CONFIG & STATE
+// ============================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec';
+
+const state = {
+    lang: 'es',
+    pin: '',
+    teams: {},
+    teamConfig: [],
+    configLoaded: false,
+    currentTeam: null,
+    currentTechnician: '',
+    photos: {},       // { fieldId: [base64, ...] }
+    photoQuality: {}, // { fieldId: [{isBlurry, isDark, isOverexposed, warnings}, ...] }
+    submissions: [],
+};
+
+// ============================================
+// I18N
+// ============================================
+const T = {
+    es: {
+        online:'En línea', offline:'Sin conexión', pinLabel:'Ingrese PIN (4 dígitos)', invalidPin:'PIN inválido',
+        sendBtn:'✓ Enviar', sending:'⏳ Enviando...', histBtn:'📋 Historial',
+        successTitle:'Enviado con Éxito', successMsg:'Los datos se han registrado correctamente.', newForm:'Nuevo Formulario',
+        savedOffline:'📱 Guardado localmente. Se enviará cuando haya conexión.', connError:'⚠️ Error de conexión. Guardado localmente.',
+        fillRequired:'Complete todos los campos obligatorios', timeError:'Hora fin debe ser posterior a inicio',
+        needComments:'Se requieren observaciones para este estado', needEvidence:'Se requiere al menos 1 foto de evidencia',
+        needPhotos:'Faltan fotos obligatorias', needProtocols:'Deben completarse los 4 protocolos',
+        needOrder:'Ingrese el Nº de Orden', needHA:'Ingrese todos los datos HA requeridos', needBuilding:'Seleccione el tipo de edificio',
+        // UI labels
+        sectionBasic:'Información Básica', lblClient:'Cliente/Operador', lblTeam:'Equipo', lblTech:'Técnico',
+        lblSupport:'Equipo de Apoyo', noSupport:'Sin equipo de apoyo', lblDate:'Fecha', lblSchedule:'Horario',
+        lblStart:'Inicio', lblEnd:'Fin', lblStatus:'Estado del Trabajo', selectStatus:'Seleccionar estado...',
+        statusOk:'Finalizada OK', statusAbsent:'Cliente Ausente', statusPrevious:'Cliente Estados Previos',
+        statusReschedule:'Cliente Recitar', statusHold:'Paralizada', statusPreinstalled:'Orden Preinstalada', statusNotOk:'Finalizada No OK',
+        lblComments:'Observaciones', phComments:'Agregue observaciones...',
+        selectOpt:'Seleccionar...', lblOrder:'Nº Orden', lblBuildType:'Tipo de Edificio',
+        sdu1simple:'SDU(1): AP/TA - 1 vivienda simple', sdu1apTa:'SDU(1): AP + TA - 1 vivienda con AP separado',
+        sdu2:'SDU(2): 2 viviendas', mdu3:'MDU(3+): 3 o más viviendas',
+        gfpData:'Datos de Orden - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        wcData:'Datos HA - Westconnect', lblHA:'Nº HA', lblUnits:'Unidades de Vivienda (WE)', lblVariant:'Variante de Ejecución',
+        varEmpty:'Tuberías vacías / Conductos chimenea', varInterior:'Montante interior / vivienda',
+        varCorridor:'Montante de pasillo', varExterior:'Montante exterior fachada',
+        protocols:'Protocolos (4/4 obligatorios)',
+        protAusk:'Auskundungsprotokoll', protAuskDesc:'Protocolo de exploración — firmado por técnico y propietario',
+        protInst:'Installationsprotokoll', protInstDesc:'Nº contrato, Home-ID, serial ONT, fibra por WE, GV-Port',
+        protMess:'Messprotokoll', protMessDesc:'Mediciones de TODAS las WE (incluso las del APL)',
+        protFarb:'Farbcodierungsprotokoll', protFarbDesc:'Asignación de fibras — Rot + Reserva en Weiß por WE',
+        fotosSotano:'Fotos Sótano', fotosVivienda:'Fotos por Vivienda', fotosExterior:'Fotos Exterior/Pasillo',
+        evidenceTitle:'Foto de Evidencia (Obligatoria)', evidenceHint:'Tome al menos 1 foto como evidencia (buzón, vivienda, flyer, problema, etc.)',
+        evidencePhoto:'Foto de Evidencia', evidenceExtra:'Foto Adicional',
+        histTitle:'Envíos de Hoy', histEmpty:'📋 No hay envíos aún', histBack:'← Volver al formulario',
+        selectMember:'Seleccione su nombre',
+        checklistTitle:'📋 Checklist Documentación NE4',
+        chkContract:'Nº Contrato en Installationsprotokoll', chkContractDesc:'Vertragsnummer incluido y correcto',
+        chkHomeId:'HOME-ID pegada', chkHomeIdDesc:'Etiqueta HOME-ID visible y pegada en GFTA',
+        chkOntSerial:'Serial ONT correcto', chkOntSerialDesc:'Número de serie ONT registrado correctamente',
+        chkFiberWe:'Fibra asignada por WE', chkFiberWeDesc:'Cada WE tiene fibra asignada con nombre/unidad',
+        chkGvPort:'GV-Port para GE correcto', chkGvPortDesc:'Puerto GV indicado (ej: ½, ¾)',
+        chkSignature:'Protocolo firmado', chkSignatureDesc:'Installationsprotokoll firmado por técnico',
+        chkMessAll:'Mediciones de TODAS las WE', chkMessAllDesc:'Incluso las conectadas directo al APL (anotarlo)',
+        chkMessGe:'GE: ambas fibras medidas', chkMessGeDesc:'Documentar mediciones de ambas fibras para GE',
+        chkUgFormat:'Formato UG-WE correcto', chkUgFormatDesc:'Formato: A.-0X.00X',
+        chkFarbWe:'WE: Rot + reserva Weiß', chkFarbWeDesc:'NO dejar verde por defecto — WE = Rojo + Blanco',
+        chkFarbGe:'GE: Rot / Grün', chkFarbGeDesc:'Unidades comerciales con Rojo / Verde',
+        chkFarbCount:'Cantidad WE/GE correcta', chkFarbCountDesc:'Verificar número correcto de WE y GE registradas',
+        chkHochzeit:'Hochzeit indicada', chkHochzeitDesc:'Indicar si se realizó la conexión APL-GV',
+        chkLp:'Leistungspositionen correctas', chkLpDesc:'#100, #200, #210, #110, #180 según corresponda',
+        chkFotoApl:'Foto APL-GV conexión clara', chkFotoAplDesc:'Patchkabel en canal, sin cables visibles',
+        chkFotoKassette:'Foto cada Kassette clara', chkFotoKassetteDesc:'Cada casete con patchkabel visibles',
+        chkFotoGfta:'GFTA+ONT: HOME-ID legible, ONT encendido', chkFotoGftaDesc:'Misma altura, rectos, no cerca del suelo',
+        chkFotoMedicion:'1 foto por cada fibra medida', chkFotoMedicionDesc:'Incluir GE — no olvidar ninguna',
+        chkClean:'🧹 Lugar de trabajo limpio', chkCleanDesc:'Sitio ordenado y limpio al terminar',
+        needChecklist:'Complete todos los items del checklist NE4',
+        // Validation score
+        valTitle:'📊 Score de Documentación',
+        valBasicData:'Datos básicos', valComplete:'Completos', valIncomplete:'Incompletos',
+        valPhotos:'Fotos', valMissing:'faltan', valChecklist:'Checklist NE4',
+        valProtocols:'Protocolos', valComments:'Observaciones', valIncluded:'Incluidas',
+        valNotIncluded:'Sin observaciones', valHaFormat:'Formato HA',
+        valHaFormatHint:'HA debe empezar con "HA" seguido de números',
+        valGoBack:'← Revisar', valSendAnyway:'Enviar →',
+        valLowScoreTitle:'Score incompleto', valLowScoreMsg:'El score de documentación es {score}%. Faltan items por completar. ¿Enviar de todas formas?',
+        photoBlurry:'Foto borrosa', photoDark:'Foto oscura', photoOverexposed:'Foto sobreexpuesta', photoQuality:'Calidad de fotos',
+    },
+    de: {
+        online:'Online', offline:'Keine Verbindung', pinLabel:'PIN eingeben (4 Ziffern)', invalidPin:'Ungültige PIN',
+        sendBtn:'✓ Einreichen', sending:'⏳ Senden...', histBtn:'📋 Verlauf',
+        successTitle:'Erfolgreich gesendet', successMsg:'Daten korrekt registriert.', newForm:'Neues Formular',
+        savedOffline:'📱 Lokal gespeichert.', connError:'⚠️ Verbindungsfehler. Lokal gespeichert.',
+        fillRequired:'Bitte alle Pflichtfelder ausfüllen', timeError:'Endzeit muss nach Startzeit liegen',
+        needComments:'Anmerkungen für diesen Status erforderlich', needEvidence:'Mindestens 1 Beweisfoto erforderlich',
+        needPhotos:'Pflichtfotos fehlen', needProtocols:'Alle 4 Protokolle müssen ausgefüllt sein',
+        needOrder:'Auftragsnummer eingeben', needHA:'Alle HA-Daten eingeben', needBuilding:'Gebäudetyp auswählen',
+        // UI labels
+        sectionBasic:'Grundinformationen', lblClient:'Kunde/Betreiber', lblTeam:'Team', lblTech:'Techniker',
+        lblSupport:'Unterstützungsteam', noSupport:'Kein Unterstützungsteam', lblDate:'Datum', lblSchedule:'Zeitplan',
+        lblStart:'Start', lblEnd:'Ende', lblStatus:'Arbeitsstatus', selectStatus:'Status auswählen...',
+        statusOk:'Abgeschlossen OK', statusAbsent:'Kunde Abwesend', statusPrevious:'Vorherige Zustände',
+        statusReschedule:'Kunde Umterminierung', statusHold:'Pausiert', statusPreinstalled:'Vorinstalliert', statusNotOk:'Abgeschlossen Nicht OK',
+        lblComments:'Anmerkungen', phComments:'Wichtige Anmerkungen...',
+        selectOpt:'Auswählen...', lblOrder:'Auftragsnr.', lblBuildType:'Gebäudetyp',
+        sdu1simple:'SDU(1): AP/TA - 1 Wohnung einfach', sdu1apTa:'SDU(1): AP + TA - 1 Wohnung mit separatem AP',
+        sdu2:'SDU(2): 2 Wohnungen', mdu3:'MDU(3+): 3 oder mehr Wohnungen',
+        gfpData:'Auftragsdaten - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        wcData:'HA-Daten - Westconnect', lblHA:'HA-Nr.', lblUnits:'Wohneinheiten (WE)', lblVariant:'Ausführungsvariante',
+        varEmpty:'Leerrohre / Schornsteinzüge', varInterior:'Innensteigleitung / Wohnungssteigleitung',
+        varCorridor:'Flursteigleitung', varExterior:'Außensteigleitung Fassade',
+        protocols:'Protokolle (4/4 erforderlich)',
+        protAusk:'Auskundungsprotokoll', protAuskDesc:'Erkundungsprotokoll — von Techniker und Eigentümer unterschrieben',
+        protInst:'Installationsprotokoll', protInstDesc:'Vertragsnr., Home-ID, ONT-Seriennr., Faser pro WE, GV-Port',
+        protMess:'Messprotokoll', protMessDesc:'Messungen ALLER WE (auch die am APL)',
+        protFarb:'Farbcodierungsprotokoll', protFarbDesc:'Faserzuordnung — Rot + Reserve in Weiß pro WE',
+        fotosSotano:'Fotos Keller', fotosVivienda:'Fotos pro Wohnung', fotosExterior:'Fotos Außen/Flur',
+        evidenceTitle:'Beweisfoto (Pflicht)', evidenceHint:'Mindestens 1 Foto als Nachweis (Briefkasten, Wohnung, Flyer, Problem, etc.)',
+        evidencePhoto:'Beweisfoto', evidenceExtra:'Zusätzliches Foto',
+        histTitle:'Heutige Einreichungen', histEmpty:'📋 Noch keine Einreichungen', histBack:'← Zurück zum Formular',
+        selectMember:'Wählen Sie Ihren Namen',
+        checklistTitle:'📋 Checkliste NE4-Dokumentation',
+        chkContract:'Vertragsnr. im Installationsprotokoll', chkContractDesc:'Vertragsnummer korrekt eingetragen',
+        chkHomeId:'HOME-ID aufgeklebt', chkHomeIdDesc:'HOME-ID-Aufkleber sichtbar auf GFTA',
+        chkOntSerial:'ONT-Seriennr. korrekt', chkOntSerialDesc:'ONT-Seriennummer korrekt erfasst',
+        chkFiberWe:'Faser pro WE zugewiesen', chkFiberWeDesc:'Jede WE hat zugewiesene Faser mit Name/Einheit',
+        chkGvPort:'GV-Port für GE korrekt', chkGvPortDesc:'GV-Port angegeben (z.B. ½, ¾)',
+        chkSignature:'Protokoll unterschrieben', chkSignatureDesc:'Installationsprotokoll vom Techniker unterschrieben',
+        chkMessAll:'Messungen ALLER WE', chkMessAllDesc:'Auch direkt am APL angeschlossene (vermerken)',
+        chkMessGe:'GE: beide Fasern gemessen', chkMessGeDesc:'Messungen beider Fasern für GE dokumentiert',
+        chkUgFormat:'UG-WE Format korrekt', chkUgFormatDesc:'Format: A.-0X.00X',
+        chkFarbWe:'WE: Rot + Reserve Weiß', chkFarbWeDesc:'NICHT Standard Grün — WE = Rot + Weiß',
+        chkFarbGe:'GE: Rot / Grün', chkFarbGeDesc:'Gewerbeeinheiten mit Rot / Grün',
+        chkFarbCount:'Anzahl WE/GE korrekt', chkFarbCountDesc:'Korrekte Anzahl WE und GE überprüft',
+        chkHochzeit:'Hochzeit vermerkt', chkHochzeitDesc:'Angeben ob APL-GV Verbindung hergestellt wurde',
+        chkLp:'Leistungspositionen korrekt', chkLpDesc:'#100, #200, #210, #110, #180 je nach Bedarf',
+        chkFotoApl:'Foto APL-GV Verbindung klar', chkFotoAplDesc:'Patchkabel im Kanal, keine sichtbaren Kabel',
+        chkFotoKassette:'Foto jeder Kassette klar', chkFotoKassetteDesc:'Jede Kassette mit sichtbaren Patchkabeln',
+        chkFotoGfta:'GFTA+ONT: HOME-ID lesbar, ONT an', chkFotoGftaDesc:'Gleiche Höhe, gerade, nicht bodennah',
+        chkFotoMedicion:'1 Foto pro gemessener Faser', chkFotoMedicionDesc:'Inkl. GE — keine vergessen',
+        chkClean:'🧹 Arbeitsplatz sauber', chkCleanDesc:'Ordentlich und sauber hinterlassen',
+        needChecklist:'Bitte alle NE4-Checklisten-Punkte ausfüllen',
+        // Validation score
+        valTitle:'📊 Dokumentations-Score',
+        valBasicData:'Basisdaten', valComplete:'Vollständig', valIncomplete:'Unvollständig',
+        valPhotos:'Fotos', valMissing:'fehlen', valChecklist:'Checkliste NE4',
+        valProtocols:'Protokolle', valComments:'Anmerkungen', valIncluded:'Vorhanden',
+        valNotIncluded:'Keine Anmerkungen', valHaFormat:'HA-Format',
+        valHaFormatHint:'HA muss mit "HA" gefolgt von Zahlen beginnen',
+        valGoBack:'← Prüfen', valSendAnyway:'Senden →',
+        valLowScoreTitle:'Score unvollständig', valLowScoreMsg:'Der Dokumentations-Score beträgt {score}%. Es fehlen noch Punkte. Trotzdem senden?',
+        photoBlurry:'Foto unscharf', photoDark:'Foto zu dunkel', photoOverexposed:'Foto überbelichtet', photoQuality:'Fotoqualität',
+    }
+};
+
+function t(key) { return (T[state.lang] && T[state.lang][key]) || T.es[key] || key; }
+
+function setLang(lang) {
+    state.lang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim() === lang.toUpperCase()));
+    // Update all data-t elements
+    document.querySelectorAll('[data-t]').forEach(el => {
+        const key = el.getAttribute('data-t');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-ph]').forEach(el => {
+        const key = el.getAttribute('data-t-ph');
+        if (T[lang] && T[lang][key]) el.placeholder = T[lang][key];
+    });
+    document.querySelectorAll('[data-t-opt]').forEach(el => {
+        const key = el.getAttribute('data-t-opt');
+        if (T[lang] && T[lang][key]) el.textContent = T[lang][key];
+    });
+    document.getElementById('pinLabel').textContent = t('pinLabel');
+    document.getElementById('submitBtn').textContent = t('sendBtn');
+    document.getElementById('historyBtn').textContent = t('histBtn');
+    document.getElementById('modalTitle').textContent = t('successTitle');
+    document.getElementById('modalMsg').textContent = t('successMsg');
+    // Re-render dynamic sections with new lang
+    handleStatusChange();
+    updateConnectionStatus();
+}
+
+// ============================================
+// PHOTO HELPERS
+// ============================================
+function createPhotoField(id, label, required) {
+    const inputId = 'photo_' + id;
+    const previewId = 'preview_' + id;
+    return `<div class="photo-section">
+        <label class="photo-label ${required ? 'required' : 'optional'}">${label}</label>
+        <div><button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">📷 Foto</button></div>
+        <input type="file" class="photo-file-input" id="${inputId}" accept="image/*" capture="environment" multiple onchange="handlePhoto(this,'${id}')">
+        <div class="photo-preview-container" id="${previewId}"></div>
+    </div>`;
+}
+
+function compressPhoto(file, maxW, quality) {
+    maxW = maxW || 1280; quality = quality || 0.7;
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+                canvas.width = w; canvas.height = h;
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// ============================================
+// PHOTO QUALITY DETECTION
+// ============================================
+function toGrayscale(imageData) {
+    const d = imageData.data, len = d.length / 4;
+    const gray = new Float32Array(len);
+    for (let i = 0; i < len; i++) gray[i] = 0.299 * d[i*4] + 0.587 * d[i*4+1] + 0.114 * d[i*4+2];
+    return gray;
+}
+
+function laplacianVariance(gray, w, h) {
+    // 3x3 Laplacian kernel: [0,1,0],[1,-4,1],[0,1,0]
+    let sum = 0, sum2 = 0, n = 0;
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const val = -4 * gray[y*w+x] + gray[(y-1)*w+x] + gray[(y+1)*w+x] + gray[y*w+x-1] + gray[y*w+x+1];
+            sum += val; sum2 += val * val; n++;
+        }
+    }
+    if (n === 0) return 999;
+    const mean = sum / n;
+    return (sum2 / n) - (mean * mean);
+}
+
+function averageBrightness(gray) {
+    let sum = 0;
+    for (let i = 0; i < gray.length; i++) sum += gray[i];
+    return gray.length > 0 ? sum / gray.length : 128;
+}
+
+function checkPhotoQuality(dataUrl) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const scale = Math.min(200 / img.width, 200 / img.height, 1);
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const gray = toGrayscale(imageData);
+            const blur = laplacianVariance(gray, canvas.width, canvas.height);
+            const brightness = averageBrightness(gray);
+            const warnings = [];
+            if (blur < 100) warnings.push(t('photoBlurry'));
+            if (brightness < 40) warnings.push(t('photoDark'));
+            if (brightness > 240) warnings.push(t('photoOverexposed'));
+            resolve({ isBlurry: blur < 100, isDark: brightness < 40, isOverexposed: brightness > 240, blurScore: blur, brightness, warnings });
+        };
+        img.onerror = () => resolve({ isBlurry:false, isDark:false, isOverexposed:false, blurScore:999, brightness:128, warnings:[] });
+        img.src = dataUrl;
+    });
+}
+
+function renderPhotoWarning(previewDiv, quality) {
+    if (quality.warnings.length > 0) {
+        previewDiv.classList.add('photo-warn');
+        const warn = document.createElement('div');
+        warn.className = 'photo-warning';
+        warn.textContent = '⚠️ ' + quality.warnings.join(', ');
+        previewDiv.appendChild(warn);
+    }
+}
+
+function handlePhoto(input, fieldId) {
+    if (!input.files || !input.files.length) return;
+    Array.from(input.files).forEach(file => {
+        compressPhoto(file).then(async dataUrl => {
+            if (!state.photos[fieldId]) state.photos[fieldId] = [];
+            if (!state.photoQuality[fieldId]) state.photoQuality[fieldId] = [];
+            state.photos[fieldId].push(dataUrl);
+            const quality = await checkPhotoQuality(dataUrl);
+            state.photoQuality[fieldId].push(quality);
+            const preview = document.getElementById('preview_' + fieldId);
+            if (preview) {
+                const div = document.createElement('div');
+                div.className = 'photo-preview';
+                div.innerHTML = `<img src="${dataUrl}"><button type="button" class="photo-remove" onclick="removePhoto('${fieldId}',this)">×</button>`;
+                renderPhotoWarning(div, quality);
+                preview.appendChild(div);
+            }
+            updateSectionCounters();
+            renderValidationCard();
+        }).catch(err => console.error('Photo error:', err));
+    });
+    input.value = '';
+}
+
+function removePhoto(fieldId, btn) {
+    const container = btn.closest('.photo-preview-container');
+    const idx = Array.from(container.children).indexOf(btn.closest('.photo-preview'));
+    if (state.photos[fieldId]) state.photos[fieldId].splice(idx, 1);
+    if (state.photoQuality[fieldId]) state.photoQuality[fieldId].splice(idx, 1);
+    btn.closest('.photo-preview').remove();
+    updateSectionCounters();
+    renderValidationCard();
+}
+
+function hasPhoto(fieldId) { return state.photos[fieldId] && state.photos[fieldId].length > 0; }
+
+// ============================================
+// GFP PHOTO DEFINITIONS
+// ============================================
+const GFP_PHOTOS = {
+    // Always required (all building types)
+    always: [
+        { id:'gfp_ta_entrada', label:'4.1 ONT/TA Abierta - Entrada cable' },
+        { id:'gfp_ta_fusion', label:'4.2 ONT/TA Abierta - Bandeja Fusión' },
+        { id:'gfp_ta_cerrada', label:'4.3 ONT/TA Cerrada + Etiqueta Home ID (QR)' },
+        { id:'gfp_activacion', label:'6.1 Captura Activación en App Cliente' },
+        { id:'gfp_patch_nvt', label:'7.1 Patch en POP/NVT' },
+        { id:'gfp_luz_roja', label:'8.1 Luz Roja - Fibras NVT a OTB/AP' },
+        { id:'gfp_fusion_dp', label:'9.1 Fusión DP/NVT - Bandeja + Etiqueta' },
+    ],
+    // Obra civil (SDU1 AP+TA, SDU2, MDU3+)
+    obraCivil: [
+        { id:'gfp_pre_ext', label:'1.1 Previo trabajos - Pasamuros Exterior' },
+        { id:'gfp_pre_int', label:'1.2 Previo trabajos - Pasamuros Interior' },
+        { id:'gfp_post_ext', label:'2.1 Post trabajos - Pasamuros Exterior' },
+        { id:'gfp_post_int', label:'2.2 Post trabajos - Pasamuros Interior' },
+    ],
+    // OTB/AP (SDU1 AP+TA, SDU2, MDU3+)
+    otbAp: [
+        { id:'gfp_otb_entrada', label:'3.1 OTB/AP Abierta - Entrada cable + splitter' },
+        { id:'gfp_otb_fusion', label:'3.2 OTB/AP Abierta - Bandeja Fusión' },
+        { id:'gfp_otb_cerrada', label:'3.3 OTB/AP Cerrada + Etiqueta KLS ID' },
+    ],
+    // Interior SDU2 only
+    interiorSdu2: [
+        { id:'gfp_canal_ap_entrada', label:'5.1 Canalizado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+    // Interior SDU1 AP+TA
+    interiorSdu1: [
+        { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+    // Interior MDU3+
+    interiorMdu: [
+        { id:'gfp_canal_ap_sp', label:'5.2 Canalizado: OTB/AP a SammelPunkt' },
+        { id:'gfp_canal_sp_entrada', label:'5.3 Canalizado: SammelPunkt a Entrada Vivienda' },
+        { id:'gfp_cable_ap_sp', label:'5.5 Cableado: OTB/AP a SammelPunkt' },
+        { id:'gfp_cable_sp_entrada', label:'5.6 Cableado: SammelPunkt a Entrada Vivienda' },
+        { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
+    ],
+};
+
+function getGfpRequiredPhotos(buildingType) {
+    let photos = [...GFP_PHOTOS.always];
+    if (['sdu1-ap+ta','sdu2','mdu3'].includes(buildingType)) {
+        photos = [...GFP_PHOTOS.obraCivil, ...GFP_PHOTOS.otbAp, ...photos];
+    }
+    if (buildingType === 'sdu2') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu2);
+    else if (buildingType === 'sdu1-ap+ta') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu1);
+    else if (buildingType === 'mdu3') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorMdu);
+    return photos;
+}
+
+function updateGfpPhotos() {
+    const container = document.getElementById('gfpPhotosContainer');
+    const bt = document.getElementById('buildingType').value;
+    const status = document.getElementById('workStatus').value;
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    if (!bt || !isFinalized) { container.innerHTML = ''; return; }
+
+    const photos = getGfpRequiredPhotos(bt);
+    let html = '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('gfpPhotos')} <span class="section-counter" id="gfpCounter">0/${photos.length}</span></div>`;
+    html += '<div class="collapse-icon">▶</div></div><div class="section-content">';
+    photos.forEach(p => { html += createPhotoField(p.id, p.label, true); });
+    html += '</div></div>';
+    container.innerHTML = html;
+    updateSectionCounters();
+}
+
+// ============================================
+// WESTCONNECT PHOTO DEFINITIONS
+// ============================================
+const WC_BASEMENT = [
+    { id:'wc_ap_gv_conexion', label:'Conexión GF-AP / GF-GV (patchkabel)', req:true },
+    { id:'wc_ap_gv_canal', label:'Canal/Tubo entre GF-AP y GF-GV', req:true },
+    { id:'wc_ap_antes', label:'GF-AP Abierto ANTES de trabajos NE4', req:true },
+    { id:'wc_ap_despues', label:'GF-AP Abierto DESPUÉS de trabajos NE4', req:true },
+    { id:'wc_ap_cerrado', label:'GF-AP Cerrado y Precintado', req:true },
+    { id:'wc_gv_patch', label:'Interior GF-GV - Cable Patch desde GF-AP', req:true },
+    { id:'wc_gv_acopl', label:'Interior GF-GV - Acoplamientos fibra operativa', req:true },
+    { id:'wc_gv_empalme', label:'Interior GF-GV - Empalme (crimp) y bandejas', req:true },
+    { id:'wc_gv_puertos', label:'Interior GF-GV - Salida de puertos (1,3,5,7...)', req:true },
+    { id:'wc_gv_cerrado', label:'GF-GV Cerrado con canal saliente', req:true },
+    { id:'wc_sello_sotano', label:'Sello Cortafuegos sótano', req:false },
+];
+
+const WC_WE_PHOTOS = [
+    { suffix:'gfta', label:'GF-TA con pegatinas Home ID + publicidad', req:true },
+    { suffix:'patch', label:'Cable patch GF-TA ↔ ONT', req:true },
+    { suffix:'ont_led', label:'ONT funcionando (LEDs visibles)', req:true },
+    { suffix:'canal', label:'Canal superficial hasta GF-TA', req:true },
+    { suffix:'ont_serie', label:'Nº Serie ONT (ALCL...)', req:true },
+    { suffix:'medicion', label:'Medición de fibra', req:true },
+    { suffix:'sobrelong', label:'Sobrelongitudes', req:false },
+];
+
+const WC_EXTERIOR = [
+    { id:'wc_canal_ext', label:'Canal pasillo / escalera / exterior', req:true },
+    { id:'wc_sello_ext', label:'Sello Cortafuegos exterior', req:false },
+];
+
+function updateWcWePhotos() {
+    const status = document.getElementById('workStatus').value;
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+    const container = document.getElementById('wcPhotosContainer');
+
+    if (!isFinalized) { container.innerHTML = ''; return; }
+
+    const numWe = parseInt(document.getElementById('units').value) || 0;
+    let html = '';
+
+    // Basement
+    html += '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('fotosSotano')} <span class="section-counter" id="wcBasementCounter">0/${WC_BASEMENT.filter(p=>p.req).length}</span></div>`;
+    html += '<div class="collapse-icon">▶</div></div><div class="section-content">';
+    WC_BASEMENT.forEach(p => { html += createPhotoField(p.id, p.label, p.req); });
+    html += '</div></div>';
+
+    // Per WE
+    if (numWe > 0) {
+        html += '<div class="form-section">';
+        html += `<div class="section-title">${t('fotosVivienda')} (${numWe} WE)</div>`;
+        html += '<div class="we-tabs" id="weTabs">';
+        for (let i = 1; i <= numWe; i++) {
+            html += `<div class="we-tab ${i===1?'active':''}" onclick="switchWeTab(${i})">WE-${String(i).padStart(2,'0')}</div>`;
+        }
+        html += '</div>';
+        for (let i = 1; i <= numWe; i++) {
+            const weId = 'we' + String(i).padStart(2,'0');
+            html += `<div class="we-panel ${i===1?'active':''}" id="panel_${weId}">`;
+            html += `<div style="font-weight:600;font-size:14px;color:var(--primary-dark);margin-bottom:8px;">WE-${String(i).padStart(2,'0')} <span class="section-counter" id="counter_${weId}">0/${WC_WE_PHOTOS.filter(p=>p.req).length}</span></div>`;
+            WC_WE_PHOTOS.forEach(p => {
+                html += createPhotoField(`${weId}_${p.suffix}`, p.label, p.req);
+            });
+            html += '</div>';
+        }
+        html += '</div>';
+    }
+
+    // Exterior
+    html += '<div class="form-section"><div class="section-collapsible" onclick="this.classList.toggle(\'collapsed\')">';
+    html += `<div class="section-title" style="margin-bottom:0;">${t('fotosExterior')} <span class="section-counter" id="wcExtCounter">0/${WC_EXTERIOR.filter(p=>p.req).length}</span></div>`;
+    html += '<div class="collapse-icon">▶</div></div><div class="section-content">';
+    WC_EXTERIOR.forEach(p => { html += createPhotoField(p.id, p.label, p.req); });
+    html += '</div></div>';
+
+    container.innerHTML = html;
+    updateSectionCounters();
+}
+
+function switchWeTab(num) {
+    document.querySelectorAll('.we-tab').forEach((tab, i) => tab.classList.toggle('active', i === num - 1));
+    document.querySelectorAll('.we-panel').forEach((panel, i) => panel.classList.toggle('active', i === num - 1));
+}
+
+// ============================================
+// STATUS CHANGE
+// ============================================
+function handleStatusChange() {
+    const status = document.getElementById('workStatus').value;
+    const client = document.getElementById('client').value;
+    const needsEvidence = ['client-absent','previous-states','client-reschedule','on-hold','completed-not-ok'].includes(status);
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    // Comments required for non-OK
+    const label = document.getElementById('commentsLabel');
+    label.className = needsEvidence ? 'form-label required' : 'form-label';
+
+    // Evidence section
+    const evSection = document.getElementById('evidenceSection');
+    if (needsEvidence) {
+        evSection.style.display = 'block';
+        const evPhotos = document.getElementById('evidencePhotos');
+        evPhotos.innerHTML = createPhotoField('evidence_1', t('evidencePhoto'), true) + createPhotoField('evidence_2', t('evidenceExtra'), false);
+    } else {
+        evSection.style.display = 'none';
+    }
+
+    // Client-specific sections
+    if (client === 'glasfaser-plus') {
+        document.getElementById('gfpSection').style.display = 'block';
+        document.getElementById('wcSection').style.display = 'none';
+        if (isFinalized) { document.getElementById('wcProtocols').style.display = 'none'; }
+        updateGfpPhotos();
+    } else if (client === 'westconnect') {
+        document.getElementById('gfpSection').style.display = 'none';
+        document.getElementById('wcSection').style.display = 'block';
+        document.getElementById('wcProtocols').style.display = isFinalized ? 'block' : 'none';
+        document.getElementById('wcChecklist').style.display = isFinalized ? 'block' : 'none';
+        if (isFinalized) updateChecklistCounter();
+        // Generate protocol upload fields
+        if (isFinalized) {
+            const pu = document.getElementById('protocolUploads');
+            pu.innerHTML = ['Auskundungsprotokoll','Installationsprotokoll','Messprotokoll','Farbcodierungsprotokoll'].map((name, i) => {
+                const pid = 'protocol_' + i;
+                return createPhotoField(pid, name + ' (foto/PDF)', true);
+            }).join('');
+        }
+        updateWcWePhotos();
+    }
+    renderValidationCard();
+}
+
+// ============================================
+// SECTION COUNTERS
+// ============================================
+function updateSectionCounters() {
+    // GFP counter
+    const bt = document.getElementById('buildingType')?.value;
+    if (bt) {
+        const photos = getGfpRequiredPhotos(bt);
+        const filled = photos.filter(p => hasPhoto(p.id)).length;
+        const counter = document.getElementById('gfpCounter');
+        if (counter) {
+            counter.textContent = `${filled}/${photos.length}`;
+            counter.className = 'section-counter' + (filled === photos.length ? ' complete' : '');
+        }
+    }
+
+    // WC basement counter
+    const bcEl = document.getElementById('wcBasementCounter');
+    if (bcEl) {
+        const req = WC_BASEMENT.filter(p => p.req);
+        const filled = req.filter(p => hasPhoto(p.id)).length;
+        bcEl.textContent = `${filled}/${req.length}`;
+        bcEl.className = 'section-counter' + (filled === req.length ? ' complete' : '');
+    }
+
+    // WC exterior counter
+    const ecEl = document.getElementById('wcExtCounter');
+    if (ecEl) {
+        const req = WC_EXTERIOR.filter(p => p.req);
+        const filled = req.filter(p => hasPhoto(p.id)).length;
+        ecEl.textContent = `${filled}/${req.length}`;
+        ecEl.className = 'section-counter' + (filled === req.length ? ' complete' : '');
+    }
+
+    // Per-WE counters
+    const numWe = parseInt(document.getElementById('units')?.value) || 0;
+    for (let i = 1; i <= numWe; i++) {
+        const weId = 'we' + String(i).padStart(2, '0');
+        const cEl = document.getElementById('counter_' + weId);
+        if (cEl) {
+            const reqPhotos = WC_WE_PHOTOS.filter(p => p.req);
+            const filled = reqPhotos.filter(p => hasPhoto(`${weId}_${p.suffix}`)).length;
+            cEl.textContent = `${filled}/${reqPhotos.length}`;
+            cEl.className = 'section-counter' + (filled === reqPhotos.length ? ' complete' : '');
+        }
+        // Update tab
+        const tab = document.querySelectorAll('.we-tab')[i - 1];
+        if (tab) {
+            const reqPhotos = WC_WE_PHOTOS.filter(p => p.req);
+            const filled = reqPhotos.filter(p => hasPhoto(`${weId}_${p.suffix}`)).length;
+            tab.classList.toggle('complete', filled === reqPhotos.length);
+        }
+    }
+}
+
+// ============================================
+// NE4 CHECKLIST
+// ============================================
+const NE4_CHECKS = ['chk_inst_contract','chk_inst_homeid','chk_inst_ont','chk_inst_fiber','chk_inst_gvport','chk_inst_sign','chk_mess_allwe','chk_mess_ge','chk_mess_ugformat','chk_farb_we','chk_farb_ge','chk_farb_count','chk_baumappe_hochzeit','chk_baumappe_lp','chk_fotos_apl','chk_fotos_kassette','chk_fotos_gfta','chk_fotos_medicion','chk_sauberkeit'];
+
+function updateChecklistCounter() {
+    const el = document.getElementById('checklistCounter');
+    if (!el) return;
+    const checked = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
+    el.textContent = `${checked}/${NE4_CHECKS.length}`;
+    el.className = 'section-counter' + (checked === NE4_CHECKS.length ? ' complete' : '');
+}
+
+// Attach listeners after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    NE4_CHECKS.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => { updateChecklistCounter(); renderValidationCard(); });
+    });
+    // Live validation on all form inputs
+    ['ha','units','variant','startTime','endTime','date','comments','workStatus','client'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', renderValidationCard);
+        if (el) el.addEventListener('change', renderValidationCard);
+    });
+    // Protocol checkboxes
+    ['prot_auskundung','prot_installation','prot_mess','prot_farb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', renderValidationCard);
+    });
+});
+
+// ============================================
+// VALIDATION
+// ============================================
+function validate() {
+    const client = document.getElementById('client').value;
+    const status = document.getElementById('workStatus').value;
+    const start = document.getElementById('startTime').value;
+    const end = document.getElementById('endTime').value;
+    const comments = document.getElementById('comments').value;
+
+    if (!client || !status || !start || !end || !document.getElementById('date').value) {
+        showAlert(t('fillRequired'), 'error'); return false;
+    }
+    if (start >= end) { showAlert(t('timeError'), 'error'); return false; }
+
+    const needsEvidence = ['client-absent','previous-states','client-reschedule','on-hold','completed-not-ok'].includes(status);
+    if (needsEvidence && !comments.trim()) { showAlert(t('needComments'), 'error'); return false; }
+    if (needsEvidence && !hasPhoto('evidence_1')) { showAlert(t('needEvidence'), 'error'); return false; }
+
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+
+    if (client === 'glasfaser-plus') {
+        if (!document.getElementById('orderNumber').value) { showAlert(t('needOrder'), 'error'); return false; }
+        const bt = document.getElementById('buildingType').value;
+        if (!bt) { showAlert(t('needBuilding'), 'error'); return false; }
+        if (isFinalized) {
+            const photos = getGfpRequiredPhotos(bt);
+            const missing = photos.filter(p => !hasPhoto(p.id));
+            if (missing.length > 0) {
+                showAlert(t('needPhotos') + ': ' + missing[0].label, 'error'); return false;
+            }
+        }
+    }
+
+    if (client === 'westconnect') {
+        const ha = document.getElementById('ha').value;
+        const units = document.getElementById('units').value;
+        const variant = document.getElementById('variant').value;
+        if (!ha || !units || !variant) { showAlert(t('needHA'), 'error'); return false; }
+
+        // For finalized WC orders, validation is handled by the score system
+        // Only block if absolutely no effort was made (score < 30%)
+        if (isFinalized) {
+            const valResult = computeValidationScore();
+            if (valResult && valResult.score < 30) {
+                showAlert(t('fillRequired') + ' — Score: ' + valResult.score + '%', 'error');
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// ============================================
+// SMART VALIDATION SCORE
+// ============================================
+function computeValidationScore() {
+    const client = document.getElementById('client').value;
+    const status = document.getElementById('workStatus').value;
+    const isFinalized = ['completed-ok','preinstalled'].includes(status);
+    const isWc = client === 'westconnect';
+
+    // Only show for Westconnect finalized orders
+    if (!isWc || !isFinalized) return null;
+
+    const results = { items: [], totalPoints: 0, earnedPoints: 0 };
+
+    // --- 1. Basic data completeness (weight: 20) ---
+    const ha = document.getElementById('ha').value.trim();
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    const dateVal = document.getElementById('date').value;
+    const units = document.getElementById('units').value;
+    const variant = document.getElementById('variant').value;
+    const comments = document.getElementById('comments').value.trim();
+
+    const basicFields = [ha, startTime, endTime, dateVal, units, variant];
+    const basicFilled = basicFields.filter(v => v).length;
+    const basicOk = basicFilled === basicFields.length;
+    results.totalPoints += 20;
+    results.earnedPoints += basicOk ? 20 : Math.round(20 * basicFilled / basicFields.length);
+    results.items.push({
+        label: t('valBasicData'),
+        ok: basicOk,
+        detail: basicOk ? `✅ ${t('valComplete')}` : `❌ ${t('valIncomplete')} (${basicFilled}/${basicFields.length})`,
+        cssClass: basicOk ? 'v-ok' : 'v-fail'
+    });
+
+    // --- 2. HA format check (weight: 5) ---
+    const haFormatOk = /^HA\d+$/i.test(ha);
+    results.totalPoints += 5;
+    results.earnedPoints += haFormatOk ? 5 : (ha ? 2 : 0);
+    const haHint = document.getElementById('haFormatHint');
+    if (haHint) haHint.style.display = (ha && !haFormatOk) ? 'block' : 'none';
+    results.items.push({
+        label: t('valHaFormat'),
+        ok: haFormatOk,
+        detail: haFormatOk ? '✅ OK' : (ha ? '⚠️ ' + t('valHaFormatHint') : '❌'),
+        cssClass: haFormatOk ? 'v-ok' : (ha ? 'v-warn' : 'v-fail')
+    });
+
+    // --- 3. Photos (weight: 30) ---
+    const numWe = parseInt(units) || 0;
+    const expectedBasement = 3; // minimum: APL, GV/Kassette, Patchkabel
+    const expectedPerWe = 2; // minimum: GFTA+ONT, measurement
+    const expectedTotal = expectedBasement + (numWe * expectedPerWe);
+
+    let actualBasement = WC_BASEMENT.filter(p => hasPhoto(p.id)).length;
+    let actualWe = 0;
+    for (let i = 1; i <= numWe; i++) {
+        const weId = 'we' + String(i).padStart(2, '0');
+        actualWe += WC_WE_PHOTOS.filter(p => hasPhoto(`${weId}_${p.suffix}`)).length;
+    }
+    const actualTotal = actualBasement + actualWe;
+
+    const photoRatio = expectedTotal > 0 ? Math.min(actualTotal / expectedTotal, 1) : 1;
+    results.totalPoints += 30;
+    // Count photos with quality warnings
+    let badPhotoCount = 0;
+    Object.values(state.photoQuality).forEach(arr => { if (arr) arr.forEach(q => { if (q && q.warnings && q.warnings.length > 0) badPhotoCount++; }); });
+    const qualityPenalty = Math.min(badPhotoCount * 5, 30);
+    const photoPoints = Math.max(0, Math.round(30 * photoRatio) - qualityPenalty);
+    results.earnedPoints += photoPoints;
+    const photosOk = actualTotal >= expectedTotal && badPhotoCount === 0;
+    let photoDetail = photosOk ? `✅ ${actualTotal}/${expectedTotal}` : `⚠️ ${actualTotal}/${expectedTotal}`;
+    if (actualTotal < expectedTotal) photoDetail += ` (${t('valMissing')} ${expectedTotal - actualTotal})`;
+    if (badPhotoCount > 0) photoDetail += ` | ⚠️ ${badPhotoCount} ${t('photoQuality').toLowerCase()}`;
+    results.items.push({
+        label: t('valPhotos'),
+        ok: photosOk,
+        detail: photoDetail,
+        cssClass: photosOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 4. Checklist NE4 (weight: 25) ---
+    const checkedCount = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
+    const checklistOk = checkedCount === NE4_CHECKS.length;
+    const checkRatio = NE4_CHECKS.length > 0 ? checkedCount / NE4_CHECKS.length : 1;
+    results.totalPoints += 25;
+    results.earnedPoints += Math.round(25 * checkRatio);
+    results.items.push({
+        label: t('valChecklist'),
+        ok: checklistOk,
+        detail: checklistOk ? `✅ ${checkedCount}/${NE4_CHECKS.length}` : `⚠️ ${checkedCount}/${NE4_CHECKS.length}`,
+        cssClass: checklistOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 5. Protocols (weight: 10) ---
+    const prots = ['prot_auskundung','prot_installation','prot_mess','prot_farb'];
+    const protsChecked = prots.filter(id => document.getElementById(id)?.checked).length;
+    const protsOk = protsChecked === 4;
+    results.totalPoints += 10;
+    results.earnedPoints += Math.round(10 * protsChecked / 4);
+    results.items.push({
+        label: t('valProtocols'),
+        ok: protsOk,
+        detail: protsOk ? `✅ ${protsChecked}/4` : `⚠️ ${protsChecked}/4`,
+        cssClass: protsOk ? 'v-ok' : 'v-warn'
+    });
+
+    // --- 6. Comments (weight: 10) ---
+    const commentsOk = comments.length > 0;
+    results.totalPoints += 10;
+    results.earnedPoints += commentsOk ? 10 : 0;
+    results.items.push({
+        label: t('valComments'),
+        ok: commentsOk,
+        detail: commentsOk ? `✅ ${t('valIncluded')}` : `⚠️ ${t('valNotIncluded')}`,
+        cssClass: commentsOk ? 'v-ok' : 'v-warn'
+    });
+
+    results.score = results.totalPoints > 0 ? Math.round(100 * results.earnedPoints / results.totalPoints) : 0;
+    return results;
+}
+
+function renderValidationCard() {
+    const card = document.getElementById('validationCard');
+    const result = computeValidationScore();
+
+    if (!result) { card.style.display = 'none'; return; }
+
+    card.style.display = 'block';
+    const scoreEl = document.getElementById('valScoreDisplay');
+    const itemsEl = document.getElementById('valItems');
+
+    const score = result.score;
+    const emoji = score >= 90 ? '🟢' : score >= 70 ? '🟡' : '🔴';
+    const level = score >= 90 ? 'high' : score >= 70 ? 'mid' : 'low';
+
+    scoreEl.textContent = `${emoji} ${score}%`;
+    scoreEl.className = `validation-score-display ${level}`;
+    card.className = `form-section validation-card score-${level}`;
+
+    const symbols = ['├','├','├','├','├','└'];
+    itemsEl.innerHTML = result.items.map((item, i) => {
+        const sym = i === result.items.length - 1 ? '└' : '├';
+        return `<div class="v-row"><span class="v-label">${sym} ${item.label}</span><span class="v-value ${item.cssClass}">${item.detail}</span></div>`;
+    }).join('');
+}
+
+function closeScoreWarning() {
+    document.getElementById('scoreWarningModal').classList.remove('show');
+}
+
+function forceSubmit() {
+    document.getElementById('scoreWarningModal').classList.remove('show');
+    doSubmit();
+}
+
+// ============================================
+// SUBMIT
+// ============================================
+function collectFormData() {
+    const client = document.getElementById('client').value;
+    const data = {
+        timestamp: new Date().toISOString(),
+        team: state.currentTeam?.name || '',
+        technician: state.currentTechnician || '',
+        client, date: document.getElementById('date').value,
+        startTime: document.getElementById('startTime').value,
+        endTime: document.getElementById('endTime').value,
+        workStatus: document.getElementById('workStatus').value,
+        comments: document.getElementById('comments').value,
+        supportTeam: document.getElementById('supportTeam').value,
+        photos: state.photos,
+    };
+    if (client === 'glasfaser-plus') {
+        data.orderNumber = document.getElementById('orderNumber').value;
+        data.buildingType = document.getElementById('buildingType').value;
+    } else if (client === 'westconnect') {
+        data.ha = document.getElementById('ha').value;
+        data.units = document.getElementById('units').value;
+        data.variant = document.getElementById('variant').value;
+        data.protocols = ['prot_auskundung','prot_installation','prot_mess','prot_farb'].filter(id => document.getElementById(id)?.checked);
+        data.ne4Checklist = NE4_CHECKS.filter(id => document.getElementById(id)?.checked);
+    }
+    // Add validation score
+    const valResult = computeValidationScore();
+    if (valResult) {
+        data.validation_score = valResult.score;
+        data.validation_details = valResult.items.map(i => `${i.label}: ${i.detail}`).join(' | ');
+    }
+    return data;
+}
+
+async function handleSubmit() {
+    if (!validate()) return;
+    // Check score for low-score warning (WC finalized only)
+    const valResult = computeValidationScore();
+    if (valResult && valResult.score < 90) {
+        const emoji = valResult.score < 70 ? '🔴' : '🟡';
+        const msg = t('valLowScoreMsg').replace('{score}', valResult.score);
+        document.getElementById('scoreWarningTitle').textContent = `${emoji} ${t('valLowScoreTitle')} (${valResult.score}%)`;
+        document.getElementById('scoreWarningMsg').textContent = msg;
+        document.getElementById('scoreWarningModal').classList.add('show');
+        return;
+    }
+    doSubmit();
+}
+
+async function doSubmit() {
+    const formData = collectFormData();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = t('sending');
+
+    if (navigator.onLine) {
+        try {
+            await fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(formData) });
+            saveSubmission(formData);
+            document.getElementById('successModal').classList.add('show');
+            setTimeout(() => { document.getElementById('successModal').classList.remove('show'); resetForm(); }, 2500);
+        } catch(e) {
+            formData.pendingSync = true;
+            saveSubmission(formData);
+            showAlert(t('connError'), 'warning');
+        }
+    } else {
+        formData.pendingSync = true;
+        saveSubmission(formData);
+        showAlert(t('savedOffline'), 'warning');
+        setTimeout(resetForm, 1500);
+    }
+    btn.disabled = false; btn.textContent = t('sendBtn');
+}
+
+// ============================================
+// INDEXEDDB
+// ============================================
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open('FieldReportDB', 1);
+        req.onupgradeneeded = e => { if (!e.target.result.objectStoreNames.contains('submissions')) e.target.result.createObjectStore('submissions', {keyPath:'timestamp'}); };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e);
+    });
+}
+
+async function saveSubmission(data) {
+    const db = await openDB();
+    const tx = db.transaction(['submissions'], 'readwrite');
+    tx.objectStore('submissions').add(data);
+    state.submissions.push(data);
+}
+
+async function loadSubmissions() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readonly');
+        const req = tx.objectStore('submissions').getAll();
+        req.onsuccess = () => { state.submissions = req.result || []; };
+    } catch(e) { console.error(e); }
+}
+
+// ============================================
+// PIN & AUTH
+// ============================================
+async function loadConfig() {
+    try {
+        const resp = await fetch(GOOGLE_SCRIPT_URL + '?action=getConfig');
+        const data = await resp.json();
+        if (data.teams && data.teams.length > 0) {
+            state.teams = {};
+            state.teamConfig = data.teams;
+            data.teams.forEach(team => {
+                let cl = (team.client || '').toLowerCase().trim();
+                if (cl.includes('glasfaser')) cl = 'glasfaser-plus';
+                if (cl.includes('westconnect')) cl = 'westconnect';
+                state.teams[team.pin] = { name:team.name, client:cl, members:team.members || [] };
+            });
+            state.configLoaded = true;
+        } else { fallbackTeams(); }
+    } catch(e) { fallbackTeams(); }
+}
+
+function fallbackTeams() {
+    state.teams = {
+        '1234': { name:'Plus-001', client:'glasfaser-plus', members:['Erick Flores'] },
+        '2345': { name:'West-001', client:'westconnect', members:['Alejandro Herrera','Alexander Herrera'] },
+        '3456': { name:'West-002', client:'westconnect', members:['Juan Correa','Eddier Aldana'] },
+        '4567': { name:'West-003', client:'westconnect', members:['Jaime Guzman'] },
+        '5678': { name:'West-004', client:'westconnect', members:['Michel Matos'] },
+    };
+    state.configLoaded = true;
+}
+
+function handleKey(key) {
+    if (key === 'del') { state.pin = state.pin.slice(0, -1); }
+    else if (state.pin.length < 4) { state.pin += key; }
+    updatePinDisplay();
+    if (state.pin.length === 4) setTimeout(submitPin, 300);
+}
+
+function updatePinDisplay() {
+    document.querySelectorAll('.pin-digit').forEach((d, i) => {
+        d.value = i < state.pin.length ? '●' : '';
+        d.classList.toggle('filled', i < state.pin.length);
+    });
+}
+
+function submitPin() {
+    if (!state.configLoaded) { setTimeout(submitPin, 500); return; }
+    const team = state.teams[state.pin];
+    if (!team) { showAlert(t('invalidPin'), 'error'); state.pin = ''; updatePinDisplay(); return; }
+    state.currentTeam = team;
+    if (team.members && team.members.length > 0) { showMemberScreen(team); }
+    else { enterForm(); }
+}
+
+function showMemberScreen(team) {
+    document.getElementById('memberTeamName').textContent = team.name;
+    const list = document.getElementById('memberList');
+    list.innerHTML = '';
+    team.members.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'member-btn'; btn.textContent = m;
+        btn.onclick = () => { state.currentTechnician = m; enterForm(); };
+        list.appendChild(btn);
+    });
+    showScreen('memberScreen');
+}
+
+function enterForm() {
+    const team = state.currentTeam;
+    document.getElementById('client').value = team.client;
+    document.getElementById('teamDisplay').textContent = team.name;
+    if (state.currentTechnician) {
+        document.getElementById('techDisplay').textContent = state.currentTechnician;
+        document.getElementById('technicianGroup').style.display = 'block';
+    }
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    populateSupportTeams();
+    handleStatusChange();
+    showScreen('formScreen');
+    document.getElementById('bottomActions').classList.remove('hidden');
+    document.getElementById('langToggle').style.display = 'flex';
+}
+
+function populateSupportTeams() {
+    const sel = document.getElementById('supportTeam');
+    sel.innerHTML = `<option value="">${t('noSupport')}</option>`;
+    const current = state.currentTeam;
+    const teams = state.teamConfig.length > 0 ? state.teamConfig : Object.values(state.teams);
+    (state.teamConfig.length > 0 ? state.teamConfig : Object.entries(state.teams).map(([k,v]) => v)).forEach(t => {
+        let cl = typeof t.client === 'string' ? t.client.toLowerCase() : '';
+        if (cl.includes('glasfaser')) cl = 'glasfaser-plus';
+        if (cl.includes('westconnect')) cl = 'westconnect';
+        if (cl === current.client && t.name !== current.name) {
+            sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+        }
+    });
+}
+
+// ============================================
+// NAVIGATION & UI
+// ============================================
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const ba = document.getElementById('bottomActions');
+    ba.classList.toggle('hidden', id !== 'formScreen');
+}
+
+function showHistory() {
+    const list = document.getElementById('historyList');
+    if (state.submissions.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:40px 0;">📋 No hay envíos aún</div>';
+    } else {
+        list.innerHTML = state.submissions.map(s => {
+            const ref = s.client === 'glasfaser-plus' ? s.orderNumber : s.ha;
+            return `<div style="padding:12px;background:var(--gray-light);border-radius:8px;margin-bottom:8px;">
+                <div style="font-weight:600;">${ref || '—'}</div>
+                <div style="font-size:13px;color:var(--text-secondary);">${s.startTime} - ${s.endTime} | ${s.workStatus}</div>
+            </div>`;
+        }).join('');
+    }
+    showScreen('historyScreen');
+}
+
+function resetForm() {
+    document.getElementById('fieldForm').reset();
+    state.photos = {};
+    state.photoQuality = {};
+    state.currentTechnician = '';
+    document.querySelectorAll('.photo-preview-container').forEach(c => c.innerHTML = '');
+    document.getElementById('gfpPhotosContainer').innerHTML = '';
+    document.getElementById('wcPhotosContainer').innerHTML = '';
+    document.getElementById('evidenceSection').style.display = 'none';
+    document.getElementById('successModal').classList.remove('show');
+    // Re-enter with same team
+    if (state.currentTeam) enterForm();
+}
+
+function showAlert(msg, type) {
+    const c = document.getElementById('alertContainer');
+    const el = document.createElement('div');
+    el.className = `alert alert-${type}`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+}
+
+function updateConnectionStatus() {
+    const ind = document.getElementById('connectionIndicator');
+    const txt = document.getElementById('statusText');
+    ind.classList.toggle('offline', !navigator.onLine);
+    txt.textContent = navigator.onLine ? t('online') : t('offline');
+}
+
+// ============================================
+// INIT
+// ============================================
+window.addEventListener('DOMContentLoaded', () => {
+    // Service Worker
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(e => console.log('SW fail:', e));
+
+    // PIN keypad
+    document.getElementById('pinKeypad').addEventListener('click', e => {
+        const btn = e.target.closest('.key-btn');
+        if (btn) handleKey(btn.dataset.key);
+    });
+
+    // Connection
+    updateConnectionStatus();
+    window.addEventListener('online', () => { updateConnectionStatus(); syncPending(); });
+    window.addEventListener('offline', updateConnectionStatus);
+
+    // Load
+    loadSubmissions();
+    loadConfig();
+});
+
+async function syncPending() {
+    try {
+        const db = await openDB();
+        const tx = db.transaction(['submissions'], 'readwrite');
+        const store = tx.objectStore('submissions');
+        const req = store.getAll();
+        req.onsuccess = () => {
+            const pending = (req.result || []).filter(s => s.pendingSync);
+            if (pending.length > 0) {
+                showAlert(`🔄 Sincronizando ${pending.length} envío(s)...`, 'info');
+                pending.forEach(s => {
+                    s.pendingSync = false;
+                    fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(s) }).catch(() => {});
+                });
+            }
+        };
+    } catch(e) {}
+}
+</script>
+</body>
+</html>
