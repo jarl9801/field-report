@@ -389,84 +389,7 @@
                     <!-- NE4 Documentation Checklist -->
                     <div class="form-section" id="wcChecklist" style="display:none;">
                         <div class="section-title"><span data-t="checklistTitle">&#x1F4CB; Checklist Documentacion NE4</span> <span class="section-counter" id="checklistCounter">0/0</span></div>
-                        <div class="checkbox-group">
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_contract">
-                                <label class="checkbox-label" for="chk_inst_contract"><strong data-t="chkContract">N&#xBA; Contrato en Installationsprotokoll</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkContractDesc">Vertragsnummer incluido y correcto</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_homeid">
-                                <label class="checkbox-label" for="chk_inst_homeid"><strong data-t="chkHomeId">HOME-ID pegada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHomeIdDesc">Etiqueta HOME-ID visible y pegada en GFTA</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_ont">
-                                <label class="checkbox-label" for="chk_inst_ont"><strong data-t="chkOntSerial">Serial ONT correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkOntSerialDesc">Numero de serie ONT registrado correctamente</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_fiber">
-                                <label class="checkbox-label" for="chk_inst_fiber"><strong data-t="chkFiberWe">Fibra asignada por WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFiberWeDesc">Cada WE tiene fibra asignada con nombre/unidad</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_gvport">
-                                <label class="checkbox-label" for="chk_inst_gvport"><strong data-t="chkGvPort">GV-Port para GE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkGvPortDesc">Puerto GV indicado (ej: 1/2, 3/4)</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFF3E0;border-left:3px solid var(--warning);">
-                                <input type="checkbox" id="chk_inst_sign">
-                                <label class="checkbox-label" for="chk_inst_sign"><strong data-t="chkSignature">Protocolo firmado</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkSignatureDesc">Installationsprotokoll firmado por tecnico</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
-                                <input type="checkbox" id="chk_mess_allwe">
-                                <label class="checkbox-label" for="chk_mess_allwe"><strong data-t="chkMessAll">Mediciones de TODAS las WE</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessAllDesc">Incluso las conectadas directo al APL (anotarlo)</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
-                                <input type="checkbox" id="chk_mess_ge">
-                                <label class="checkbox-label" for="chk_mess_ge"><strong data-t="chkMessGe">GE: ambas fibras medidas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkMessGeDesc">Documentar mediciones de ambas fibras para GE</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E3F2FD;border-left:3px solid var(--primary);">
-                                <input type="checkbox" id="chk_mess_ugformat">
-                                <label class="checkbox-label" for="chk_mess_ugformat"><strong data-t="chkUgFormat">Formato UG-WE correcto</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkUgFormatDesc">Formato: A.-0X.00X</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
-                                <input type="checkbox" id="chk_farb_we">
-                                <label class="checkbox-label" for="chk_farb_we"><strong data-t="chkFarbWe">WE: Rot + reserva Weiss</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbWeDesc">NO dejar verde por defecto — WE = Rojo + Blanco</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
-                                <input type="checkbox" id="chk_farb_ge">
-                                <label class="checkbox-label" for="chk_farb_ge"><strong data-t="chkFarbGe">GE: Rot / Grun</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbGeDesc">Unidades comerciales con Rojo / Verde</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E8F5E9;border-left:3px solid var(--success);">
-                                <input type="checkbox" id="chk_farb_count">
-                                <label class="checkbox-label" for="chk_farb_count"><strong data-t="chkFarbCount">Cantidad WE/GE correcta</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFarbCountDesc">Verificar numero correcto de WE y GE registradas</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
-                                <input type="checkbox" id="chk_baumappe_hochzeit">
-                                <label class="checkbox-label" for="chk_baumappe_hochzeit"><strong data-t="chkHochzeit">Hochzeit indicada</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkHochzeitDesc">Indicar si se realizo la conexion APL-GV</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#F3E5F5;border-left:3px solid #9C27B0;">
-                                <input type="checkbox" id="chk_baumappe_lp">
-                                <label class="checkbox-label" for="chk_baumappe_lp"><strong data-t="chkLp">Leistungspositionen correctas</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkLpDesc">#100, #200, #210, #110, #180 segun corresponda</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
-                                <input type="checkbox" id="chk_fotos_apl">
-                                <label class="checkbox-label" for="chk_fotos_apl"><strong data-t="chkFotoApl">Foto APL-GV conexion clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoAplDesc">Patchkabel en canal, sin cables visibles</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
-                                <input type="checkbox" id="chk_fotos_kassette">
-                                <label class="checkbox-label" for="chk_fotos_kassette"><strong data-t="chkFotoKassette">Foto cada Kassette clara</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoKassetteDesc">Cada casete con patchkabel visibles</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
-                                <input type="checkbox" id="chk_fotos_gfta">
-                                <label class="checkbox-label" for="chk_fotos_gfta"><strong data-t="chkFotoGfta">GFTA+ONT: HOME-ID legible, ONT encendido</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoGftaDesc">Misma altura, rectos, no cerca del suelo</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#FFEBEE;border-left:3px solid var(--danger);">
-                                <input type="checkbox" id="chk_fotos_medicion">
-                                <label class="checkbox-label" for="chk_fotos_medicion"><strong data-t="chkFotoMedicion">1 foto por cada fibra medida</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkFotoMedicionDesc">Incluir GE — no olvidar ninguna</span></label>
-                            </div>
-                            <div class="checkbox-item" style="background:#E0F2F1;border-left:3px solid #009688;">
-                                <input type="checkbox" id="chk_sauberkeit">
-                                <label class="checkbox-label" for="chk_sauberkeit"><strong data-t="chkClean">&#x1F9F9; Lugar de trabajo limpio</strong><br><span style="font-size:12px;color:var(--text-secondary)" data-t="chkCleanDesc">Sitio ordenado y limpio al terminar</span></label>
-                            </div>
-                        </div>
+                        <div class="checkbox-group" id="checklistContainer"></div>
                     </div>
 
                     <!-- WC photos generated dynamically -->
@@ -605,6 +528,11 @@ const T = {
         chkFarbCount:'Cantidad WE/GE correcta', chkFarbCountDesc:'Verificar numero correcto de WE y GE registradas',
         chkHochzeit:'Hochzeit indicada', chkHochzeitDesc:'Indicar si se realizo la conexion APL-GV',
         chkLp:'Leistungspositionen correctas', chkLpDesc:'#100, #200, #210, #110, #180 segun corresponda',
+        chkLeerrohr:'Leerrohre documentados', chkLeerrohrDesc:'Fotos de tubos vacios/conductos chimenea con recorrido visible',
+        chkBrandschutz:'Sellado cortafuegos', chkBrandschutzDesc:'Fotos del sello cortafuegos en cada perforacion de planta',
+        chkMlar:'MLAR cumplido', chkMlarDesc:'Documentar cumplimiento de normativa MLAR en pasillo',
+        chkFluchtweg:'Via de escape libre', chkFluchtwegDesc:'Canal no obstruye via de evacuacion en pasillo/escalera',
+        chkWetterfest:'Sellado exterior', chkWetterfestDesc:'Canal exterior protegido contra intemperie, penetracion sellada',
         chkFotoApl:'Foto APL-GV conexion clara', chkFotoAplDesc:'Patchkabel en canal, sin cables visibles',
         chkFotoKassette:'Foto cada Kassette clara', chkFotoKassetteDesc:'Cada casete con patchkabel visibles',
         chkFotoGfta:'GFTA+ONT: HOME-ID legible, ONT encendido', chkFotoGftaDesc:'Misma altura, rectos, no cerca del suelo',
@@ -670,6 +598,11 @@ const T = {
         chkFarbCount:'Anzahl WE/GE korrekt', chkFarbCountDesc:'Korrekte Anzahl WE und GE uberpruft',
         chkHochzeit:'Hochzeit vermerkt', chkHochzeitDesc:'Angeben ob APL-GV Verbindung hergestellt wurde',
         chkLp:'Leistungspositionen korrekt', chkLpDesc:'#100, #200, #210, #110, #180 je nach Bedarf',
+        chkLeerrohr:'Leerrohre dokumentiert', chkLeerrohrDesc:'Fotos der Leerrohre/Schornsteinzuge mit sichtbarem Verlauf',
+        chkBrandschutz:'Brandschutzabschottung', chkBrandschutzDesc:'Fotos der Brandschutzabschottung bei jeder Deckendurchfuhrung',
+        chkMlar:'MLAR eingehalten', chkMlarDesc:'Einhaltung der MLAR-Vorschriften im Flurbereich dokumentiert',
+        chkFluchtweg:'Fluchtweg frei', chkFluchtwegDesc:'Kanaltrasse versperrt keinen Fluchtweg im Treppenhaus/Flur',
+        chkWetterfest:'Aussendichtung', chkWetterfestDesc:'Aussenkanal wetterfest, Mauerdurchfuhrung abgedichtet',
         chkFotoApl:'Foto APL-GV Verbindung klar', chkFotoAplDesc:'Patchkabel im Kanal, keine sichtbaren Kabel',
         chkFotoKassette:'Foto jeder Kassette klar', chkFotoKassetteDesc:'Jede Kassette mit sichtbaren Patchkabeln',
         chkFotoGfta:'GFTA+ONT: HOME-ID lesbar, ONT an', chkFotoGftaDesc:'Gleiche Hohe, gerade, nicht bodennah',
@@ -998,6 +931,7 @@ function updateWcWePhotos() {
         handleWePresenceChange('we' + String(i).padStart(2,'0'));
     }
     updateExteriorPhotos();
+    renderChecklist();
     updateSectionCounters();
 }
 
@@ -1038,6 +972,7 @@ function handleWePresenceChange(weId) {
 
     photosContainer.innerHTML = html;
     updateExteriorPhotos();
+    renderChecklist();
     updateSectionCounters();
     renderValidationCard();
 }
@@ -1141,7 +1076,7 @@ function handleStatusChange() {
     document.getElementById('wcProtocols').style.display = isCompleted ? 'block' : 'none';
     document.getElementById('wcChecklist').style.display = isCompleted ? 'block' : 'none';
     if (isCompleted) {
-        updateChecklistCounter();
+        renderChecklist();
         const pu = document.getElementById('protocolUploads');
         pu.innerHTML = createPhotoField('protocol_inst', 'Installationsprotokoll (foto/PDF)', true);
     }
@@ -1210,24 +1145,89 @@ function updateSectionCounters() {
 }
 
 // ============================================
-// NE4 CHECKLIST
+// NE4 CHECKLIST — dynamic by variant
 // ============================================
-const NE4_CHECKS = ['chk_inst_contract','chk_inst_homeid','chk_inst_ont','chk_inst_fiber','chk_inst_gvport','chk_inst_sign','chk_mess_allwe','chk_mess_ge','chk_mess_ugformat','chk_farb_we','chk_farb_ge','chk_farb_count','chk_baumappe_hochzeit','chk_baumappe_lp','chk_fotos_apl','chk_fotos_kassette','chk_fotos_gfta','chk_fotos_medicion','chk_sauberkeit'];
+const NE4_CHECKLIST_ITEMS = [
+    // Installationsprotokoll (orange)
+    { id:'chk_inst_contract', titleKey:'chkContract', descKey:'chkContractDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    { id:'chk_inst_homeid', titleKey:'chkHomeId', descKey:'chkHomeIdDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    { id:'chk_inst_ont', titleKey:'chkOntSerial', descKey:'chkOntSerialDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    { id:'chk_inst_fiber', titleKey:'chkFiberWe', descKey:'chkFiberWeDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    { id:'chk_inst_gvport', titleKey:'chkGvPort', descKey:'chkGvPortDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    { id:'chk_inst_sign', titleKey:'chkSignature', descKey:'chkSignatureDesc', bg:'#FFF3E0', border:'var(--warning)', variants:'all' },
+    // Messprotokoll (blue)
+    { id:'chk_mess_allwe', titleKey:'chkMessAll', descKey:'chkMessAllDesc', bg:'#E3F2FD', border:'var(--primary)', variants:'all' },
+    { id:'chk_mess_ge', titleKey:'chkMessGe', descKey:'chkMessGeDesc', bg:'#E3F2FD', border:'var(--primary)', variants:'all' },
+    { id:'chk_mess_ugformat', titleKey:'chkUgFormat', descKey:'chkUgFormatDesc', bg:'#E3F2FD', border:'var(--primary)', variants:'all' },
+    // Farbcodierung (green)
+    { id:'chk_farb_we', titleKey:'chkFarbWe', descKey:'chkFarbWeDesc', bg:'#E8F5E9', border:'var(--success)', variants:'all' },
+    { id:'chk_farb_ge', titleKey:'chkFarbGe', descKey:'chkFarbGeDesc', bg:'#E8F5E9', border:'var(--success)', variants:'all' },
+    { id:'chk_farb_count', titleKey:'chkFarbCount', descKey:'chkFarbCountDesc', bg:'#E8F5E9', border:'var(--success)', variants:'all' },
+    // Baumappe (purple)
+    { id:'chk_baumappe_hochzeit', titleKey:'chkHochzeit', descKey:'chkHochzeitDesc', bg:'#F3E5F5', border:'#9C27B0', variants:'all' },
+    { id:'chk_baumappe_lp', titleKey:'chkLp', descKey:'chkLpDesc', bg:'#F3E5F5', border:'#9C27B0', variants:'all' },
+    { id:'chk_leerrohr', titleKey:'chkLeerrohr', descKey:'chkLeerrohrDesc', bg:'#F3E5F5', border:'#9C27B0', variants:['empty-pipes'] },
+    { id:'chk_brandschutz', titleKey:'chkBrandschutz', descKey:'chkBrandschutzDesc', bg:'#F3E5F5', border:'#9C27B0', variants:['interior-riser','corridor-riser','exterior-riser'] },
+    { id:'chk_mlar', titleKey:'chkMlar', descKey:'chkMlarDesc', bg:'#F3E5F5', border:'#9C27B0', variants:['corridor-riser'] },
+    { id:'chk_fluchtweg', titleKey:'chkFluchtweg', descKey:'chkFluchtwegDesc', bg:'#F3E5F5', border:'#9C27B0', variants:['corridor-riser'] },
+    { id:'chk_wetterfest', titleKey:'chkWetterfest', descKey:'chkWetterfestDesc', bg:'#F3E5F5', border:'#9C27B0', variants:['exterior-riser'] },
+    // Fotodokumentation (red)
+    { id:'chk_fotos_apl', titleKey:'chkFotoApl', descKey:'chkFotoAplDesc', bg:'#FFEBEE', border:'var(--danger)', variants:'all' },
+    { id:'chk_fotos_kassette', titleKey:'chkFotoKassette', descKey:'chkFotoKassetteDesc', bg:'#FFEBEE', border:'var(--danger)', variants:'all' },
+    { id:'chk_fotos_gfta', titleKey:'chkFotoGfta', descKey:'chkFotoGftaDesc', bg:'#FFEBEE', border:'var(--danger)', variants:'all' },
+    { id:'chk_fotos_medicion', titleKey:'chkFotoMedicion', descKey:'chkFotoMedicionDesc', bg:'#FFEBEE', border:'var(--danger)', variants:'all' },
+    // Sauberkeit (teal)
+    { id:'chk_sauberkeit', titleKey:'chkClean', descKey:'chkCleanDesc', bg:'#E0F2F1', border:'#009688', variants:'all' },
+];
+
+function getActiveChecklist() {
+    const usedVars = getUsedVariants();
+    if (usedVars.length === 0) return NE4_CHECKLIST_ITEMS.filter(i => i.variants === 'all');
+    return NE4_CHECKLIST_ITEMS.filter(i => {
+        if (i.variants === 'all') return true;
+        return i.variants.some(v => usedVars.includes(v));
+    });
+}
+
+function renderChecklist() {
+    const container = document.getElementById('checklistContainer');
+    if (!container) return;
+    const items = getActiveChecklist();
+    // Preserve checked state
+    const wasChecked = {};
+    NE4_CHECKLIST_ITEMS.forEach(i => {
+        const el = document.getElementById(i.id);
+        if (el) wasChecked[i.id] = el.checked;
+    });
+    container.innerHTML = items.map(i =>
+        `<div class="checkbox-item" style="background:${i.bg};border-left:3px solid ${i.border};">
+            <input type="checkbox" id="${i.id}"${wasChecked[i.id] ? ' checked' : ''}>
+            <label class="checkbox-label" for="${i.id}"><strong>${t(i.titleKey)}</strong><br><span style="font-size:12px;color:var(--text-secondary)">${t(i.descKey)}</span></label>
+        </div>`
+    ).join('');
+    // Attach listeners
+    items.forEach(i => {
+        const el = document.getElementById(i.id);
+        if (el) el.addEventListener('change', () => { updateChecklistCounter(); renderValidationCard(); });
+    });
+    updateChecklistCounter();
+}
+
+function getActiveCheckIds() {
+    return getActiveChecklist().map(i => i.id);
+}
 
 function updateChecklistCounter() {
     const el = document.getElementById('checklistCounter');
     if (!el) return;
-    const checked = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
-    el.textContent = `${checked}/${NE4_CHECKS.length}`;
-    el.className = 'section-counter' + (checked === NE4_CHECKS.length ? ' complete' : '');
+    const ids = getActiveCheckIds();
+    const checked = ids.filter(id => document.getElementById(id)?.checked).length;
+    el.textContent = `${checked}/${ids.length}`;
+    el.className = 'section-counter' + (checked === ids.length ? ' complete' : '');
 }
 
 // Attach listeners after DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-    NE4_CHECKS.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', () => { updateChecklistCounter(); renderValidationCard(); });
-    });
     // Live validation on form inputs
     ['ha','units','variant','startTime','endTime','date','comments','workStatus'].forEach(id => {
         const el = document.getElementById(id);
@@ -1396,15 +1396,16 @@ function computeValidationScore() {
     });
 
     // --- 4. Checklist NE4 (weight: 25) ---
-    const checkedCount = NE4_CHECKS.filter(id => document.getElementById(id)?.checked).length;
-    const checklistOk = checkedCount === NE4_CHECKS.length;
-    const checkRatio = NE4_CHECKS.length > 0 ? checkedCount / NE4_CHECKS.length : 1;
+    const activeCheckIds = getActiveCheckIds();
+    const checkedCount = activeCheckIds.filter(id => document.getElementById(id)?.checked).length;
+    const checklistOk = checkedCount === activeCheckIds.length;
+    const checkRatio = activeCheckIds.length > 0 ? checkedCount / activeCheckIds.length : 1;
     results.totalPoints += 25;
     results.earnedPoints += Math.round(25 * checkRatio);
     results.items.push({
         label: t('valChecklist'),
         ok: checklistOk,
-        detail: checklistOk ? `\u2705 ${checkedCount}/${NE4_CHECKS.length}` : `\u26A0\uFE0F ${checkedCount}/${NE4_CHECKS.length}`,
+        detail: checklistOk ? `\u2705 ${checkedCount}/${activeCheckIds.length}` : `\u26A0\uFE0F ${checkedCount}/${activeCheckIds.length}`,
         cssClass: checklistOk ? 'v-ok' : 'v-warn'
     });
 
@@ -1488,7 +1489,7 @@ function collectFormData() {
         units: document.getElementById('units').value,
         variant: document.getElementById('variant').value,
         protocols: ['prot_auskundung','prot_installation','prot_mess','prot_farb'].filter(id => document.getElementById(id)?.checked),
-        ne4Checklist: NE4_CHECKS.filter(id => document.getElementById(id)?.checked),
+        ne4Checklist: getActiveCheckIds().filter(id => document.getElementById(id)?.checked),
         apInstalled: document.getElementById('apYes').checked ? 'yes' : 'no',
         photos: state.photos,
     };
