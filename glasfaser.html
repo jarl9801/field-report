@@ -290,6 +290,13 @@
                     <div id="gfpPhotosContainer"></div>
                 </div>
 
+                <!-- Miscellaneous photos (for finalized statuses) -->
+                <div class="form-section" id="miscSection" style="display:none;">
+                    <div class="section-title" data-t="miscTitle">Fotos Adicionales / Miscelaneos</div>
+                    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;" data-t="miscHint">Fotos extras: entrada vivienda, sellado, danos previos, etc.</p>
+                    <div id="miscPhotos"></div>
+                </div>
+
                 <!-- Evidence (non-OK statuses) -->
                 <div class="form-section" id="evidenceSection" style="display:none;">
                     <div class="section-title" data-t="evidenceTitle">Foto de Evidencia (Obligatoria)</div>
@@ -371,6 +378,8 @@ const T = {
         gfpData:'Datos de Orden - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
         evidenceTitle:'Foto de Evidencia (Obligatoria)', evidenceHint:'Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)',
         evidencePhoto:'Foto de Evidencia', evidenceExtra:'Foto Adicional',
+        miscTitle:'Fotos Adicionales / Miscelaneos', miscHint:'Fotos extras: entrada vivienda, sellado, danos previos, etc.',
+        miscPhoto1:'Foto adicional 1', miscPhoto2:'Foto adicional 2', miscPhoto3:'Foto adicional 3',
         histTitle:'Envios de Hoy', histEmpty:'\uD83D\uDCCB No hay envios aun', histBack:'\u2190 Volver al formulario',
         selectMember:'Seleccione su nombre',
         photoBlurry:'Foto borrosa', photoDark:'Foto oscura', photoOverexposed:'Foto sobreexpuesta', photoQuality:'Calidad de fotos',
@@ -395,6 +404,8 @@ const T = {
         gfpData:'Auftragsdaten - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
         evidenceTitle:'Beweisfoto (Pflicht)', evidenceHint:'Mindestens 1 Foto als Nachweis (Briefkasten, Wohnung, Flyer, Problem, etc.)',
         evidencePhoto:'Beweisfoto', evidenceExtra:'Zusatzliches Foto',
+        miscTitle:'Zusatzfotos / Sonstiges', miscHint:'Zusatzfotos: Wohnungseingang, Abdichtung, vorherige Schaden, etc.',
+        miscPhoto1:'Zusatzfoto 1', miscPhoto2:'Zusatzfoto 2', miscPhoto3:'Zusatzfoto 3',
         histTitle:'Heutige Einreichungen', histEmpty:'\uD83D\uDCCB Noch keine Einreichungen', histBack:'\u2190 Zuruck zum Formular',
         selectMember:'Wahlen Sie Ihren Namen',
         photoBlurry:'Foto unscharf', photoDark:'Foto zu dunkel', photoOverexposed:'Foto uberbelichtet', photoQuality:'Fotoqualitat',
@@ -435,8 +446,12 @@ function createPhotoField(id, label, required) {
     const previewId = 'preview_' + id;
     return `<div class="photo-section">
         <label class="photo-label ${required ? 'required' : 'optional'}">${label}</label>
-        <div><button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">\uD83D\uDCF7 Foto</button></div>
-        <input type="file" class="photo-file-input" id="${inputId}" accept="image/*" capture="environment" multiple onchange="handlePhoto(this,'${id}')">
+        <div style="display:flex;gap:8px;">
+            <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">\uD83D\uDCC2 Galeria</button>
+            <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}_cam').click()">\uD83D\uDCF7 Camara</button>
+        </div>
+        <input type="file" class="photo-file-input" id="${inputId}" accept="image/*" multiple onchange="handlePhoto(this,'${id}')">
+        <input type="file" class="photo-file-input" id="${inputId}_cam" accept="image/*" capture="environment" onchange="handlePhoto(this,'${id}')">
         <div class="photo-preview-container" id="${previewId}"></div>
     </div>`;
 }
@@ -604,13 +619,18 @@ const GFP_PHOTOS = {
 };
 
 function getGfpRequiredPhotos(buildingType) {
-    let photos = [...GFP_PHOTOS.always];
+    // Obra civil (pasamuros) required for ALL building types per documentation
+    let photos = [...GFP_PHOTOS.obraCivil];
+    // OTB/AP only when AP is separate from TA
     if (['sdu1-ap+ta','sdu2','mdu3'].includes(buildingType)) {
-        photos = [...GFP_PHOTOS.obraCivil, ...GFP_PHOTOS.otbAp, ...photos];
+        photos.push(...GFP_PHOTOS.otbAp);
     }
-    if (buildingType === 'sdu2') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu2);
-    else if (buildingType === 'sdu1-ap+ta') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorSdu1);
-    else if (buildingType === 'mdu3') photos.splice(-GFP_PHOTOS.always.length, 0, ...GFP_PHOTOS.interiorMdu);
+    // Interior routing photos per building type
+    if (buildingType === 'sdu1-ap+ta') photos.push(...GFP_PHOTOS.interiorSdu1);
+    else if (buildingType === 'sdu2') photos.push(...GFP_PHOTOS.interiorSdu2);
+    else if (buildingType === 'mdu3') photos.push(...GFP_PHOTOS.interiorMdu);
+    // ONT/TA + misc always required
+    photos.push(...GFP_PHOTOS.always);
     return photos;
 }
 
@@ -642,7 +662,7 @@ function handleStatusChange() {
 
     // Comments required for non-OK
     const label = document.getElementById('commentsLabel');
-    label.className = needsEvidence ? 'form-label required' : 'form-label';
+    label.className = needsEvidence || status === 'completed-not-ok' ? 'form-label required' : 'form-label';
 
     // Evidence section
     const evSection = document.getElementById('evidenceSection');
@@ -654,7 +674,19 @@ function handleStatusChange() {
         evSection.style.display = 'none';
     }
 
-    // Show GFP section for finalized or always (need order + building type)
+    // Miscellaneous photos for finalized statuses
+    const miscSection = document.getElementById('miscSection');
+    if (isFinalized) {
+        miscSection.style.display = 'block';
+        const miscPhotos = document.getElementById('miscPhotos');
+        miscPhotos.innerHTML = createPhotoField('misc_1', t('miscPhoto1'), false)
+            + createPhotoField('misc_2', t('miscPhoto2'), false)
+            + createPhotoField('misc_3', t('miscPhoto3'), false);
+    } else {
+        miscSection.style.display = 'none';
+    }
+
+    // Show GFP section (always need order + building type)
     document.getElementById('gfpSection').style.display = 'block';
     updateGfpPhotos();
 }
@@ -915,6 +947,7 @@ function resetForm() {
     document.querySelectorAll('.photo-preview-container').forEach(c => c.innerHTML = '');
     document.getElementById('gfpPhotosContainer').innerHTML = '';
     document.getElementById('evidenceSection').style.display = 'none';
+    document.getElementById('miscSection').style.display = 'none';
     document.getElementById('successModal').classList.remove('show');
     if (state.currentTeam) enterForm();
 }
