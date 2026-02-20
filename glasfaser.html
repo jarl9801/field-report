@@ -285,6 +285,22 @@
                                 <option value="mdu3" data-t="mdu3">MDU(3+): 3 o mas viviendas</option>
                             </select>
                         </div>
+                        <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                            <div style="padding:12px;background:#E8F5E9;border-radius:6px;border-left:3px solid var(--success);">
+                                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;">
+                                    <input type="checkbox" id="ne4Check" onchange="updateGfpPhotos()" style="width:20px;height:20px;accent-color:var(--success);">
+                                    <span data-t="lblNe4Check">NE4 realizado (Instalacion en edificio)</span>
+                                </label>
+                                <p style="font-size:12px;color:var(--text-secondary);margin:4px 0 0 30px;" data-t="ne4Hint">OTB/AP, cableado interior, ONT/TA, activacion</p>
+                            </div>
+                            <div style="padding:12px;background:#E3F2FD;border-radius:6px;border-left:3px solid var(--secondary);">
+                                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;">
+                                    <input type="checkbox" id="ne3Check" onchange="updateGfpPhotos()" style="width:20px;height:20px;accent-color:var(--secondary);">
+                                    <span data-t="lblNe3Check">NE3 realizado (Patch NVT / Fusion DP)</span>
+                                </label>
+                                <p style="font-size:12px;color:var(--text-secondary);margin:4px 0 0 30px;" data-t="ne3Hint">Patch en POP/NVT, luz roja, fusion DP</p>
+                            </div>
+                        </div>
                     </div>
                     <!-- GFP photos generated dynamically -->
                     <div id="gfpPhotosContainer"></div>
@@ -376,6 +392,9 @@ const T = {
         sdu1simple:'SDU(1): AP/TA - 1 vivienda simple', sdu1apTa:'SDU(1): AP + TA - 1 vivienda con AP separado',
         sdu2:'SDU(2): 2 viviendas', mdu3:'MDU(3+): 3 o mas viviendas',
         gfpData:'Datos de Orden - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        lblNe4Check:'NE4 realizado (Instalacion en edificio)', ne4Hint:'OTB/AP, cableado interior, ONT/TA, activacion',
+        lblNe3Check:'NE3 realizado (Patch NVT / Fusion DP)', ne3Hint:'Patch en POP/NVT, luz roja, fusion DP',
+        phPhotoName:'Nombre de la foto...',
         evidenceTitle:'Foto de Evidencia (Obligatoria)', evidenceHint:'Tome al menos 1 foto como evidencia (buzon, vivienda, flyer, problema, etc.)',
         evidencePhoto:'Foto de Evidencia', evidenceExtra:'Foto Adicional',
         miscTitle:'Fotos Adicionales / Miscelaneos', miscHint:'Fotos extras: entrada vivienda, sellado, danos previos, etc.',
@@ -402,6 +421,9 @@ const T = {
         sdu1simple:'SDU(1): AP/TA - 1 Wohnung einfach', sdu1apTa:'SDU(1): AP + TA - 1 Wohnung mit separatem AP',
         sdu2:'SDU(2): 2 Wohnungen', mdu3:'MDU(3+): 3 oder mehr Wohnungen',
         gfpData:'Auftragsdaten - Glasfaser Plus', gfpPhotos:'Fotos Glasfaser Plus',
+        lblNe4Check:'NE4 durchgefuhrt (Gebaudeinstallation)', ne4Hint:'OTB/AP, Innenverkabelung, ONT/TA, Aktivierung',
+        lblNe3Check:'NE3 durchgefuhrt (Patch NVT / Fusion DP)', ne3Hint:'Patch im POP/NVT, Rotlicht, DP-Fusion',
+        phPhotoName:'Fotobezeichnung...',
         evidenceTitle:'Beweisfoto (Pflicht)', evidenceHint:'Mindestens 1 Foto als Nachweis (Briefkasten, Wohnung, Flyer, Problem, etc.)',
         evidencePhoto:'Beweisfoto', evidenceExtra:'Zusatzliches Foto',
         miscTitle:'Zusatzfotos / Sonstiges', miscHint:'Zusatzfotos: Wohnungseingang, Abdichtung, vorherige Schaden, etc.',
@@ -444,8 +466,10 @@ function setLang(lang) {
 function createPhotoField(id, label, required) {
     const inputId = 'photo_' + id;
     const previewId = 'preview_' + id;
+    const nameId = 'name_' + id;
     return `<div class="photo-section">
         <label class="photo-label ${required ? 'required' : 'optional'}">${label}</label>
+        <input type="text" class="form-input" id="${nameId}" placeholder="${t('phPhotoName')}" value="${label}" style="font-size:12px;padding:6px 8px;margin-bottom:6px;background:#FAFAFA;">
         <div style="display:flex;gap:8px;">
             <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}').click()">\uD83D\uDCC2 Galeria</button>
             <button type="button" class="upload-btn" onclick="document.getElementById('${inputId}_cam').click()">\uD83D\uDCF7 Camara</button>
@@ -576,19 +600,19 @@ function removePhoto(fieldId, btn) {
 
 function hasPhoto(fieldId) { return state.photos[fieldId] && state.photos[fieldId].length > 0; }
 
+function collectPhotoNames() {
+    const names = {};
+    document.querySelectorAll('[id^="name_"]').forEach(input => {
+        const id = input.id.replace('name_', '');
+        if (input.value.trim()) names[id] = input.value.trim();
+    });
+    return names;
+}
+
 // ============================================
 // GFP PHOTO DEFINITIONS
 // ============================================
 const GFP_PHOTOS = {
-    always: [
-        { id:'gfp_ta_entrada', label:'4.1 ONT/TA Abierta - Entrada cable' },
-        { id:'gfp_ta_fusion', label:'4.2 ONT/TA Abierta - Bandeja Fusion' },
-        { id:'gfp_ta_cerrada', label:'4.3 ONT/TA Cerrada + Etiqueta Home ID (QR)' },
-        { id:'gfp_activacion', label:'6.1 Captura Activacion en App Cliente' },
-        { id:'gfp_patch_nvt', label:'7.1 Patch en POP/NVT' },
-        { id:'gfp_luz_roja', label:'8.1 Luz Roja - Fibras NVT a OTB/AP' },
-        { id:'gfp_fusion_dp', label:'9.1 Fusion DP/NVT - Bandeja + Etiqueta' },
-    ],
     obraCivil: [
         { id:'gfp_pre_ext', label:'1.1 Previo trabajos - Pasamuros Exterior' },
         { id:'gfp_pre_int', label:'1.2 Previo trabajos - Pasamuros Interior' },
@@ -600,12 +624,17 @@ const GFP_PHOTOS = {
         { id:'gfp_otb_fusion', label:'3.2 OTB/AP Abierta - Bandeja Fusion' },
         { id:'gfp_otb_cerrada', label:'3.3 OTB/AP Cerrada + Etiqueta KLS ID' },
     ],
-    interiorSdu2: [
-        { id:'gfp_canal_ap_entrada', label:'5.1 Canalizado: OTB/AP a Entrada Vivienda' },
+    ontTa: [
+        { id:'gfp_ta_entrada', label:'4.1 ONT/TA Abierta - Entrada cable' },
+        { id:'gfp_ta_fusion', label:'4.2 ONT/TA Abierta - Bandeja Fusion' },
+        { id:'gfp_ta_cerrada', label:'4.3 ONT/TA Cerrada + Etiqueta Home ID (QR)' },
+    ],
+    interiorSdu1: [
         { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
         { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
     ],
-    interiorSdu1: [
+    interiorSdu2: [
+        { id:'gfp_canal_ap_entrada', label:'5.1 Canalizado: OTB/AP a Entrada Vivienda' },
         { id:'gfp_cable_ap_entrada', label:'5.4 Cableado: OTB/AP a Entrada Vivienda' },
         { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
     ],
@@ -616,21 +645,35 @@ const GFP_PHOTOS = {
         { id:'gfp_cable_sp_entrada', label:'5.6 Cableado: SammelPunkt a Entrada Vivienda' },
         { id:'gfp_cable_entrada_ta', label:'5.7 Cableado: Entrada Vivienda - ONT/TA' },
     ],
+    activation: [
+        { id:'gfp_activacion', label:'6.1 Captura Activacion en App Cliente' },
+    ],
+    ne3: [
+        { id:'gfp_patch_nvt', label:'7.1 Patch en POP/NVT' },
+        { id:'gfp_luz_roja', label:'8.1 Luz Roja - Fibras NVT a OTB/AP' },
+        { id:'gfp_fusion_dp', label:'9.1 Fusion DP/NVT - Bandeja + Etiqueta' },
+    ],
 };
 
 function getGfpRequiredPhotos(buildingType) {
-    // Obra civil (pasamuros) required for ALL building types per documentation
+    // Obra civil (pasamuros) always required for ALL building types
     let photos = [...GFP_PHOTOS.obraCivil];
-    // OTB/AP only when AP is separate from TA
-    if (['sdu1-ap+ta','sdu2','mdu3'].includes(buildingType)) {
-        photos.push(...GFP_PHOTOS.otbAp);
+    // NE4 photos: OTB/AP + Interior + ONT/TA + Activation
+    const ne4 = document.getElementById('ne4Check')?.checked;
+    if (ne4) {
+        if (['sdu1-ap+ta','sdu2','mdu3'].includes(buildingType)) {
+            photos.push(...GFP_PHOTOS.otbAp);
+        }
+        if (buildingType === 'sdu1-ap+ta') photos.push(...GFP_PHOTOS.interiorSdu1);
+        else if (buildingType === 'sdu2') photos.push(...GFP_PHOTOS.interiorSdu2);
+        else if (buildingType === 'mdu3') photos.push(...GFP_PHOTOS.interiorMdu);
+        photos.push(...GFP_PHOTOS.ontTa);
+        photos.push(...GFP_PHOTOS.activation);
     }
-    // Interior routing photos per building type
-    if (buildingType === 'sdu1-ap+ta') photos.push(...GFP_PHOTOS.interiorSdu1);
-    else if (buildingType === 'sdu2') photos.push(...GFP_PHOTOS.interiorSdu2);
-    else if (buildingType === 'mdu3') photos.push(...GFP_PHOTOS.interiorMdu);
-    // ONT/TA + misc always required
-    photos.push(...GFP_PHOTOS.always);
+    // NE3 photos
+    if (document.getElementById('ne3Check')?.checked) {
+        photos.push(...GFP_PHOTOS.ne3);
+    }
     return photos;
 }
 
@@ -758,7 +801,10 @@ function collectFormData() {
         supportTeam: document.getElementById('supportTeam').value,
         orderNumber: document.getElementById('orderNumber').value,
         buildingType: document.getElementById('buildingType').value,
+        ne4: document.getElementById('ne4Check').checked,
+        ne3: document.getElementById('ne3Check').checked,
         photos: state.photos,
+        photoNames: collectPhotoNames(),
     };
 }
 
