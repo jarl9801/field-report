@@ -14,8 +14,31 @@ GOG_ACCOUNT=jromero@umtelkomd.com gog calendar events "$TEAM_CAL" --days 14 --li
 
 SCRIPT_URL="https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec"
 
-echo "📋 Leyendo asignaciones del Apps Script..."
-curl -sL "${SCRIPT_URL}?action=getAllCitas" > /tmp/assignments.json 2>/dev/null || echo '{"citas":[]}' > /tmp/assignments.json
+echo "📋 Leyendo asignaciones del Apps Script (próximos 14 días)..."
+# getAllCitas filtra por fecha — consultamos cada fecha del rango
+python3 - << 'DATES_PYEOF'
+import subprocess, json
+from datetime import date, timedelta
+
+all_citas = []
+today = date.today()
+for i in range(15):
+    d = (today + timedelta(days=i)).isoformat()
+    url = f"https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec?action=getAllCitas&date={d}"
+    try:
+        r = subprocess.run(['curl', '-sL', url], capture_output=True, text=True, timeout=10)
+        data = json.loads(r.stdout)
+        citas = data.get('citas', [])
+        if citas:
+            all_citas.extend(citas)
+            print(f"  {d}: {len(citas)} asignadas")
+    except Exception as e:
+        pass
+
+with open('/tmp/assignments.json', 'w') as f:
+    json.dump({'citas': all_citas}, f)
+print(f"Total asignaciones: {len(all_citas)}")
+DATES_PYEOF
 
 python3 - << 'PYEOF'
 import json, re, urllib.request
