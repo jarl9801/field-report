@@ -731,7 +731,7 @@ async function loadAdminCitas() {
                 <div class="cita-admin-row">
                     <select id="team-${c.id}">${selected}${teamOptions}</select>
                     <input id="docs-${c.id}" type="url" placeholder="Link Aushändigung (Drive)" value="${c.linkDocs||''}"/>
-                    <button class="btn btn-green btn-sm" onclick="assignCitaAdmin('${c.id}')">✅ Asignar</button>
+                    <button class="btn btn-green btn-sm" onclick="assignCitaAdmin('${c.id}')">${c.equipo ? '✏️ Actualizar' : '✅ Asignar'}</button>
                 </div>` : `
                 <div style="font-size:13px;color:var(--text3);">
                     ${c.equipo ? `👥 ${c.equipo}` : ''} ${c.linkDocs ? `· <a href="${c.linkDocs}" target="_blank" style="color:var(--blue);">📎 Docs</a>` : ''}
