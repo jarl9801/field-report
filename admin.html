@@ -238,7 +238,8 @@
             <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
                 <input type="date" id="citasDatePicker" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;" />
                 <button class="btn btn-green btn-sm" onclick="loadAdminCitas()">🔄 Cargar</button>
-                <button class="btn btn-outline btn-sm" onclick="syncCitasAdmin()">📡 Sync Calendario</button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('citasDatePicker').value='';loadAdminCitas()">📋 Todas</button>
+                <button class="btn btn-outline btn-sm" onclick="syncCitasAdmin()">📡 Sync</button>
                 <span id="citasAdminStatus" style="font-size:13px;color:var(--text3);"></span>
             </div>
 
@@ -655,8 +656,7 @@ async function syncCitasAdmin() {
 
 async function loadAdminCitas() {
     const picker  = document.getElementById('citasDatePicker');
-    const dateStr = picker.value || new Date().toISOString().split('T')[0];
-    picker.value  = dateStr;
+    const dateStr = picker.value || ''; // vacío = mostrar todas las fechas
 
     const loading = document.getElementById('citasAdminLoading');
     const empty   = document.getElementById('citasAdminEmpty');
@@ -668,24 +668,21 @@ async function loadAdminCitas() {
     grid.innerHTML        = '';
 
     try {
-        // Lee del JSON estático generado por LobsterOps (no necesita Calendar OAuth)
         const resp = await fetch('citas.json?t=' + Date.now());
         const data = await resp.json();
-        // Filtrar por fecha seleccionada
-        const citas = (data.citas || []).filter(c => c.fecha === dateStr);
+
+        // Filtrar: si hay fecha seleccionada, solo esa; si no, todas desde hoy
+        const today = new Date().toISOString().split('T')[0];
+        const allCitas = (data.citas || []).filter(c => c.fecha >= today);
+        const citas = dateStr ? allCitas.filter(c => c.fecha === dateStr) : allCitas;
+
         loading.style.display = 'none';
 
         if (citas.length === 0) {
             empty.style.display = 'block';
-            empty.innerHTML = `📭 Sin citas para el ${dateStr}.<br><small>Generado: ${data.generated ? data.generated.substring(0,16) : '—'}</small>`;
+            empty.innerHTML = `📭 Sin citas${dateStr ? ` para el ${dateStr}` : ' próximas'}.<br><small>Generado: ${data.generated ? data.generated.substring(0,16) : '—'}</small>`;
             return;
         }
-        // Normalizar campos (JSON usa 'calle', template espera 'direccion')
-        const data2 = { citas: citas.map(c => ({
-            ...c,
-            direccion: c.calle || c.direccion || '',
-            tecnicos:  c.tecnicos || c.technicianCount || 0
-        })) };
 
         const STATUS_DONE = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
         const STATUS_LABELS = {
@@ -694,43 +691,59 @@ async function loadAdminCitas() {
             finalizada_no_ok: 'Finalizada ✗', cliente_ausente: 'Ausente',
             recitar: 'Recitar', paralizada: 'Paralizada'
         };
-
         const teamOptions = adminTeams.map(t => `<option value="${t}">${t}</option>`).join('');
 
-        grid.innerHTML = data2.citas.map(c => {
-            const isDone    = STATUS_DONE.includes(c.status);
-            const badgeCls  = isDone ? 'badge-done' : `badge-${c.status}`;
-            const badgeLbl  = STATUS_LABELS[c.status] || c.status;
-            const canAssign = !isDone;
-            const selected  = c.equipo ? `<option value="${c.equipo}" selected>${c.equipo}</option>` : '<option value="">— Equipo —</option>';
+        // Agrupar por fecha
+        const byDate = {};
+        citas.forEach(c => { if (!byDate[c.fecha]) byDate[c.fecha] = []; byDate[c.fecha].push(c); });
+
+        const DAY_NAMES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+        const MONTH_NAMES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+        function fmtDate(d) {
+            const dt = new Date(d + 'T12:00:00');
+            return `${DAY_NAMES[dt.getDay()]} ${dt.getDate()} ${MONTH_NAMES[dt.getMonth()]}`;
+        }
+
+        function renderCard(c) {
+            const isDone   = STATUS_DONE.includes(c.status);
+            const badgeCls = isDone ? 'badge-done' : `badge-${c.status}`;
+            const badgeLbl = STATUS_LABELS[c.status] || c.status;
+            const selected = c.equipo ? `<option value="${c.equipo}" selected>${c.equipo}</option>` : '<option value="">— Equipo —</option>';
+            const addr     = c.calle ? `${c.calle}, ${c.cp} ${c.ciudad}`.trim() : (c.ciudad || '—');
 
             return `
             <div class="admin-cita-card ${c.status}" id="admin-cita-${c.id}">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
                     <div>
                         <span style="font-size:18px;font-weight:700;color:#fff;">${c.ha || '—'}</span>
-                        <span style="font-size:13px;color:var(--text3);margin-left:10px;">👷 ${c.tecnicos} TK</span>
+                        <span style="font-size:13px;color:var(--text3);margin-left:8px;">👷 ${c.tecnicos} TK</span>
                     </div>
                     <span class="badge ${badgeCls}">${badgeLbl}</span>
                 </div>
-                <div style="font-size:14px;color:var(--text2);margin:6px 0 2px;">
-                  📍 ${c.cp && c.calle && c.calle.length > 3
-                      ? `${c.calle}, ${c.cp} ${c.ciudad}`
-                      : (c.titulo || '—').replace(/^\d+\s*TK\s+Umtelkomd\s*[-–]\s*Installation\s*[-–]\s*/i,'')
-                  }
-                </div>
-                <div style="font-size:13px;color:var(--blue);">🕐 ${c.inicio} – ${c.fin}</div>
-                ${canAssign ? `
+                <div style="font-size:14px;color:var(--text2);margin:6px 0 2px;">📍 ${addr}</div>
+                <div style="font-size:13px;color:var(--blue);margin-bottom:10px;">🕐 ${c.inicio} – ${c.fin}</div>
+                ${!isDone ? `
                 <div class="cita-admin-row">
                     <select id="team-${c.id}">${selected}${teamOptions}</select>
-                    <input  id="docs-${c.id}"  type="url" placeholder="Link Aushändigung (Drive)" value="${c.linkDocs||''}"/>
+                    <input id="docs-${c.id}" type="url" placeholder="Link Aushändigung (Drive)" value="${c.linkDocs||''}"/>
                     <button class="btn btn-green btn-sm" onclick="assignCitaAdmin('${c.id}')">✅ Asignar</button>
                 </div>` : `
-                <div style="font-size:13px;color:var(--text3);margin-top:8px;">
+                <div style="font-size:13px;color:var(--text3);">
                     ${c.equipo ? `👥 ${c.equipo}` : ''} ${c.linkDocs ? `· <a href="${c.linkDocs}" target="_blank" style="color:var(--blue);">📎 Docs</a>` : ''}
                 </div>`}
             </div>`;
-        }).join('');
+        }
+
+        grid.innerHTML = Object.keys(byDate).sort().map(fecha => `
+            <div style="margin-bottom:24px;">
+                <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+                            color:var(--blue);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;">
+                    📅 ${fmtDate(fecha)} &nbsp;<span style="color:var(--text3);font-weight:400;">(${byDate[fecha].length} cita${byDate[fecha].length>1?'s':''})</span>
+                </div>
+                ${byDate[fecha].map(renderCard).join('')}
+            </div>
+        `).join('');
 
     } catch (err) {
         loading.style.display = 'none';
@@ -764,7 +777,7 @@ async function assignCitaAdmin(citaId) {
 
 // Inicializar
 loadTeamsForAdmin();
-document.getElementById('citasDatePicker').value = new Date().toISOString().split('T')[0];
+// No pre-seleccionar fecha → carga todas las citas próximas al abrir
 </script>
 </body>
 </html>
