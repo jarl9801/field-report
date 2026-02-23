@@ -1,8 +1,10 @@
 *.backup
 .DS_Store
-*.pdf
 *.txt
 *.md
 Code.gs
 nexus_logo_transparent.png
 dashboard.html
+# Allow docs/ folder
+!docs/*.pdf
+!docs/*.xlsx
