@@ -766,10 +766,20 @@ async function assignCitaAdmin(citaId) {
 
     try {
         // text/plain avoids CORS preflight — Apps Script reads body normally
+        // Buscar datos completos de la cita del JSON
+        const citasResp = await fetch('citas.json?t=' + Date.now());
+        const citasData = await citasResp.json();
+        const cita = (citasData.citas || []).find(c => c.id === citaId) || {};
+
         await fetch(SCRIPT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: 'assignCita', citaId, equipo, linkDocs })
+            body: JSON.stringify({
+                action: 'assignCita', citaId, equipo, linkDocs,
+                ha: cita.ha, direccion: cita.calle, cp: cita.cp,
+                ciudad: cita.ciudad, inicio: cita.inicio, fin: cita.fin,
+                tecnicos: cita.tecnicos
+            })
         });
         btn.textContent = '✅ Asignado';
         setTimeout(loadAdminCitas, 1500);

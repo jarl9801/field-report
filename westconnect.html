@@ -1732,17 +1732,25 @@ async function loadCitas() {
 
     try {
         const teamName = state.currentTeam.name;
-        const url = `${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${dateStr}`;
-        const resp = await fetch(url);
+        // Lee del JSON estático (calendario) — no necesita Apps Script
+        const CITAS_JSON = 'https://jarl9801.github.io/field-report/citas.json';
+        const resp = await fetch(CITAS_JSON + '?t=' + Date.now());
         const data = await resp.json();
         loading.style.display = 'none';
 
-        if (!data.citas || data.citas.length === 0) {
+        // Mostrar citas del día asignadas a este equipo, o todas si no hay asignación
+        let citas = (data.citas || []).filter(c => c.fecha === dateStr);
+        const assigned = citas.filter(c => c.equipo === teamName);
+        if (assigned.length > 0) citas = assigned; // preferir las asignadas
+        // Normalizar campo dirección
+        citas = citas.map(c => ({ ...c, direccion: c.calle || c.direccion || '' }));
+
+        if (citas.length === 0) {
             empty.style.display = 'block';
             return;
         }
 
-        renderCitasCards(data.citas);
+        renderCitasCards(citas);
 
     } catch (err) {
         loading.style.display = 'none';
@@ -1765,7 +1773,8 @@ function renderCitasCards(citas) {
             : '';
 
         let actionBtns = '';
-        if (c.status === 'asignada') {
+        // libre y asignada ambos muestran "Capturar"
+        if (c.status === 'libre' || c.status === 'asignada') {
             actionBtns = `<button class="cita-btn cita-btn-primary" onclick="capturarCita('${c.id}')">✅ Capturar</button>${docsBtn}`;
         } else if (c.status === 'capturada') {
             actionBtns = `<button class="cita-btn cita-btn-success" onclick="iniciarCita('${c.id}', ${JSON.stringify(c).replace(/"/g,'&quot;')})">▶️ Iniciar trabajo</button>${docsBtn}`;
@@ -1773,13 +1782,15 @@ function renderCitasCards(citas) {
             actionBtns = `<button class="cita-btn cita-btn-primary" onclick="finalizarCita('${c.id}', ${JSON.stringify(c).replace(/"/g,'&quot;')})">🏁 Finalizar</button>${docsBtn}`;
         }
 
+        const addr = c.calle ? `${c.calle}, ${c.cp} ${c.ciudad}`.trim() : (c.ciudad || c.direccion || '—');
+
         return `
         <div class="cita-card status-${c.status}" id="cita-${c.id}">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
                 <span class="cita-ha">${c.ha || '—'}</span>
-                <span class="cita-status-badge ${st.cls}">${st.label}</span>
+                <span class="cita-status-badge ${st.cls}">${st.label || c.status}</span>
             </div>
-            <div class="cita-address">📍 ${[c.direccion, c.cp, c.ciudad].filter(Boolean).join(' · ')}</div>
+            <div class="cita-address">📍 ${addr}</div>
             <div class="cita-time" style="margin-top:4px;">🕐 ${c.inicio} – ${c.fin} &nbsp;·&nbsp; 👷 ${c.tecnicos} TK</div>
             <div class="cita-actions">${actionBtns}</div>
         </div>`;

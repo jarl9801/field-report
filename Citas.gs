@@ -168,25 +168,46 @@ function assignCitaData(data) {
   try {
     const sheet   = ensureCitasSheet();
     const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return jsonResponse({ success: false, error: 'No hay citas' });
+    const now     = new Date().toISOString();
+    let rowNum    = -1;
 
-    const rows = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
-    const idx  = rows.findIndex(r => r[CITAS_COLS.ID - 1] === data.citaId);
-    if (idx === -1) return jsonResponse({ success: false, error: 'Cita no encontrada' });
+    // Buscar fila existente
+    if (lastRow >= 2) {
+      const rows = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
+      const idx  = rows.findIndex(r => r[CITAS_COLS.ID - 1] === data.citaId);
+      if (idx !== -1) rowNum = idx + 2;
+    }
 
-    const rowNum = idx + 2; // +1 header, +1 1-indexed
-    sheet.getRange(rowNum, CITAS_COLS.EQUIPO).setValue(data.equipo || '');
-    sheet.getRange(rowNum, CITAS_COLS.STATUS).setValue(STATUS.ASIGNADA);
-    sheet.getRange(rowNum, CITAS_COLS.LINK_DOCS).setValue(data.linkDocs || '');
-    sheet.getRange(rowNum, CITAS_COLS.TS_ASIGNACION).setValue(new Date().toISOString());
+    if (rowNum === -1) {
+      // ── UPSERT: insertar fila nueva desde los datos del POST ──
+      const parts = (data.citaId || '').split('_');
+      const fecha = parts[0] || '';
+      const ha    = data.ha || (parts[1] ? 'HA' + parts[1] : '');
+      const newRow = Array(CITAS_COLS.NOTAS).fill('');
+      newRow[CITAS_COLS.ID - 1]           = data.citaId;
+      newRow[CITAS_COLS.FECHA - 1]        = fecha;
+      newRow[CITAS_COLS.HA - 1]           = ha;
+      newRow[CITAS_COLS.DIRECCION - 1]    = data.direccion || '';
+      newRow[CITAS_COLS.CP - 1]           = data.cp || '';
+      newRow[CITAS_COLS.CIUDAD - 1]       = data.ciudad || '';
+      newRow[CITAS_COLS.H_INICIO - 1]     = data.inicio || '';
+      newRow[CITAS_COLS.H_FIN - 1]        = data.fin || '';
+      newRow[CITAS_COLS.TECNICOS - 1]     = data.tecnicos || '';
+      newRow[CITAS_COLS.EQUIPO - 1]       = data.equipo || '';
+      newRow[CITAS_COLS.STATUS - 1]       = STATUS.ASIGNADA;
+      newRow[CITAS_COLS.LINK_DOCS - 1]    = data.linkDocs || '';
+      newRow[CITAS_COLS.TS_CREACION - 1]  = now;
+      newRow[CITAS_COLS.TS_ASIGNACION - 1]= now;
+      sheet.appendRow(newRow);
+    } else {
+      // Actualizar fila existente
+      sheet.getRange(rowNum, CITAS_COLS.EQUIPO).setValue(data.equipo || '');
+      sheet.getRange(rowNum, CITAS_COLS.STATUS).setValue(STATUS.ASIGNADA);
+      sheet.getRange(rowNum, CITAS_COLS.LINK_DOCS).setValue(data.linkDocs || '');
+      sheet.getRange(rowNum, CITAS_COLS.TS_ASIGNACION).setValue(now);
+    }
 
-    // Notificación Slack
-    _notifySlackCita('asignada', {
-      ha: rows[idx][CITAS_COLS.HA - 1],
-      equipo: data.equipo,
-      inicio: rows[idx][CITAS_COLS.H_INICIO - 1]
-    });
-
+    _notifySlackCita('asignada', { ha: data.ha || data.citaId, equipo: data.equipo, inicio: data.inicio || '' });
     return jsonResponse({ success: true, citaId: data.citaId, equipo: data.equipo });
   } catch (err) {
     return jsonResponse({ success: false, error: err.toString() });
