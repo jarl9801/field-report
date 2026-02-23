@@ -12,12 +12,25 @@ echo "📅 Leyendo calendario Umtelkomd (14 días, JSON)..."
 GOG_ACCOUNT=jromero@umtelkomd.com gog calendar events "$TEAM_CAL" --days 14 --limit 50 --json \
   > /tmp/cal_team_json.json 2>&1
 
+SCRIPT_URL="https://script.google.com/macros/s/AKfycbz6YI1Oh-tutU3q5NfPJxDq77QKDMVX6DtM92YZ_GxgKYqm0XXymVCOi08k4SuDteXr/exec"
+
+echo "📋 Leyendo asignaciones del Apps Script..."
+curl -sL "${SCRIPT_URL}?action=getAllCitas" > /tmp/assignments.json 2>/dev/null || echo '{"citas":[]}' > /tmp/assignments.json
+
 python3 - << 'PYEOF'
-import json, re
+import json, re, urllib.request
 from datetime import datetime
 
 with open('/tmp/cal_team_json.json') as f:
     raw = json.load(f)
+
+# Cargar asignaciones existentes del Sheet
+try:
+    with open('/tmp/assignments.json') as f:
+        assign_data = json.load(f)
+    assignments = {a['id']: a for a in assign_data.get('citas', []) if a.get('id')}
+except Exception:
+    assignments = {}
 
 events = raw if isinstance(raw, list) else raw.get('items', raw.get('events', []))
 
@@ -42,6 +55,9 @@ for e in events:
     location = e.get('location', '') or ''
     loc_m = re.match(r'^(.+),\s*(\d{5})\s+([^,]+)', location)
 
+    # Merge asignaciones del Sheet si existen
+    a = assignments.get(uid, {})
+
     citas.append({
         "id":       uid,
         "fecha":    start[:10],
@@ -53,7 +69,10 @@ for e in events:
         "cp":       loc_m.group(2) if loc_m else '',
         "ciudad":   loc_m.group(3).replace(', Deutschland', '').strip() if loc_m else '',
         "titulo":   title,
-        "equipo":   "", "status": "libre", "linkDocs": ""
+        # Preservar asignación si existe, si no → libre
+        "equipo":   a.get("equipo", ""),
+        "status":   a.get("status", "libre"),
+        "linkDocs": a.get("linkDocs", "")
     })
 
 result = {
@@ -63,9 +82,11 @@ result = {
 with open('citas.json', 'w') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
-print(f"✅ {len(citas)} citas generadas")
+assigned_count = sum(1 for c in citas if c['equipo'])
+print(f"✅ {len(citas)} citas generadas ({assigned_count} asignadas)")
 for c in result['citas']:
-    print(f"  {c['fecha']} | {c['ha']} | {c['calle']}, {c['cp']} {c['ciudad']} | {c['inicio']}-{c['fin']} | {c['tecnicos']} TK")
+    eq = f" → {c['equipo']}" if c['equipo'] else ""
+    print(f"  {c['fecha']} | {c['ha']} | {c['calle']}, {c['cp']} {c['ciudad']} | {c['inicio']}-{c['fin']} | {c['tecnicos']} TK{eq}")
 PYEOF
 
 git add citas.json
