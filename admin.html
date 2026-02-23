@@ -713,7 +713,12 @@ async function loadAdminCitas() {
                     </div>
                     <span class="badge ${badgeCls}">${badgeLbl}</span>
                 </div>
-                <div style="font-size:14px;color:var(--text2);margin:6px 0 2px;">📍 ${[c.direccion,c.cp,c.ciudad].filter(Boolean).join(' · ')}</div>
+                <div style="font-size:14px;color:var(--text2);margin:6px 0 2px;">
+                  📍 ${c.cp && c.calle && c.calle.length > 3
+                      ? `${c.calle}, ${c.cp} ${c.ciudad}`
+                      : (c.titulo || '—').replace(/^\d+\s*TK\s+Umtelkomd\s*[-–]\s*Installation\s*[-–]\s*/i,'')
+                  }
+                </div>
                 <div style="font-size:13px;color:var(--blue);">🕐 ${c.inicio} – ${c.fin}</div>
                 ${canAssign ? `
                 <div class="cita-admin-row">
