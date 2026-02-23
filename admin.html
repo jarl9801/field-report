@@ -323,8 +323,11 @@ async function loadData() {
         const resp = await fetch(SCRIPT_URL + '?action=getReports');
         const json = await resp.json();
         const raw = json.reports || json.data || json || [];
+        // Normalizar status legacy: 'completed' → 'completed-ok'
+        const STATUS_NORMALIZE = { 'completed': 'completed-ok', 'not-ok': 'completed-not-ok', 'absent': 'client-absent' };
         allData = raw.map(r => ({
             ...r,
+            workStatus: STATUS_NORMALIZE[r.workStatus] || r.workStatus,
             date: r.date || (r.timestamp ? r.timestamp.split('T')[0] : ''),
             startTime: parseTime(r.startTime),
             endTime: parseTime(r.endTime),
