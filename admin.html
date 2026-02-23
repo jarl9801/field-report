@@ -645,21 +645,12 @@ async function loadTeamsForAdmin() {
 }
 
 async function syncCitasAdmin() {
+    // El JSON se genera automáticamente por LobsterOps cada mañana
+    // Este botón simplemente recarga el archivo
     const el = document.getElementById('citasAdminStatus');
-    el.textContent = '⏳ Sincronizando con calendario…';
-    const dateStr = document.getElementById('citasDatePicker').value || new Date().toISOString().split('T')[0];
-    try {
-        // text/plain avoids CORS preflight — Apps Script reads body normally
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: 'syncCitas', date: dateStr })
-        });
-        el.textContent = '✅ Sincronizado';
-        setTimeout(loadAdminCitas, 1500);
-    } catch(e) {
-        el.textContent = '⚠️ Error: ' + e.message;
-    }
+    el.textContent = '🔄 Recargando…';
+    await loadAdminCitas();
+    el.textContent = '✅ Actualizado';
 }
 
 async function loadAdminCitas() {
@@ -677,15 +668,24 @@ async function loadAdminCitas() {
     grid.innerHTML        = '';
 
     try {
-        const resp = await fetch(`${SCRIPT_URL}?action=getAllCitas&date=${dateStr}`);
+        // Lee del JSON estático generado por LobsterOps (no necesita Calendar OAuth)
+        const resp = await fetch('citas.json?t=' + Date.now());
         const data = await resp.json();
+        // Filtrar por fecha seleccionada
+        const citas = (data.citas || []).filter(c => c.fecha === dateStr);
         loading.style.display = 'none';
 
-        if (!data.citas || data.citas.length === 0) {
+        if (citas.length === 0) {
             empty.style.display = 'block';
-            empty.innerHTML = `📭 Sin citas para el ${dateStr}.<br><small>Prueba <strong>Sync Calendario</strong> para jalarlo del Google Calendar.</small>`;
+            empty.innerHTML = `📭 Sin citas para el ${dateStr}.<br><small>Generado: ${data.generated ? data.generated.substring(0,16) : '—'}</small>`;
             return;
         }
+        // Normalizar campos (JSON usa 'calle', template espera 'direccion')
+        const data2 = { citas: citas.map(c => ({
+            ...c,
+            direccion: c.calle || c.direccion || '',
+            tecnicos:  c.tecnicos || c.technicianCount || 0
+        })) };
 
         const STATUS_DONE = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
         const STATUS_LABELS = {
@@ -697,7 +697,7 @@ async function loadAdminCitas() {
 
         const teamOptions = adminTeams.map(t => `<option value="${t}">${t}</option>`).join('');
 
-        grid.innerHTML = data.citas.map(c => {
+        grid.innerHTML = data2.citas.map(c => {
             const isDone    = STATUS_DONE.includes(c.status);
             const badgeCls  = isDone ? 'badge-done' : `badge-${c.status}`;
             const badgeLbl  = STATUS_LABELS[c.status] || c.status;

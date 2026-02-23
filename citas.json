@@ -1,0 +1,65 @@
+{
+  "generated": "2026-02-23T18:01:06.818210",
+  "citas": [
+    {
+      "id": "2026-02-23_755769",
+      "fecha": "2026-02-23",
+      "ha": "HA755769",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "15:00",
+      "cp": "49143",
+      "ciudad": "Bissendorf-Bergstr",
+      "calle": "Bergstr. 15",
+      "titulo": "2 TK Umtelkomd -Installation-WC-HA755769-49143 Bissendorf-Bergstr. 15",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-02-23_755773",
+      "fecha": "2026-02-23",
+      "ha": "HA755773",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "15:00",
+      "cp": "49143",
+      "ciudad": "Bissendorf-Bergstr",
+      "calle": "Bergstr. 13",
+      "titulo": "2 TK Umtelkomd -Installation-WC-HA755773-49143 Bissendorf-Bergstr. 13",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-02-24_755803",
+      "fecha": "2026-02-24",
+      "ha": "HA755803",
+      "tecnicos": 4,
+      "inicio": "07:45",
+      "fin": "16:45",
+      "cp": "49143",
+      "ciudad": "Bissendorf-Heinrich-Gerdom-Straße",
+      "calle": "19",
+      "titulo": "4 TK  Umtelkomd Installation WC -HA755803-49143 Bissendorf-Heinrich-Gerdom-Straße 19",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-02-25_409104",
+      "fecha": "2026-02-25",
+      "ha": "HA409104",
+      "tecnicos": 3,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "cp": "34414",
+      "ciudad": "Warburg",
+      "calle": "Warburg Fichtenweg 1 a",
+      "titulo": "3 TK Umtelkomd-Installation-HA409104- 34414 Warburg Warburg Fichtenweg 1 a",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    }
+  ]
+}
