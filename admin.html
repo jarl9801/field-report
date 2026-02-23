@@ -168,8 +168,8 @@
                 <span class="filter-label">Periodo:</span>
                 <select class="filter-select" id="filterPeriod" onchange="applyFilters()">
                     <option value="today">Hoy</option>
-                    <option value="week" selected>Esta semana</option>
-                    <option value="month">Este mes</option>
+                    <option value="week">Esta semana</option>
+                    <option value="month" selected>Este mes</option>
                     <option value="all">Todo</option>
                     <option value="custom">Personalizado</option>
                 </select>
@@ -409,14 +409,15 @@ function applyFilters() {
 
         if (period === 'today') return r.date === today;
         if (period === 'week') {
-            const d = new Date(r.date);
-            const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate()-7);
-            return d >= weekAgo;
+            // Semana actual: lunes a domingo
+            const d = new Date(r.date + 'T12:00:00');
+            const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay()+6)%7)); mon.setHours(0,0,0,0);
+            const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+            return d >= mon && d <= sun;
         }
         if (period === 'month') {
-            const d = new Date(r.date);
-            const monthAgo = new Date(now); monthAgo.setDate(monthAgo.getDate()-30);
-            return d >= monthAgo;
+            // Mes actual
+            return r.date.startsWith(today.substring(0,7));
         }
         if (period === 'custom') {
             const from = document.getElementById('filterFrom').value;
@@ -566,7 +567,7 @@ function renderTeams() {
         if (r.workStatus === 'completed-ok' || r.workStatus === 'preinstalled') byteam[t].ok++;
         if (r.workStatus === 'completed-not-ok') byteam[t].notOk++;
         byteam[t].totalTime += r.duration || 0;
-        const tech = r.technician || 'Sin nombre';
+        const tech = r.technician && r.technician.trim() ? r.technician.trim() : `(${r.team||'Sin equipo'})`;
         if (!byteam[t].techs[tech]) byteam[t].techs[tech] = { total:0, ok:0, notOk:0, totalTime:0 };
         byteam[t].techs[tech].total++;
         if (r.workStatus === 'completed-ok' || r.workStatus === 'preinstalled') byteam[t].techs[tech].ok++;
