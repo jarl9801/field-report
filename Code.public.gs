@@ -77,11 +77,69 @@ function doGet(e) {
     return getReportsData(e.parameter);
   }
 
+  if (action === 'getCitas') {
+    return getCitasData(e.parameter);
+  }
+
   return jsonResponse({
     status: 'online',
     message: 'Umtelkomd Field Report Backend activo',
     timestamp: new Date().toISOString()
   });
+}
+
+// ============================================
+// CITAS — Lee eventos WestConnect del Calendario
+// ============================================
+
+function getCitasData(params) {
+  try {
+    const tz = 'Europe/Berlin';
+    const dateStr = (params && params.date)
+      ? params.date
+      : Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+    const startDate = new Date(dateStr + 'T00:00:00');
+    const endDate   = new Date(dateStr + 'T23:59:59');
+
+    const citas = [];
+    const calendars = CalendarApp.getAllCalendars();
+
+    for (const cal of calendars) {
+      const events = cal.getEvents(startDate, endDate);
+      for (const event of events) {
+        const title = event.getTitle();
+        // Filtrar sólo eventos WestConnect
+        if (!/WC|Westconnect/i.test(title) && !/Installation.*HA/i.test(title)) continue;
+
+        const haMatch  = title.match(/HA(\d+)/i);
+        const tkMatch  = title.match(/^(\d+)\s*TK/i);
+        const cpMatch  = title.match(/(\d{5})\s+([\wäöüÄÖÜß-]+)/);
+        const strMatch = title.match(/\d{5}\s+[\wäöüÄÖÜß-]+[-\s]+(.+)$/);
+
+        citas.push({
+          id:          event.getId(),
+          title:       title,
+          ha:          haMatch  ? 'HA' + haMatch[1]    : '',
+          technicians: tkMatch  ? parseInt(tkMatch[1]) : 0,
+          start:       Utilities.formatDate(event.getStartTime(), tz, 'HH:mm'),
+          end:         Utilities.formatDate(event.getEndTime(),   tz, 'HH:mm'),
+          postalCode:  cpMatch  ? cpMatch[1]  : '',
+          city:        cpMatch  ? cpMatch[2]  : '',
+          street:      strMatch ? strMatch[1].replace(/-+/g, ' ').trim() : '',
+          description: event.getDescription() || ''
+        });
+      }
+    }
+
+    citas.sort((a, b) => a.start.localeCompare(b.start));
+
+    return jsonResponse({ success: true, citas: citas, date: dateStr, count: citas.length });
+
+  } catch (err) {
+    Logger.log('getCitasData error: ' + err.toString());
+    return jsonResponse({ success: false, error: err.toString(), citas: [] });
+  }
 }
 
 // ============================================
