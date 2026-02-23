@@ -125,6 +125,23 @@
         /* Photo count indicator */
         .photo-indicator { display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--text3); }
         .photo-indicator span { color:var(--green); font-weight:600; }
+        /* ===== ADMIN CITAS ===== */
+        .admin-cita-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
+        .admin-cita-card.libre     { border-left:3px solid var(--text3); }
+        .admin-cita-card.asignada  { border-left:3px solid var(--blue); }
+        .admin-cita-card.capturada { border-left:3px solid var(--orange); }
+        .admin-cita-card.en_trabajo{ border-left:3px solid var(--green); }
+        .admin-cita-card.finalizada_ok,.admin-cita-card.finalizada_no_ok,
+        .admin-cita-card.cliente_ausente,.admin-cita-card.recitar,.admin-cita-card.paralizada
+            { border-left:3px solid var(--text3); opacity:0.6; }
+        .cita-admin-row { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+        .cita-admin-row select, .cita-admin-row input { padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:var(--bg3); color:var(--text); font-size:13px; flex:1; min-width:120px; }
+        .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; }
+        .badge-libre     { background:rgba(104,104,160,0.2); color:var(--text3); }
+        .badge-asignada  { background:var(--blue-bg); color:var(--blue); }
+        .badge-capturada { background:var(--orange-bg); color:var(--orange); }
+        .badge-en_trabajo{ background:var(--green-bg); color:var(--green); }
+        .badge-done      { background:rgba(104,104,160,0.15); color:var(--text3); }
     </style>
 </head>
 <body>
@@ -140,6 +157,7 @@
         <!-- Tabs -->
         <div class="tabs">
             <div class="tab active" onclick="switchTab('overview')">📊 Resumen</div>
+            <div class="tab" onclick="switchTab('citas')">📅 Citas</div>
             <div class="tab" onclick="switchTab('reports')">📋 Reportes</div>
             <div class="tab" onclick="switchTab('teams')">👥 Equipos</div>
         </div>
@@ -213,6 +231,20 @@
                     <div class="bar-chart" id="chartTime"></div>
                 </div>
             </div>
+        </div>
+
+        <!-- Citas Tab -->
+        <div id="tab-citas" style="display:none;">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+                <input type="date" id="citasDatePicker" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:14px;" />
+                <button class="btn btn-green btn-sm" onclick="loadAdminCitas()">🔄 Cargar</button>
+                <button class="btn btn-outline btn-sm" onclick="syncCitasAdmin()">📡 Sync Calendario</button>
+                <span id="citasAdminStatus" style="font-size:13px;color:var(--text3);"></span>
+            </div>
+
+            <div id="citasAdminLoading" style="text-align:center;padding:40px;color:var(--text3);">Selecciona una fecha y carga las citas</div>
+            <div id="citasAdminEmpty" style="display:none;text-align:center;padding:40px;color:var(--text3);">📭 Sin citas para esta fecha</div>
+            <div id="citasAdminGrid"></div>
         </div>
 
         <!-- Reports Tab -->
@@ -568,9 +600,10 @@ function renderTeams() {
 function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
-    ['overview','reports','teams'].forEach(t => {
+    ['overview','citas','reports','teams'].forEach(t => {
         document.getElementById('tab-'+t).style.display = t===tab ? 'block' : 'none';
     });
+    if (tab === 'citas') loadAdminCitas();
 }
 
 // ===== EXPORT =====
@@ -591,6 +624,145 @@ function exportCSV() {
 
 // ===== INIT =====
 loadData();
+
+// =====================================================
+// ADMIN CITAS — Gestión de visitas WestConnect
+// =====================================================
+
+let adminTeams = ['West-001','West-002','West-003','West-004'];
+
+// Cargar equipos dinámicamente desde config
+async function loadTeamsForAdmin() {
+    try {
+        const resp = await fetch(SCRIPT_URL + '?action=getConfig');
+        const data = await resp.json();
+        if (data.teams) {
+            adminTeams = data.teams
+                .filter(t => (t.client||'').toLowerCase().includes('westconnect'))
+                .map(t => t.name);
+        }
+    } catch (_) {}
+}
+
+async function syncCitasAdmin() {
+    const el = document.getElementById('citasAdminStatus');
+    el.textContent = '⏳ Sincronizando con calendario…';
+    const dateStr = document.getElementById('citasDatePicker').value || new Date().toISOString().split('T')[0];
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ action:'syncCitas', date: dateStr })
+        });
+        el.textContent = '✅ Sincronizado';
+        loadAdminCitas();
+    } catch(e) {
+        el.textContent = '⚠️ Error: ' + e.message;
+    }
+}
+
+async function loadAdminCitas() {
+    const picker  = document.getElementById('citasDatePicker');
+    const dateStr = picker.value || new Date().toISOString().split('T')[0];
+    picker.value  = dateStr;
+
+    const loading = document.getElementById('citasAdminLoading');
+    const empty   = document.getElementById('citasAdminEmpty');
+    const grid    = document.getElementById('citasAdminGrid');
+
+    loading.style.display = 'block';
+    loading.textContent   = '⏳ Cargando citas…';
+    empty.style.display   = 'none';
+    grid.innerHTML        = '';
+
+    try {
+        const resp = await fetch(`${SCRIPT_URL}?action=getAllCitas&date=${dateStr}`);
+        const data = await resp.json();
+        loading.style.display = 'none';
+
+        if (!data.citas || data.citas.length === 0) {
+            empty.style.display = 'block';
+            empty.innerHTML = `📭 Sin citas para el ${dateStr}.<br><small>Prueba <strong>Sync Calendario</strong> para jalarlo del Google Calendar.</small>`;
+            return;
+        }
+
+        const STATUS_DONE = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
+        const STATUS_LABELS = {
+            libre: 'Libre', asignada: 'Asignada', capturada: 'Capturada',
+            en_trabajo: 'En trabajo', finalizada_ok: 'Finalizada ✓',
+            finalizada_no_ok: 'Finalizada ✗', cliente_ausente: 'Ausente',
+            recitar: 'Recitar', paralizada: 'Paralizada'
+        };
+
+        const teamOptions = adminTeams.map(t => `<option value="${t}">${t}</option>`).join('');
+
+        grid.innerHTML = data.citas.map(c => {
+            const isDone    = STATUS_DONE.includes(c.status);
+            const badgeCls  = isDone ? 'badge-done' : `badge-${c.status}`;
+            const badgeLbl  = STATUS_LABELS[c.status] || c.status;
+            const canAssign = !isDone;
+            const selected  = c.equipo ? `<option value="${c.equipo}" selected>${c.equipo}</option>` : '<option value="">— Equipo —</option>';
+
+            return `
+            <div class="admin-cita-card ${c.status}" id="admin-cita-${c.id}">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <span style="font-size:18px;font-weight:700;color:#fff;">${c.ha || '—'}</span>
+                        <span style="font-size:13px;color:var(--text3);margin-left:10px;">👷 ${c.tecnicos} TK</span>
+                    </div>
+                    <span class="badge ${badgeCls}">${badgeLbl}</span>
+                </div>
+                <div style="font-size:14px;color:var(--text2);margin:6px 0 2px;">📍 ${[c.direccion,c.cp,c.ciudad].filter(Boolean).join(' · ')}</div>
+                <div style="font-size:13px;color:var(--blue);">🕐 ${c.inicio} – ${c.fin}</div>
+                ${canAssign ? `
+                <div class="cita-admin-row">
+                    <select id="team-${c.id}">${selected}${teamOptions}</select>
+                    <input  id="docs-${c.id}"  type="url" placeholder="Link Aushändigung (Drive)" value="${c.linkDocs||''}"/>
+                    <button class="btn btn-green btn-sm" onclick="assignCitaAdmin('${c.id}')">✅ Asignar</button>
+                </div>` : `
+                <div style="font-size:13px;color:var(--text3);margin-top:8px;">
+                    ${c.equipo ? `👥 ${c.equipo}` : ''} ${c.linkDocs ? `· <a href="${c.linkDocs}" target="_blank" style="color:var(--blue);">📎 Docs</a>` : ''}
+                </div>`}
+            </div>`;
+        }).join('');
+
+    } catch (err) {
+        loading.style.display = 'none';
+        grid.innerHTML = `<div style="text-align:center;padding:40px;color:var(--red);">⚠️ Error: ${err.message}</div>`;
+    }
+}
+
+async function assignCitaAdmin(citaId) {
+    const equipo   = document.getElementById(`team-${citaId}`).value;
+    const linkDocs = document.getElementById(`docs-${citaId}`).value;
+
+    if (!equipo) { alert('Selecciona un equipo'); return; }
+
+    const btn = event.target;
+    btn.disabled = true; btn.textContent = '⏳';
+
+    try {
+        const resp = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action:'assignCita', citaId, equipo, linkDocs })
+        });
+        const data = await resp.json();
+        if (data.success) {
+            btn.textContent = '✅ OK';
+            setTimeout(loadAdminCitas, 800);
+        } else {
+            btn.disabled = false; btn.textContent = 'Asignar';
+            alert('Error: ' + data.error);
+        }
+    } catch (err) {
+        btn.disabled = false; btn.textContent = 'Asignar';
+        alert('Error de red: ' + err.message);
+    }
+}
+
+// Inicializar
+loadTeamsForAdmin();
+document.getElementById('citasDatePicker').value = new Date().toISOString().split('T')[0];
 </script>
 </body>
 </html>

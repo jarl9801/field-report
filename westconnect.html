@@ -213,16 +213,25 @@
 
         @media (prefers-reduced-motion: reduce) { * { animation-duration:0.01ms!important; transition-duration:0.01ms!important; } }
         /* ====== CITAS SCREEN ====== */
-        .cita-card { background:white; border:2px solid var(--gray-medium); border-radius:12px; padding:16px; margin-bottom:12px; cursor:pointer; transition:border-color 0.2s, box-shadow 0.2s; }
-        .cita-card:active { border-color:var(--primary); box-shadow:0 2px 12px rgba(25,118,210,0.25); }
+        .cita-card { background:white; border:2px solid var(--gray-medium); border-radius:12px; padding:16px; margin-bottom:12px; transition:all 0.2s; }
+        .cita-card.status-asignada  { border-left:4px solid #1976D2; }
+        .cita-card.status-capturada { border-left:4px solid #F57C00; background:#FFF8F0; }
+        .cita-card.status-en_trabajo{ border-left:4px solid #388E3C; background:#F0FFF4; }
         .cita-ha { font-size:20px; font-weight:700; color:var(--primary-dark); }
         .cita-address { font-size:14px; color:var(--text-secondary); margin:6px 0 4px; }
         .cita-time { font-size:13px; color:var(--primary); font-weight:600; }
         .cita-tk { font-size:12px; background:var(--gray-light); border:1px solid var(--gray-medium); border-radius:20px; padding:2px 10px; }
-        .cita-docs-row { display:flex; gap:8px; margin-bottom:16px; }
-        .cita-doc-btn { flex:1; padding:12px 8px; border:1px solid var(--gray-medium); border-radius:10px; font-size:13px; font-weight:600; text-align:center; text-decoration:none; color:var(--primary-dark); background:white; display:block; }
-        .cita-section-label { font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
+        .cita-status-badge { font-size:11px; font-weight:700; border-radius:20px; padding:3px 10px; text-transform:uppercase; letter-spacing:0.5px; }
+        .badge-asignada   { background:#E3F2FD; color:#1565C0; }
+        .badge-capturada  { background:#FFF3E0; color:#E65100; }
+        .badge-en_trabajo { background:#E8F5E9; color:#2E7D32; }
+        .cita-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+        .cita-btn { flex:1; min-width:100px; padding:10px 12px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
+        .cita-btn-primary { background:var(--primary); color:white; }
+        .cita-btn-success { background:var(--success); color:white; }
+        .cita-btn-doc     { background:var(--gray-light); color:var(--text-primary); border:1px solid var(--gray-medium); text-decoration:none; text-align:center; display:inline-block; }
         .cita-skip-btn { width:100%; padding:14px; margin-top:8px; background:var(--gray-light); border:1px solid var(--gray-medium); border-radius:10px; font-size:15px; cursor:pointer; color:var(--text-secondary); }
+        .cita-section-label { font-size:12px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:10px; }
     </style>
 </head>
 <body>
@@ -289,20 +298,12 @@
                 <div style="font-size:13px;opacity:0.85;margin-top:2px;" id="citasDate"></div>
             </div>
 
-            <!-- Documentos siempre disponibles -->
-            <div class="cita-section-label">📎 Documentos NE4</div>
-            <div class="cita-docs-row">
-                <a id="docReplanteo" href="#" target="_blank" class="cita-doc-btn">📋 Replanteo NE4</a>
-                <a id="docExcel" href="#" target="_blank" class="cita-doc-btn">📊 Diligenciamiento</a>
-            </div>
-
-            <!-- Lista de citas -->
-            <div class="cita-section-label">📅 Citas del día</div>
+            <div class="cita-section-label">📅 Citas asignadas hoy</div>
             <div id="citasLoading" style="text-align:center;padding:32px;color:var(--text-secondary);">⏳ Cargando citas…</div>
-            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas programadas hoy</div>
+            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas asignadas para hoy.<br><small style="color:var(--text-secondary);">El administrador aún no ha asignado citas a tu equipo.</small></div>
             <div id="citasList"></div>
 
-            <button class="cita-skip-btn" onclick="enterFormDirect()">✏️ Continuar sin cita</button>
+            <button class="cita-skip-btn" onclick="enterFormDirect()">✏️ Llenar formulario sin cita</button>
         </div>
 
         <!-- Form Screen -->
@@ -1572,6 +1573,22 @@ async function doSubmit() {
     if (navigator.onLine) {
         try {
             await fetch(GOOGLE_SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(formData) });
+
+            // Actualizar status de la cita si estaba asociada
+            if (state.selectedCita && state.selectedCita.id) {
+                const statusMap = {
+                    'completed-ok':      'finalizada_ok',
+                    'completed-not-ok':  'finalizada_no_ok',
+                    'client-absent':     'cliente_ausente',
+                    'client-reschedule': 'recitar',
+                    'on-hold':           'paralizada',
+                    'preinstalled':      'finalizada_ok'
+                };
+                const citaFinalStatus = statusMap[formData.workStatus] || 'finalizada_ok';
+                updateCitaStatus(state.selectedCita.id, citaFinalStatus, formData.comments);
+                state.selectedCita = null;
+            }
+
             saveSubmission(formData);
             document.getElementById('successModal').classList.add('show');
             setTimeout(() => { document.getElementById('successModal').classList.remove('show'); resetForm(); }, 2500);
@@ -1689,12 +1706,8 @@ function showMemberScreen(team) {
 }
 
 // ============================================
-// CITAS — Pantalla de asignación de visitas
+// CITAS — Gestión de visitas WestConnect
 // ============================================
-const DOCS = {
-  replanteo: 'https://jarl9801.github.io/field-report/docs/replanteo_ne4.pdf',
-  excel:     'https://jarl9801.github.io/field-report/docs/diligenciamiento_wc.xlsx'
-};
 
 function showCitasScreen() {
     const team = state.currentTeam;
@@ -1702,28 +1715,25 @@ function showCitasScreen() {
     const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
     document.getElementById('citasDate').textContent =
         new Date().toLocaleDateString(state.lang === 'de' ? 'de-DE' : 'es-ES', opts);
-
-    // Docs links
-    document.getElementById('docReplanteo').href = DOCS.replanteo;
-    document.getElementById('docExcel').href     = DOCS.excel;
-
     state.selectedCita = null;
     showScreen('citasScreen');
     loadCitas();
 }
 
 async function loadCitas() {
-    const dateStr  = new Date().toISOString().split('T')[0];
-    const loading  = document.getElementById('citasLoading');
-    const empty    = document.getElementById('citasEmpty');
-    const list     = document.getElementById('citasList');
+    const dateStr = new Date().toISOString().split('T')[0];
+    const loading = document.getElementById('citasLoading');
+    const empty   = document.getElementById('citasEmpty');
+    const list    = document.getElementById('citasList');
 
     loading.style.display = 'block';
     empty.style.display   = 'none';
     list.innerHTML        = '';
 
     try {
-        const resp = await fetch(GOOGLE_SCRIPT_URL + '?action=getCitas&date=' + dateStr);
+        const teamName = state.currentTeam.name;
+        const url = `${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${dateStr}`;
+        const resp = await fetch(url);
         const data = await resp.json();
         loading.style.display = 'none';
 
@@ -1732,26 +1742,74 @@ async function loadCitas() {
             return;
         }
 
-        list.innerHTML = data.citas.map(c => `
-            <div class="cita-card" onclick='selectCita(${JSON.stringify(c)})'>
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-                    <span class="cita-ha">${c.ha || '—'}</span>
-                    <span class="cita-tk">👷 ${c.technicians} TK</span>
-                </div>
-                <div class="cita-address">📍 ${[c.street, c.postalCode, c.city].filter(Boolean).join(' · ')}</div>
-                <div class="cita-time">🕐 ${c.start} – ${c.end}</div>
-            </div>
-        `).join('');
+        renderCitasCards(data.citas);
 
     } catch (err) {
         loading.style.display = 'none';
-        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">⚠️ Error al cargar citas. Continúa sin seleccionar.</div>';
+        list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger);">⚠️ Sin conexión. Continúa sin cita o intenta de nuevo.</div>';
     }
 }
 
-function selectCita(cita) {
+function renderCitasCards(citas) {
+    const list = document.getElementById('citasList');
+    const STATUS_LABELS = {
+        asignada:   { label:'Asignada',    cls:'badge-asignada'  },
+        capturada:  { label:'Capturada',   cls:'badge-capturada' },
+        en_trabajo: { label:'En trabajo',  cls:'badge-en_trabajo' }
+    };
+
+    list.innerHTML = citas.map(c => {
+        const st    = STATUS_LABELS[c.status] || { label: c.status, cls:'' };
+        const docsBtn = c.linkDocs
+            ? `<a href="${c.linkDocs}" target="_blank" class="cita-btn cita-btn-doc">📎 Docs</a>`
+            : '';
+
+        let actionBtns = '';
+        if (c.status === 'asignada') {
+            actionBtns = `<button class="cita-btn cita-btn-primary" onclick="capturarCita('${c.id}')">✅ Capturar</button>${docsBtn}`;
+        } else if (c.status === 'capturada') {
+            actionBtns = `<button class="cita-btn cita-btn-success" onclick="iniciarCita('${c.id}', ${JSON.stringify(c).replace(/"/g,'&quot;')})">▶️ Iniciar trabajo</button>${docsBtn}`;
+        } else if (c.status === 'en_trabajo') {
+            actionBtns = `<button class="cita-btn cita-btn-primary" onclick="finalizarCita('${c.id}', ${JSON.stringify(c).replace(/"/g,'&quot;')})">🏁 Finalizar</button>${docsBtn}`;
+        }
+
+        return `
+        <div class="cita-card status-${c.status}" id="cita-${c.id}">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                <span class="cita-ha">${c.ha || '—'}</span>
+                <span class="cita-status-badge ${st.cls}">${st.label}</span>
+            </div>
+            <div class="cita-address">📍 ${[c.direccion, c.cp, c.ciudad].filter(Boolean).join(' · ')}</div>
+            <div class="cita-time" style="margin-top:4px;">🕐 ${c.inicio} – ${c.fin} &nbsp;·&nbsp; 👷 ${c.tecnicos} TK</div>
+            <div class="cita-actions">${actionBtns}</div>
+        </div>`;
+    }).join('');
+}
+
+async function capturarCita(citaId) {
+    await updateCitaStatus(citaId, 'capturada');
+    loadCitas(); // refrescar
+}
+
+function iniciarCita(citaId, cita) {
+    state.selectedCita = cita;
+    updateCitaStatus(citaId, 'en_trabajo');
+    enterFormDirect();
+}
+
+function finalizarCita(citaId, cita) {
     state.selectedCita = cita;
     enterFormDirect();
+}
+
+async function updateCitaStatus(citaId, status, notas) {
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST', mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateCitaStatus', citaId, status, notas: notas || '' })
+        });
+    } catch (_) {}
 }
 
 function enterFormDirect() {
@@ -1763,12 +1821,11 @@ function enterFormDirect() {
     }
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
-    // Pre-llenar HA y hora de inicio si hay cita seleccionada
     if (state.selectedCita) {
         const haEl    = document.getElementById('ha');
         const startEl = document.getElementById('startTime');
-        if (haEl    && state.selectedCita.ha)    haEl.value    = state.selectedCita.ha;
-        if (startEl && state.selectedCita.start) startEl.value = state.selectedCita.start;
+        if (haEl    && state.selectedCita.ha)     haEl.value    = state.selectedCita.ha;
+        if (startEl && state.selectedCita.inicio) startEl.value = state.selectedCita.inicio;
     }
 
     populateSupportTeams();
