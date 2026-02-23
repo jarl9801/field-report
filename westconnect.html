@@ -1804,9 +1804,10 @@ function finalizarCita(citaId, cita) {
 
 async function updateCitaStatus(citaId, status, notas) {
     try {
+        // text/plain avoids CORS preflight on Google Apps Script
         await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST', mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ action: 'updateCitaStatus', citaId, status, notas: notas || '' })
         });
     } catch (_) {}

@@ -649,12 +649,14 @@ async function syncCitasAdmin() {
     el.textContent = '⏳ Sincronizando con calendario…';
     const dateStr = document.getElementById('citasDatePicker').value || new Date().toISOString().split('T')[0];
     try {
+        // text/plain avoids CORS preflight — Apps Script reads body normally
         await fetch(SCRIPT_URL, {
-            method: 'POST', headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({ action:'syncCitas', date: dateStr })
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'syncCitas', date: dateStr })
         });
         el.textContent = '✅ Sincronizado';
-        loadAdminCitas();
+        setTimeout(loadAdminCitas, 1500);
     } catch(e) {
         el.textContent = '⚠️ Error: ' + e.message;
     }
@@ -741,19 +743,14 @@ async function assignCitaAdmin(citaId) {
     btn.disabled = true; btn.textContent = '⏳';
 
     try {
-        const resp = await fetch(SCRIPT_URL, {
+        // text/plain avoids CORS preflight — Apps Script reads body normally
+        await fetch(SCRIPT_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action:'assignCita', citaId, equipo, linkDocs })
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'assignCita', citaId, equipo, linkDocs })
         });
-        const data = await resp.json();
-        if (data.success) {
-            btn.textContent = '✅ OK';
-            setTimeout(loadAdminCitas, 800);
-        } else {
-            btn.disabled = false; btn.textContent = 'Asignar';
-            alert('Error: ' + data.error);
-        }
+        btn.textContent = '✅ Asignado';
+        setTimeout(loadAdminCitas, 1500);
     } catch (err) {
         btn.disabled = false; btn.textContent = 'Asignar';
         alert('Error de red: ' + err.message);
