@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-23T22:20:53.744979",
+  "generated": "2026-02-23T22:22:14.231897",
   "citas": [
     {
       "id": "2026-02-23_211369",
@@ -72,8 +72,8 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "4 TK Umtelkomd - Installation - HA755803",
-      "equipo": "",
-      "status": "libre",
+      "equipo": "West-001",
+      "status": "asignada",
       "linkDocs": ""
     },
     {
