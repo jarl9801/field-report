@@ -677,7 +677,7 @@ async function loadAdminCitas() {
 
         // Filtrar: si hay fecha seleccionada, solo esa; si no, todas desde hoy
         const today = new Date().toISOString().split('T')[0];
-        const allCitas = (data.citas || []).filter(c => c.fecha >= today);
+        const allCitas = (data.citas || []).filter(c => c.fecha > today);
         const citas = dateStr ? allCitas.filter(c => c.fecha === dateStr) : allCitas;
 
         loading.style.display = 'none';
