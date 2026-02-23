@@ -9,7 +9,7 @@ cd "$REPO_DIR"
 TEAM_CAL="a400089061a6fa2a053b8e3e3d1236767b2b97a5d5173b2e4d1f1734a5337ee0@group.calendar.google.com"
 
 echo "📅 Leyendo calendario Umtelkomd (14 días, JSON)..."
-GOG_ACCOUNT=jromero@umtelkomd.com gog calendar events "$TEAM_CAL" --days 14 --json \
+GOG_ACCOUNT=jromero@umtelkomd.com gog calendar events "$TEAM_CAL" --days 14 --limit 50 --json \
   > /tmp/cal_team_json.json 2>&1
 
 python3 - << 'PYEOF'
