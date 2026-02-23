@@ -627,7 +627,7 @@ function syncCitasFromCalendar(params) {
     if (lastRow > 1) {
       const data = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
       data.forEach((row, i) => {
-        if (row[CITAS_COLS.FECHA - 1] === dateStr && row[CITAS_COLS.CAL_EVENT_ID - 1]) {
+        if (_toDateStr(row[CITAS_COLS.FECHA - 1]) === dateStr && row[CITAS_COLS.CAL_EVENT_ID - 1]) {
           existing[row[CITAS_COLS.CAL_EVENT_ID - 1]] = i + 2; // 1-indexed + header
         }
       });
@@ -672,7 +672,7 @@ function getAllCitasData(params) {
 
     const data  = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
     const citas = data
-      .filter(r => r[CITAS_COLS.FECHA - 1] === dateStr)
+      .filter(r => _toDateStr(r[CITAS_COLS.FECHA - 1]) === dateStr)
       .map((r, i) => ({
         id:         r[CITAS_COLS.ID - 1],
         ha:         r[CITAS_COLS.HA - 1],
@@ -711,9 +711,9 @@ function getCitasByTeamData(params) {
     const data  = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
     const citas = data
       .filter(r =>
-        r[CITAS_COLS.FECHA - 1]  === dateStr &&
-        r[CITAS_COLS.EQUIPO - 1] === equipo  &&
-        r[CITAS_COLS.STATUS - 1] !== STATUS.LIBRE
+        _toDateStr(r[CITAS_COLS.FECHA - 1]) === dateStr &&
+        r[CITAS_COLS.EQUIPO - 1]            === equipo  &&
+        r[CITAS_COLS.STATUS - 1]            !== STATUS.LIBRE
       )
       .map(r => ({
         id:        r[CITAS_COLS.ID - 1],
@@ -793,37 +793,77 @@ function updateCitaStatusData(data) {
   }
 }
 
+// ─── Helper: normalizar fecha → 'yyyy-MM-dd' (Sheets devuelve Date objects) ──
+function _toDateStr(val) {
+  if (!val) return '';
+  if (val instanceof Date) return Utilities.formatDate(val, 'Europe/Berlin', 'yyyy-MM-dd');
+  return String(val).substring(0, 10);
+}
+
 // ─── Helper: leer citas del calendario (sin Sheet) ──────────────────
 function _readCalendarCitas(dateStr) {
-  const tz        = 'Europe/Berlin';
-  const startDate = new Date(dateStr + 'T00:00:00');
-  const endDate   = new Date(dateStr + 'T23:59:59');
+  const tz    = 'Europe/Berlin';
+  // Construir rango en hora de Berlin para no perder eventos por UTC offset
+  const parts = dateStr.split('-').map(Number);
+  const startDate = new Date(parts[0], parts[1]-1, parts[2],  0,  0,  0);
+  const endDate   = new Date(parts[0], parts[1]-1, parts[2], 23, 59, 59);
   const citas     = [];
 
-  for (const cal of CalendarApp.getAllCalendars()) {
-    for (const event of cal.getEvents(startDate, endDate)) {
-      const title = event.getTitle();
-      if (!/WC|Westconnect/i.test(title) && !/Installation.*HA/i.test(title)) continue;
+  try {
+    const calendars = CalendarApp.getAllCalendars();
+    Logger.log('Calendarios encontrados: ' + calendars.length);
 
-      const haMatch  = title.match(/HA(\d+)/i);
-      const tkMatch  = title.match(/^(\d+)\s*TK/i);
-      const cpMatch  = title.match(/(\d{5})\s+([\wäöüÄÖÜß-]+)/);
-      const strMatch = title.match(/\d{5}\s+[\wäöüÄÖÜß-]+[-\s]+(.+)$/);
+    for (const cal of calendars) {
+      const events = cal.getEvents(startDate, endDate);
+      Logger.log('Cal "' + cal.getName() + '" → ' + events.length + ' eventos en ' + dateStr);
 
-      citas.push({
-        calEventId: event.getId(),
-        ha:         haMatch  ? 'HA' + haMatch[1]    : '',
-        technicians: tkMatch ? parseInt(tkMatch[1]) : 0,
-        start:      Utilities.formatDate(event.getStartTime(), tz, 'HH:mm'),
-        end:        Utilities.formatDate(event.getEndTime(),   tz, 'HH:mm'),
-        postalCode: cpMatch  ? cpMatch[1]           : '',
-        city:       cpMatch  ? cpMatch[2]           : '',
-        street:     strMatch ? strMatch[1].replace(/-+/g, ' ').trim() : ''
-      });
+      for (const event of events) {
+        const title = event.getTitle();
+        Logger.log('Evento: ' + title);
+
+        // Filtro amplio — cualquier evento que mencione WC, HA, o instalación WestConnect
+        const isWC = /WC/i.test(title) || /westconnect/i.test(title) ||
+                     /HA\d{5,}/i.test(title) || (/Installation/i.test(title) && /HA/i.test(title));
+        if (!isWC) continue;
+
+        const haMatch  = title.match(/HA(\d+)/i);
+        const tkMatch  = title.match(/^(\d+)\s*TK/i);
+        const cpMatch  = title.match(/(\d{5})\s+([\wäöüÄÖÜß\-]+)/);
+        const strMatch = title.match(/\d{5}\s+[\wäöüÄÖÜß\-]+[-\s]+(.+)$/);
+
+        citas.push({
+          calEventId:  event.getId(),
+          ha:          haMatch  ? 'HA' + haMatch[1]    : title.substring(0, 30),
+          technicians: tkMatch  ? parseInt(tkMatch[1]) : 0,
+          start:       Utilities.formatDate(event.getStartTime(), tz, 'HH:mm'),
+          end:         Utilities.formatDate(event.getEndTime(),   tz, 'HH:mm'),
+          postalCode:  cpMatch  ? cpMatch[1]           : '',
+          city:        cpMatch  ? cpMatch[2]           : '',
+          street:      strMatch ? strMatch[1].replace(/-+/g, ' ').trim() : ''
+        });
+      }
     }
+  } catch (err) {
+    Logger.log('ERROR _readCalendarCitas: ' + err.toString());
+    throw err;
   }
+
   citas.sort((a, b) => a.start.localeCompare(b.start));
+  Logger.log('Total citas WC encontradas: ' + citas.length);
   return citas;
+}
+
+// ─── Función de diagnóstico (ejecutar manualmente en Apps Script) ────
+function testCitasHoy() {
+  const tz      = 'Europe/Berlin';
+  const dateStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  Logger.log('=== TEST CITAS === Fecha: ' + dateStr);
+
+  const citas = _readCalendarCitas(dateStr);
+  Logger.log('Citas encontradas: ' + JSON.stringify(citas));
+
+  const sheet = ensureCitasSheet();
+  Logger.log('Hoja Citas existe: ' + (sheet ? 'SÍ' : 'NO'));
 }
 
 // ─── Helper: notificación Slack ──────────────────────────────────────
