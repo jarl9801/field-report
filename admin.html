@@ -771,8 +771,10 @@ async function assignCitaAdmin(citaId) {
         const citasData = await citasResp.json();
         const cita = (citasData.citas || []).find(c => c.id === citaId) || {};
 
+        // no-cors: evita auth redirect de Google; no podemos leer la respuesta pero el POST llega
         await fetch(SCRIPT_URL, {
             method: 'POST',
+            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({
                 action: 'assignCita', citaId, equipo, linkDocs,
@@ -782,7 +784,8 @@ async function assignCitaAdmin(citaId) {
             })
         });
         btn.textContent = '✅ Asignado';
-        setTimeout(loadAdminCitas, 1500);
+        btn.style.background = '#27ae60';
+        setTimeout(loadAdminCitas, 2000);
     } catch (err) {
         btn.disabled = false; btn.textContent = 'Asignar';
         alert('Error de red: ' + err.message);
