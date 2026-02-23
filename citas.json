@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-23T22:32:42.109763",
+  "generated": "2026-02-23T22:40:46.663710",
   "citas": [
     {
       "id": "2026-02-23_211369",
@@ -87,9 +87,9 @@
       "cp": "34414",
       "ciudad": "Warburg",
       "titulo": "3 TK Umtelkomd - Installation - HA408695",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-002",
+      "status": "asignada",
+      "linkDocs": "https://drive.google.com/drive/folders/1K63XImVztc7Wcx76NjlE2ccv8Yb1Jinm?usp=share_link"
     },
     {
       "id": "2026-02-25_409104",
