@@ -771,18 +771,15 @@ async function assignCitaAdmin(citaId) {
         const citasData = await citasResp.json();
         const cita = (citasData.citas || []).find(c => c.id === citaId) || {};
 
-        // no-cors: evita auth redirect de Google; no podemos leer la respuesta pero el POST llega
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-                action: 'assignCita', citaId, equipo, linkDocs,
-                ha: cita.ha, direccion: cita.calle, cp: cita.cp,
-                ciudad: cita.ciudad, inicio: cita.inicio, fin: cita.fin,
-                tecnicos: cita.tecnicos
-            })
+        // GET request: evita auth redirect de Google (los GET no tienen este problema)
+        const params = new URLSearchParams({
+            action: 'assignCita', citaId, equipo, linkDocs: linkDocs || '',
+            ha: cita.ha || '', direccion: cita.calle || '', cp: cita.cp || '',
+            ciudad: cita.ciudad || '', inicio: cita.inicio || '', fin: cita.fin || '',
+            tecnicos: cita.tecnicos || ''
         });
+        const resp = await fetch(`${SCRIPT_URL}?${params}`);
+        const result = await resp.json();
         btn.textContent = '✅ Asignado';
         btn.style.background = '#27ae60';
         setTimeout(loadAdminCitas, 2000);

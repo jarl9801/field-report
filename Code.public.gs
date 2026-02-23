@@ -94,6 +94,15 @@ function doGet(e) {
     return getAllCitasData(e.parameter);
   }
 
+  // Write actions via GET (POST has auth redirect issues on some deployments)
+  if (action === 'assignCita') {
+    return assignCitaData(e.parameter);
+  }
+
+  if (action === 'updateCitaStatus') {
+    return updateCitaStatusData(e.parameter);
+  }
+
   return jsonResponse({
     status: 'online',
     message: 'Umtelkomd Field Report Backend activo',

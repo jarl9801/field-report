@@ -1813,12 +1813,8 @@ function finalizarCita(citaId, cita) {
 
 async function updateCitaStatus(citaId, status, notas) {
     try {
-        // text/plain avoids CORS preflight on Google Apps Script
-        await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ action: 'updateCitaStatus', citaId, status, notas: notas || '' })
-        });
+        const params = new URLSearchParams({ action: 'updateCitaStatus', citaId, status, notas: notas || '' });
+        await fetch(`${GOOGLE_SCRIPT_URL}?${params}`);
     } catch (_) {}
 }
 
