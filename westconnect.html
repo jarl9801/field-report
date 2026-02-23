@@ -298,9 +298,9 @@
                 <div style="font-size:13px;opacity:0.85;margin-top:2px;" id="citasDate"></div>
             </div>
 
-            <div class="cita-section-label">📅 Citas asignadas hoy</div>
+            <div class="cita-section-label" id="citasSectionLabel">📅 Citas asignadas</div>
             <div id="citasLoading" style="text-align:center;padding:32px;color:var(--text-secondary);">⏳ Cargando citas…</div>
-            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas asignadas para hoy.<br><small style="color:var(--text-secondary);">El administrador aún no ha asignado citas a tu equipo.</small></div>
+            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas asignadas próximas.<br><small style="color:var(--text-secondary);">El administrador aún no ha asignado citas a tu equipo.</small></div>
             <div id="citasList"></div>
 
             <button class="cita-skip-btn" onclick="enterFormDirect()">✏️ Llenar formulario sin cita</button>
@@ -1721,27 +1721,43 @@ function showCitasScreen() {
 }
 
 async function loadCitas() {
-    const dateStr = new Date().toISOString().split('T')[0];
-    const loading = document.getElementById('citasLoading');
-    const empty   = document.getElementById('citasEmpty');
-    const list    = document.getElementById('citasList');
+    const teamName = state.currentTeam.name;
+    const today    = new Date().toISOString().split('T')[0];
+    const loading  = document.getElementById('citasLoading');
+    const empty    = document.getElementById('citasEmpty');
+    const list     = document.getElementById('citasList');
 
     loading.style.display = 'block';
     empty.style.display   = 'none';
     list.innerHTML        = '';
 
     try {
-        const teamName = state.currentTeam.name;
-        // Lee del JSON estático (calendario) — no necesita Apps Script
-        const CITAS_JSON = 'https://jarl9801.github.io/field-report/citas.json';
-        const resp = await fetch(CITAS_JSON + '?t=' + Date.now());
+        const resp = await fetch('https://jarl9801.github.io/field-report/citas.json?t=' + Date.now());
         const data = await resp.json();
         loading.style.display = 'none';
+
+        // Buscar próximo día con citas asignadas a este equipo (hoy primero → 7 días)
+        let dateStr = today;
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0];
+            if ((data.citas || []).find(c => c.fecha === d && c.equipo === teamName)) {
+                dateStr = d; break;
+            }
+        }
 
         // Solo mostrar citas asignadas a este equipo
         let citas = (data.citas || [])
             .filter(c => c.fecha === dateStr && c.equipo === teamName)
             .map(c => ({ ...c, direccion: c.calle || c.direccion || '' }));
+
+        // Actualizar etiqueta con fecha real
+        const label = document.getElementById('citasSectionLabel');
+        if (label) {
+            const today = new Date().toISOString().split('T')[0];
+            const dayLabel = dateStr === today ? 'hoy' :
+                new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+            label.textContent = `📅 Citas asignadas — ${dayLabel}`;
+        }
 
         if (citas.length === 0) {
             empty.style.display = 'block';
