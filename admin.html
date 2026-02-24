@@ -667,18 +667,25 @@ async function loadAdminCitas() {
     const grid    = document.getElementById('citasAdminGrid');
 
     loading.style.display = 'block';
-    loading.textContent   = '⏳ Cargando citas…';
+    loading.textContent   = '⏳ Cargando citas en tiempo real…';
     empty.style.display   = 'none';
     grid.innerHTML        = '';
 
     try {
-        const resp = await fetch('citas.json?t=' + Date.now());
+        // Leer directamente del Apps Script (tiempo real)
+        const resp = await fetch(SCRIPT_URL + '?action=getLiveCitas&days=14&t=' + Date.now());
         const data = await resp.json();
+
+        if (!data.success) throw new Error(data.error || 'Error del servidor');
 
         // Filtrar: si hay fecha seleccionada, solo esa; si no, todas desde hoy
         const today = new Date().toISOString().split('T')[0];
-        const allCitas = (data.citas || []).filter(c => c.fecha > today);
+        const allCitas = (data.citas || []).filter(c => c.fecha >= today);
         const citas = dateStr ? allCitas.filter(c => c.fecha === dateStr) : allCitas;
+
+        // Guardar en cache para assignCitaAdmin
+        citasCache = {};
+        allCitas.forEach(c => { citasCache[c.id] = c; });
 
         loading.style.display = 'none';
 
@@ -755,6 +762,9 @@ async function loadAdminCitas() {
     }
 }
 
+// Cache de citas cargadas para assignCitaAdmin
+let citasCache = {};
+
 async function assignCitaAdmin(citaId) {
     const equipo   = document.getElementById(`team-${citaId}`).value;
     const linkDocs = document.getElementById(`docs-${citaId}`).value;
@@ -765,27 +775,29 @@ async function assignCitaAdmin(citaId) {
     btn.disabled = true; btn.textContent = '⏳';
 
     try {
-        // text/plain avoids CORS preflight — Apps Script reads body normally
-        // Buscar datos completos de la cita del JSON
-        const citasResp = await fetch('citas.json?t=' + Date.now());
-        const citasData = await citasResp.json();
-        const cita = (citasData.citas || []).find(c => c.id === citaId) || {};
+        // Usar cache de citas (se llena en loadAdminCitas)
+        const cita = citasCache[citaId] || {};
 
-        // GET request: evita auth redirect de Google (los GET no tienen este problema)
+        // GET request: evita auth redirect de Google
         const params = new URLSearchParams({
             action: 'assignCita', citaId, equipo, linkDocs: linkDocs || '',
             ha: cita.ha || '', direccion: cita.calle || '', cp: cita.cp || '',
             ciudad: cita.ciudad || '', inicio: cita.inicio || '', fin: cita.fin || '',
-            tecnicos: cita.tecnicos || ''
+            tecnicos: cita.tecnicos || '', fecha: cita.fecha || ''
         });
         const resp = await fetch(`${SCRIPT_URL}?${params}`);
         const result = await resp.json();
-        btn.textContent = '✅ Asignado';
-        btn.style.background = '#27ae60';
-        setTimeout(loadAdminCitas, 2000);
+        
+        if (result.success) {
+            btn.textContent = '✅ Asignado';
+            btn.style.background = '#27ae60';
+        } else {
+            throw new Error(result.error || 'Error al asignar');
+        }
+        setTimeout(loadAdminCitas, 1500);
     } catch (err) {
         btn.disabled = false; btn.textContent = 'Asignar';
-        alert('Error de red: ' + err.message);
+        alert('Error: ' + err.message);
     }
 }
 

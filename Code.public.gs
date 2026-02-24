@@ -94,6 +94,10 @@ function doGet(e) {
     return getAllCitasData(e.parameter);
   }
 
+  if (action === 'getLiveCitas') {
+    return getLiveCitasData(e.parameter);
+  }
+
   // Write actions via GET (POST has auth redirect issues on some deployments)
   if (action === 'assignCita') {
     return assignCitaData(e.parameter);
@@ -746,29 +750,60 @@ function getCitasByTeamData(params) {
 // ─── POST: admin asigna cita a equipo ───────────────────────────────
 function assignCitaData(data) {
   try {
-    const sheet   = ensureCitasSheet();
+    const sheet = ensureCitasSheet();
+    const now = new Date().toISOString();
+    let rowNum = -1;
+    let isNew = false;
+
+    // Buscar si la cita ya existe
     const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return jsonResponse({ success: false, error: 'No hay citas' });
+    if (lastRow > 1) {
+      const rows = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      const idx = rows.findIndex(r => r[0] === data.citaId);
+      if (idx !== -1) rowNum = idx + 2;
+    }
 
-    const rows = sheet.getRange(2, 1, lastRow - 1, CITAS_COLS.NOTAS).getValues();
-    const idx  = rows.findIndex(r => r[CITAS_COLS.ID - 1] === data.citaId);
-    if (idx === -1) return jsonResponse({ success: false, error: 'Cita no encontrada' });
-
-    const rowNum = idx + 2; // +1 header, +1 1-indexed
-    sheet.getRange(rowNum, CITAS_COLS.EQUIPO).setValue(data.equipo || '');
-    sheet.getRange(rowNum, CITAS_COLS.STATUS).setValue(STATUS.ASIGNADA);
-    sheet.getRange(rowNum, CITAS_COLS.LINK_DOCS).setValue(data.linkDocs || '');
-    sheet.getRange(rowNum, CITAS_COLS.TS_ASIGNACION).setValue(new Date().toISOString());
+    // Si no existe, crear nueva fila
+    if (rowNum === -1) {
+      isNew = true;
+      const newRow = [
+        data.citaId || '',           // ID
+        '',                           // CAL_EVENT_ID
+        data.fecha || '',             // FECHA
+        data.ha || '',                // HA
+        data.direccion || '',         // DIRECCION
+        data.cp || '',                // CP
+        data.ciudad || '',            // CIUDAD
+        data.inicio || '',            // H_INICIO
+        data.fin || '',               // H_FIN
+        data.tecnicos || '',          // TECNICOS
+        data.equipo || '',            // EQUIPO
+        STATUS.ASIGNADA,              // STATUS
+        data.linkDocs || '',          // LINK_DOCS
+        now,                          // TS_CREACION
+        now,                          // TS_ASIGNACION
+        '', '', '', ''                // TS_CAPTURA, TS_INICIO, TS_FINAL, NOTAS
+      ];
+      sheet.appendRow(newRow);
+      rowNum = sheet.getLastRow();
+    } else {
+      // Actualizar fila existente
+      sheet.getRange(rowNum, CITAS_COLS.EQUIPO).setValue(data.equipo || '');
+      sheet.getRange(rowNum, CITAS_COLS.STATUS).setValue(STATUS.ASIGNADA);
+      sheet.getRange(rowNum, CITAS_COLS.LINK_DOCS).setValue(data.linkDocs || '');
+      sheet.getRange(rowNum, CITAS_COLS.TS_ASIGNACION).setValue(now);
+    }
 
     // Notificación Slack
     _notifySlackCita('asignada', {
-      ha: rows[idx][CITAS_COLS.HA - 1],
+      ha: data.ha || data.citaId,
       equipo: data.equipo,
-      inicio: rows[idx][CITAS_COLS.H_INICIO - 1]
+      inicio: data.inicio || ''
     });
 
-    return jsonResponse({ success: true, citaId: data.citaId, equipo: data.equipo });
+    return jsonResponse({ success: true, citaId: data.citaId, equipo: data.equipo, created: isNew });
   } catch (err) {
+    Logger.log('assignCitaData error: ' + err.toString());
     return jsonResponse({ success: false, error: err.toString() });
   }
 }
@@ -913,4 +948,118 @@ function testConnection() {
     });
     Logger.log('✅ Slack OK — Código: ' + response.getResponseCode());
   } catch (e) { Logger.log('❌ Error Slack: ' + e.toString()); }
+}
+
+// ============================================
+// LIVE CITAS — Lee calendario + asignaciones en tiempo real
+// ============================================
+
+function getLiveCitasData(params) {
+  try {
+    const tz = 'Europe/Berlin';
+    const daysAhead = parseInt(params && params.days) || 14;
+    
+    // 1. Leer eventos del calendario
+    const today = new Date();
+    const endDate = new Date(today.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    
+    const calCitas = [];
+    const calendars = CalendarApp.getAllCalendars();
+    
+    for (const cal of calendars) {
+      const events = cal.getEvents(today, endDate);
+      for (const event of events) {
+        const title = event.getTitle();
+        
+        // Filtrar solo eventos WestConnect/Umtelkomd
+        const isWC = /TK.*Umtelkomd.*Install.*HA/i.test(title) ||
+                     /WC/i.test(title) || /westconnect/i.test(title);
+        if (!isWC) continue;
+        
+        const startTime = event.getStartTime();
+        const endTime = event.getEndTime();
+        const dateStr = Utilities.formatDate(startTime, tz, 'yyyy-MM-dd');
+        
+        const haMatch = title.match(/HA(\d+)/i);
+        const tkMatch = title.match(/^(\d+)\s*TK/i);
+        const haN = haMatch ? haMatch[1] : 'NA';
+        const uid = dateStr + '_' + haN;
+        
+        // Parsear location
+        const location = event.getLocation() || '';
+        const locMatch = location.match(/^(.+),\s*(\d{5})\s+([^,]+)/);
+        
+        calCitas.push({
+          id: uid,
+          calEventId: event.getId(),
+          fecha: dateStr,
+          ha: haMatch ? 'HA' + haN : title.substring(0, 30),
+          tecnicos: tkMatch ? parseInt(tkMatch[1]) : 0,
+          inicio: Utilities.formatDate(startTime, tz, 'HH:mm'),
+          fin: Utilities.formatDate(endTime, tz, 'HH:mm'),
+          calle: locMatch ? locMatch[1].trim() : location,
+          cp: locMatch ? locMatch[2] : '',
+          ciudad: locMatch ? locMatch[3].replace(/, Deutschland/i, '').trim() : '',
+          titulo: title
+        });
+      }
+    }
+    
+    // 2. Leer asignaciones del Sheet
+    const assignments = {};
+    const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('Citas');
+    if (sheet && sheet.getLastRow() > 1) {
+      const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 19).getValues();
+      data.forEach(row => {
+        const id = row[0]; // ID column
+        if (id) {
+          assignments[id] = {
+            equipo: row[10] || '',      // EQUIPO column (11th, 0-indexed = 10)
+            status: row[11] || 'libre', // STATUS column
+            linkDocs: row[12] || ''     // LINK_DOCS column
+          };
+        }
+      });
+    }
+    
+    // 3. Combinar calendario + asignaciones
+    const seen = {};
+    const citas = [];
+    
+    for (const c of calCitas) {
+      if (seen[c.id]) continue;
+      seen[c.id] = true;
+      
+      const a = assignments[c.id] || {};
+      citas.push({
+        id: c.id,
+        fecha: c.fecha,
+        ha: c.ha,
+        tecnicos: c.tecnicos,
+        inicio: c.inicio,
+        fin: c.fin,
+        calle: c.calle,
+        cp: c.cp,
+        ciudad: c.ciudad,
+        titulo: c.titulo,
+        equipo: a.equipo || '',
+        status: a.status || 'libre',
+        linkDocs: a.linkDocs || ''
+      });
+    }
+    
+    // Ordenar por fecha e inicio
+    citas.sort((a, b) => (a.fecha + a.inicio).localeCompare(b.fecha + b.inicio));
+    
+    return jsonResponse({
+      success: true,
+      generated: new Date().toISOString(),
+      citas: citas,
+      count: citas.length
+    });
+    
+  } catch (err) {
+    Logger.log('getLiveCitasData error: ' + err.toString());
+    return jsonResponse({ success: false, error: err.toString(), citas: [] });
+  }
 }
