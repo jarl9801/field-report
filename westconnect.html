@@ -298,7 +298,10 @@
                 <div style="font-size:13px;opacity:0.85;margin-top:2px;" id="citasDate"></div>
             </div>
 
-            <div class="cita-section-label" id="citasSectionLabel">📅 Citas asignadas</div>
+            <div class="cita-section-label" id="citasSectionLabel" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>📅 Citas asignadas</span>
+                <button onclick="loadCitas()" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">🔄 Actualizar</button>
+            </div>
             <div id="citasLoading" style="text-align:center;padding:32px;color:var(--text-secondary);">⏳ Cargando citas…</div>
             <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas asignadas próximas.<br><small style="color:var(--text-secondary);">El administrador aún no ha asignado citas a tu equipo.</small></div>
             <div id="citasList"></div>
