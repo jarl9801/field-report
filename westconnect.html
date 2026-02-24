@@ -225,6 +225,11 @@
         .badge-asignada   { background:#E3F2FD; color:#1565C0; }
         .badge-capturada  { background:#FFF3E0; color:#E65100; }
         .badge-en_trabajo { background:#E8F5E9; color:#2E7D32; }
+        .badge-done       { background:#C8E6C9; color:#1B5E20; }
+        .badge-fail       { background:#FFCDD2; color:#B71C1C; }
+        .badge-absent     { background:#FFF9C4; color:#F57F17; }
+        .badge-recitar    { background:#E1BEE7; color:#6A1B9A; }
+        .badge-paralizada { background:#CFD8DC; color:#37474F; }
         .cita-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
         .cita-btn { flex:1; min-width:100px; padding:10px 12px; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; }
         .cita-btn-primary { background:var(--primary); color:white; }
@@ -298,12 +303,21 @@
                 <div style="font-size:13px;opacity:0.85;margin-top:2px;" id="citasDate"></div>
             </div>
 
-            <div class="cita-section-label" id="citasSectionLabel" style="display:flex;justify-content:space-between;align-items:center;">
-                <span>📅 Citas asignadas</span>
-                <button onclick="loadCitas()" style="background:var(--primary);color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;">🔄 Actualizar</button>
+            <!-- Tabs -->
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+                <button id="tabPendientes" onclick="switchCitasTab('pendientes')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:600;cursor:pointer;background:var(--primary);color:white;">📋 Pendientes</button>
+                <button id="tabHistorial" onclick="switchCitasTab('historial')" style="flex:1;padding:10px;border:none;border-radius:8px;font-weight:600;cursor:pointer;background:var(--gray-medium);color:var(--text-secondary);">📁 Historial</button>
             </div>
+
+            <!-- Date Picker -->
+            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+                <input type="date" id="citasDatePicker" onchange="loadCitasByDate()" style="flex:1;padding:10px;border:1px solid var(--gray-medium);border-radius:8px;font-size:14px;">
+                <button onclick="loadCitas()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;">🔄</button>
+            </div>
+
+            <div class="cita-section-label" id="citasSectionLabel">📅 Citas asignadas</div>
             <div id="citasLoading" style="text-align:center;padding:32px;color:var(--text-secondary);">⏳ Cargando citas…</div>
-            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas asignadas próximas.<br><small style="color:var(--text-secondary);">El administrador aún no ha asignado citas a tu equipo.</small></div>
+            <div id="citasEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-secondary);">📭 Sin citas para esta fecha.<br><small style="color:var(--text-secondary);">Selecciona otra fecha o espera asignación.</small></div>
             <div id="citasList"></div>
 
             <button class="cita-skip-btn" onclick="enterFormDirect()">✏️ Llenar formulario sin cita</button>
@@ -1719,65 +1733,100 @@ function showCitasScreen() {
     document.getElementById('citasDate').textContent =
         new Date().toLocaleDateString(state.lang === 'de' ? 'de-DE' : 'es-ES', opts);
     state.selectedCita = null;
+    state.citasTab = 'pendientes';
+    document.getElementById('citasDatePicker').value = new Date().toISOString().split('T')[0];
     showScreen('citasScreen');
     loadCitas();
 }
 
+// Tabs de citas
+function switchCitasTab(tab) {
+    state.citasTab = tab;
+    document.getElementById('tabPendientes').style.background = tab === 'pendientes' ? 'var(--primary)' : 'var(--gray-medium)';
+    document.getElementById('tabPendientes').style.color = tab === 'pendientes' ? 'white' : 'var(--text-secondary)';
+    document.getElementById('tabHistorial').style.background = tab === 'historial' ? 'var(--primary)' : 'var(--gray-medium)';
+    document.getElementById('tabHistorial').style.color = tab === 'historial' ? 'white' : 'var(--text-secondary)';
+    loadCitasByDate();
+}
+
+function loadCitasByDate() {
+    const dateStr = document.getElementById('citasDatePicker').value;
+    if (dateStr) loadCitasForDate(dateStr);
+}
+
 async function loadCitas() {
+    // Cargar automáticamente el próximo día con citas pendientes
+    const teamName = state.currentTeam.name;
+    const today    = new Date().toISOString().split('T')[0];
+    const DONE_STATUS = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
+    
+    for (let i = 0; i < 14; i++) {
+        const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0];
+        try {
+            const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${d}`);
+            const data = await resp.json();
+            if (data.success && data.citas && data.citas.some(c => !DONE_STATUS.includes(c.status))) {
+                document.getElementById('citasDatePicker').value = d;
+                loadCitasForDate(d);
+                return;
+            }
+        } catch (e) {}
+    }
+    // Si no hay citas pendientes, mostrar hoy
+    document.getElementById('citasDatePicker').value = today;
+    loadCitasForDate(today);
+}
+
+async function loadCitasForDate(dateStr) {
     const teamName = state.currentTeam.name;
     const today    = new Date().toISOString().split('T')[0];
     const loading  = document.getElementById('citasLoading');
     const empty    = document.getElementById('citasEmpty');
     const list     = document.getElementById('citasList');
+    const DONE_STATUS = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
+    const isHistorial = state.citasTab === 'historial';
 
     loading.style.display = 'block';
     empty.style.display   = 'none';
     list.innerHTML        = '';
 
     try {
-        // Buscar citas PENDIENTES (no finalizadas) en los próximos 7 días
-        const DONE_STATUS = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
-        let dateStr = today;
-        let citas = [];
-        
-        for (let i = 0; i < 7 && citas.length === 0; i++) {
-            const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0];
-            const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${d}`);
-            const data = await resp.json();
-            
-            if (data.success && data.citas && data.citas.length > 0) {
-                // Filtrar solo citas pendientes (no finalizadas)
-                const pending = data.citas.filter(c => !DONE_STATUS.includes(c.status));
-                if (pending.length > 0) {
-                    dateStr = d;
-                    citas = pending.map(c => ({
-                        id: c.id,
-                        ha: c.ha,
-                        direccion: c.direccion,
-                        calle: c.direccion,
-                        cp: c.cp,
-                        ciudad: c.ciudad,
-                        inicio: c.inicio,
-                        fin: c.fin,
-                        tecnicos: c.tecnicos,
-                        status: c.status,
-                        linkDocs: c.linkDocs,
-                        equipo: teamName,
-                        fecha: d
-                    }));
-                }
-            }
-        }
+        const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${dateStr}`);
+        const data = await resp.json();
         
         loading.style.display = 'none';
+        
+        if (!data.success || !data.citas) {
+            empty.style.display = 'block';
+            return;
+        }
+        
+        // Filtrar según pestaña
+        let citas = data.citas.filter(c => isHistorial ? DONE_STATUS.includes(c.status) : !DONE_STATUS.includes(c.status));
+        
+        citas = citas.map(c => ({
+            id: c.id,
+            ha: c.ha,
+            direccion: c.direccion,
+            calle: c.direccion,
+            cp: c.cp,
+            ciudad: c.ciudad,
+            inicio: c.inicio,
+            fin: c.fin,
+            tecnicos: c.tecnicos,
+            status: c.status,
+            linkDocs: c.linkDocs,
+            equipo: teamName,
+            fecha: dateStr
+        }));
 
-        // Actualizar etiqueta con fecha real
+        // Actualizar etiqueta con fecha
         const label = document.getElementById('citasSectionLabel');
         if (label) {
-            const today = new Date().toISOString().split('T')[0];
             const dayLabel = dateStr === today ? 'hoy' :
                 new Date(dateStr + 'T12:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
-            label.textContent = `📅 Citas asignadas — ${dayLabel}`;
+            const tabLabel = isHistorial ? '📁 Historial' : '📅 Pendientes';
+            label.textContent = `${tabLabel} — ${dayLabel}`;
         }
 
         if (citas.length === 0) {
@@ -1796,9 +1845,14 @@ async function loadCitas() {
 function renderCitasCards(citas) {
     const list = document.getElementById('citasList');
     const STATUS_LABELS = {
-        asignada:   { label:'Asignada',    cls:'badge-asignada'  },
-        capturada:  { label:'Capturada',   cls:'badge-capturada' },
-        en_trabajo: { label:'En trabajo',  cls:'badge-en_trabajo' }
+        asignada:       { label:'Asignada',       cls:'badge-asignada'  },
+        capturada:      { label:'Capturada',      cls:'badge-capturada' },
+        en_trabajo:     { label:'En trabajo',     cls:'badge-en_trabajo' },
+        finalizada_ok:  { label:'✓ Finalizada',   cls:'badge-done' },
+        finalizada_no_ok: { label:'✗ Finalizada', cls:'badge-fail' },
+        cliente_ausente:{ label:'Ausente',        cls:'badge-absent' },
+        recitar:        { label:'Recitar',        cls:'badge-recitar' },
+        paralizada:     { label:'Paralizada',     cls:'badge-paralizada' }
     };
 
     list.innerHTML = citas.map(c => {
@@ -1808,8 +1862,12 @@ function renderCitasCards(citas) {
             : '';
 
         let actionBtns = '';
-        // libre y asignada ambos muestran "Capturar"
-        if (c.status === 'libre' || c.status === 'asignada') {
+        const DONE_STATUS = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
+        
+        if (DONE_STATUS.includes(c.status)) {
+            // Historial - solo botón de docs si existe
+            actionBtns = docsBtn;
+        } else if (c.status === 'libre' || c.status === 'asignada') {
             actionBtns = `<button class="cita-btn cita-btn-primary" onclick="capturarCita('${c.id}')">✅ Capturar</button>${docsBtn}`;
         } else if (c.status === 'capturada') {
             actionBtns = `<button class="cita-btn cita-btn-success" onclick="iniciarCita('${c.id}', ${JSON.stringify(c).replace(/"/g,'&quot;')})">▶️ Iniciar trabajo</button>${docsBtn}`;
