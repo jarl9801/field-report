@@ -1732,23 +1732,36 @@ async function loadCitas() {
     list.innerHTML        = '';
 
     try {
-        const resp = await fetch('https://jarl9801.github.io/field-report/citas.json?t=' + Date.now());
-        const data = await resp.json();
-        loading.style.display = 'none';
-
-        // Buscar próximo día con citas asignadas a este equipo (hoy primero → 7 días)
+        // Buscar citas asignadas a este equipo (hoy primero, luego próximos 7 días)
         let dateStr = today;
-        for (let i = 0; i < 7; i++) {
+        let citas = [];
+        
+        for (let i = 0; i < 7 && citas.length === 0; i++) {
             const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0];
-            if ((data.citas || []).find(c => c.fecha === d && c.equipo === teamName)) {
-                dateStr = d; break;
+            const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(teamName)}&date=${d}`);
+            const data = await resp.json();
+            
+            if (data.success && data.citas && data.citas.length > 0) {
+                dateStr = d;
+                citas = data.citas.map(c => ({
+                    id: c.id,
+                    ha: c.ha,
+                    direccion: c.direccion,
+                    calle: c.direccion,
+                    cp: c.cp,
+                    ciudad: c.ciudad,
+                    inicio: c.inicio,
+                    fin: c.fin,
+                    tecnicos: c.tecnicos,
+                    status: c.status,
+                    linkDocs: c.linkDocs,
+                    equipo: teamName,
+                    fecha: d
+                }));
             }
         }
-
-        // Solo mostrar citas asignadas a este equipo
-        let citas = (data.citas || [])
-            .filter(c => c.fecha === dateStr && c.equipo === teamName)
-            .map(c => ({ ...c, direccion: c.calle || c.direccion || '' }));
+        
+        loading.style.display = 'none';
 
         // Actualizar etiqueta con fecha real
         const label = document.getElementById('citasSectionLabel');
