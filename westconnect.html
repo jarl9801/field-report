@@ -1735,7 +1735,8 @@ async function loadCitas() {
     list.innerHTML        = '';
 
     try {
-        // Buscar citas asignadas a este equipo (hoy primero, luego próximos 7 días)
+        // Buscar citas PENDIENTES (no finalizadas) en los próximos 7 días
+        const DONE_STATUS = ['finalizada_ok','finalizada_no_ok','cliente_ausente','recitar','paralizada'];
         let dateStr = today;
         let citas = [];
         
@@ -1745,22 +1746,26 @@ async function loadCitas() {
             const data = await resp.json();
             
             if (data.success && data.citas && data.citas.length > 0) {
-                dateStr = d;
-                citas = data.citas.map(c => ({
-                    id: c.id,
-                    ha: c.ha,
-                    direccion: c.direccion,
-                    calle: c.direccion,
-                    cp: c.cp,
-                    ciudad: c.ciudad,
-                    inicio: c.inicio,
-                    fin: c.fin,
-                    tecnicos: c.tecnicos,
-                    status: c.status,
-                    linkDocs: c.linkDocs,
-                    equipo: teamName,
-                    fecha: d
-                }));
+                // Filtrar solo citas pendientes (no finalizadas)
+                const pending = data.citas.filter(c => !DONE_STATUS.includes(c.status));
+                if (pending.length > 0) {
+                    dateStr = d;
+                    citas = pending.map(c => ({
+                        id: c.id,
+                        ha: c.ha,
+                        direccion: c.direccion,
+                        calle: c.direccion,
+                        cp: c.cp,
+                        ciudad: c.ciudad,
+                        inicio: c.inicio,
+                        fin: c.fin,
+                        tecnicos: c.tecnicos,
+                        status: c.status,
+                        linkDocs: c.linkDocs,
+                        equipo: teamName,
+                        fecha: d
+                    }));
+                }
             }
         }
         
