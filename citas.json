@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-25T15:52:40.625006",
+  "generated": "2026-02-25T16:52:38.288254",
   "citas": [
     {
       "id": "2026-02-25_409104",
@@ -12,9 +12,9 @@
       "cp": "34414",
       "ciudad": "Warburg",
       "titulo": "3 TK Umtelkomd - Installation - HA409104",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-001",
+      "status": "en_trabajo",
+      "linkDocs": "https://drive.google.com/drive/folders/1UI0p2Q2jE6tJciPgrPDncuaz6jytBBtK?usp=sharing"
     },
     {
       "id": "2026-02-25_755688",
@@ -27,9 +27,9 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "2 TK Umtelkomd - Installation - HA755688  ",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-002",
+      "status": "capturada",
+      "linkDocs": "https://drive.google.com/drive/folders/1qysedvfJwNt-mMttaUStqUIzFVvmWotK?usp=sharing"
     },
     {
       "id": "2026-02-25_408869",
@@ -42,9 +42,9 @@
       "cp": "34414",
       "ciudad": "Warburg",
       "titulo": "3 TK Umtelkomd - Installation - HA408869",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-004",
+      "status": "en_trabajo",
+      "linkDocs": "https://drive.google.com/drive/folders/1BhdkusIzReyGQkaJh-ziGpBmgUCuAZxt?usp=sharing"
     },
     {
       "id": "2026-02-25_1118948",
@@ -57,9 +57,9 @@
       "cp": "49086",
       "ciudad": "Osnabrück",
       "titulo": "2 TK Umtelkomd - 2.Installation - HA1118948",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-002",
+      "status": "asignada",
+      "linkDocs": "https://drive.google.com/drive/folders/1PB7AONQ3i5gahbNv1ctQrEvv3KXUHm90?usp=sharing"
     },
     {
       "id": "2026-02-26_707405",
