@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-25T09:31:31.019756",
+  "generated": "2026-02-25T10:46:45.991315",
   "citas": [
     {
       "id": "2026-02-25_409104",
@@ -222,21 +222,6 @@
       "cp": "49584",
       "ciudad": "Fürstenau",
       "titulo": "3 TK Umtelkomd - Installation - HA306125",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-03_485573",
-      "fecha": "2026-03-03",
-      "ha": "HA485573",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "14:30",
-      "calle": "Am Loddenbach 8",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "2 TK Umtelkomd - Installation - HA485573",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
