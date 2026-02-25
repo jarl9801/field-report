@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-25T07:16:40.889809",
+  "generated": "2026-02-25T08:47:45.767907",
   "citas": [
     {
       "id": "2026-02-25_409104",
@@ -13,7 +13,7 @@
       "ciudad": "Warburg",
       "titulo": "3 TK Umtelkomd - Installation - HA409104",
       "equipo": "West-001",
-      "status": "asignada",
+      "status": "en_trabajo",
       "linkDocs": "https://drive.google.com/drive/folders/1UI0p2Q2jE6tJciPgrPDncuaz6jytBBtK?usp=sharing"
     },
     {
@@ -28,7 +28,7 @@
       "ciudad": "Bissendorf",
       "titulo": "2 TK Umtelkomd - Installation - HA755688  ",
       "equipo": "West-002",
-      "status": "asignada",
+      "status": "capturada",
       "linkDocs": "https://drive.google.com/drive/folders/1qysedvfJwNt-mMttaUStqUIzFVvmWotK?usp=sharing"
     },
     {
@@ -43,7 +43,7 @@
       "ciudad": "Warburg",
       "titulo": "3 TK Umtelkomd - Installation - HA408869",
       "equipo": "West-004",
-      "status": "capturada",
+      "status": "en_trabajo",
       "linkDocs": "https://drive.google.com/drive/folders/1BhdkusIzReyGQkaJh-ziGpBmgUCuAZxt?usp=sharing"
     },
     {
@@ -312,21 +312,6 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "3 TK Umtelkomd - Installation - HA754762",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-05_486468",
-      "fecha": "2026-03-05",
-      "ha": "HA486468",
-      "tecnicos": 3,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Clarholzer Str. 24",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "3 TK Umtelkomd - Installation - HA486468",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
