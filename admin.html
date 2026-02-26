@@ -721,6 +721,7 @@ async function loadAdminCitas() {
             const badgeCls = isDone ? 'badge-done' : `badge-${c.status}`;
             const badgeLbl = STATUS_LABELS[c.status] || c.status;
             const selected = c.equipo ? `<option value="${c.equipo}" selected>${c.equipo}</option>` : '<option value="">— Equipo —</option>';
+            const filteredTeamOptions = adminTeams.filter(t => t !== c.equipo).map(t => `<option value="${t}">${t}</option>`).join('');
             const addr     = c.calle ? `${c.calle}, ${c.cp} ${c.ciudad}`.trim() : (c.ciudad || '—');
 
             return `
@@ -736,7 +737,7 @@ async function loadAdminCitas() {
                 <div style="font-size:13px;color:var(--blue);margin-bottom:10px;">🕐 ${c.inicio} – ${c.fin}</div>
                 ${!isDone ? `
                 <div class="cita-admin-row">
-                    <select id="team-${c.id}">${selected}${teamOptions}</select>
+                    <select id="team-${c.id}">${selected}${filteredTeamOptions}</select>
                     <input id="docs-${c.id}" type="url" placeholder="Link Aushändigung (Drive)" value="${c.linkDocs||''}"/>
                     <button class="btn btn-green btn-sm" onclick="assignCitaAdmin('${c.id}')">${c.equipo ? '✏️ Actualizar' : '✅ Asignar'}</button>
                 </div>` : `
@@ -785,8 +786,13 @@ async function assignCitaAdmin(citaId) {
             ciudad: cita.ciudad || '', inicio: cita.inicio || '', fin: cita.fin || '',
             tecnicos: cita.tecnicos || '', fecha: cita.fecha || ''
         });
-        const resp = await fetch(`${SCRIPT_URL}?${params}`);
-        const result = await resp.json();
+        const url = `${SCRIPT_URL}?${params}`;
+        console.log('Assign URL:', url);
+        const resp = await fetch(url, { redirect: 'follow' });
+        const text = await resp.text();
+        console.log('Assign response:', resp.status, text);
+        let result;
+        try { result = JSON.parse(text); } catch(e) { throw new Error('Respuesta no JSON: ' + text.substring(0,100)); }
         
         if (result.success) {
             btn.textContent = '✅ Asignado';
@@ -796,7 +802,8 @@ async function assignCitaAdmin(citaId) {
         }
         setTimeout(loadAdminCitas, 1500);
     } catch (err) {
-        btn.disabled = false; btn.textContent = 'Asignar';
+        console.error('Assign error:', err);
+        btn.disabled = false; btn.textContent = '✅ Asignar';
         alert('Error: ' + err.message);
     }
 }
