@@ -673,10 +673,10 @@ async function loadAdminCitas() {
 
     try {
         // Leer directamente del Apps Script (tiempo real)
-        const resp = await fetch(SCRIPT_URL + '?action=getLiveCitas&days=14&t=' + Date.now());
+        // Read directly from citas.json (GitHub Pages) — always fresh
+        const resp = await fetch('citas.json?t=' + Date.now());
         const data = await resp.json();
-
-        if (!data.success) throw new Error(data.error || 'Error del servidor');
+        data.success = true; // citas.json doesn't have success flag
 
         // Filtrar: si hay fecha seleccionada, solo esa; si no, todas desde hoy
         const today = new Date().toISOString().split('T')[0];
