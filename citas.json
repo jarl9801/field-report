@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-26T20:05:18.651567",
+  "generated": "2026-02-26T20:07:16.048379",
   "citas": [
     {
       "id": "2026-02-26_707405",
@@ -53,9 +53,9 @@
       "tecnicos": 0,
       "inicio": "08:00",
       "fin": "17:00",
-      "calle": "",
-      "cp": "",
-      "ciudad": "",
+      "calle": "Röntgenstraße 23",
+      "cp": "33428",
+      "ciudad": "Harsewinkel",
       "titulo": "TK Umtelcomd- Installation-HA489131- 33428 Harsewinkel   Röntgenstraße 23 ",
       "equipo": "",
       "status": "libre",
