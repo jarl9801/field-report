@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-26T23:15:39.990673",
+  "generated": "2026-02-26T23:17:31.836627",
   "citas": [
     {
       "id": "2026-02-26_707405",
@@ -53,9 +53,9 @@
       "tecnicos": 0,
       "inicio": "08:00",
       "fin": "17:00",
-      "calle": "",
-      "cp": "",
-      "ciudad": "",
+      "calle": "Röntgenstraße 23",
+      "cp": "33428",
+      "ciudad": "Harsewinkel",
       "titulo": "TK Umtelcomd- Installation-HA489131- 33428 Harsewinkel   Röntgenstraße 23 ",
       "equipo": "West-004",
       "status": "capturada",
@@ -290,7 +290,7 @@
       "id": "2026-03-09_410837",
       "fecha": "2026-03-09",
       "ha": "HA410837",
-      "tecnicos": 0,
+      "tecnicos": 2,
       "inicio": "08:00",
       "fin": "15:00",
       "calle": "Schwerte 18",
