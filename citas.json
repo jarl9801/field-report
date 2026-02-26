@@ -1,5 +1,5 @@
 {
-  "generated": "2026-02-26T23:13:46.981644",
+  "generated": "2026-02-26T23:15:39.990673",
   "citas": [
     {
       "id": "2026-02-26_707405",
@@ -45,6 +45,21 @@
       "equipo": "West-002",
       "status": "asignada",
       "linkDocs": "https://drive.google.com/drive/folders/1Nu6YvpCj9YfjoBVmBD2lhZmI5krETSjs?usp=sharing"
+    },
+    {
+      "id": "2026-02-27_489131",
+      "fecha": "2026-02-27",
+      "ha": "HA489131",
+      "tecnicos": 0,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "",
+      "cp": "",
+      "ciudad": "",
+      "titulo": "TK Umtelcomd- Installation-HA489131- 33428 Harsewinkel   Röntgenstraße 23 ",
+      "equipo": "West-004",
+      "status": "capturada",
+      "linkDocs": ""
     },
     {
       "id": "2026-02-27_755772",
@@ -267,6 +282,21 @@
       "cp": "33014",
       "ciudad": "Bad Driburg",
       "titulo": "2 TK Umtelkomd - Installation - HA708505",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-09_410837",
+      "fecha": "2026-03-09",
+      "ha": "HA410837",
+      "tecnicos": 0,
+      "inicio": "08:00",
+      "fin": "15:00",
+      "calle": "Schwerte 18",
+      "cp": "34414",
+      "ciudad": "Warburg",
+      "titulo": "Stephan - 2 TK Umtelcomd - Installation - HA410837",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
