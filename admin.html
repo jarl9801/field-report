@@ -795,12 +795,23 @@ async function assignCitaAdmin(citaId) {
         try { result = JSON.parse(text); } catch(e) { throw new Error('Respuesta no JSON: ' + text.substring(0,100)); }
         
         if (result.success) {
+            // Update local cache immediately (don't wait for cron sync)
+            if (citasCache[citaId]) {
+                citasCache[citaId].equipo = equipo;
+                citasCache[citaId].linkDocs = linkDocs || '';
+                citasCache[citaId].status = 'asignada';
+            }
+            // Update card in-place without full reload
+            const card = document.getElementById(`admin-cita-${citaId}`);
+            if (card) {
+                const badge = card.querySelector('.badge');
+                if (badge) { badge.className = 'badge badge-asignada'; badge.textContent = 'Asignada'; }
+            }
             btn.textContent = '✅ Asignado';
             btn.style.background = '#27ae60';
         } else {
             throw new Error(result.error || 'Error al asignar');
         }
-        setTimeout(loadAdminCitas, 1500);
     } catch (err) {
         console.error('Assign error:', err);
         btn.disabled = false; btn.textContent = '✅ Asignar';
