@@ -1,66 +1,6 @@
 {
-  "generated": "2026-02-25T18:01:31.377907",
+  "generated": "2026-02-26T06:01:49.707164",
   "citas": [
-    {
-      "id": "2026-02-25_409104",
-      "fecha": "2026-02-25",
-      "ha": "HA409104",
-      "tecnicos": 3,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Fichtenweg 1A",
-      "cp": "34414",
-      "ciudad": "Warburg",
-      "titulo": "3 TK Umtelkomd - Installation - HA409104",
-      "equipo": "West-001",
-      "status": "en_trabajo",
-      "linkDocs": "https://drive.google.com/drive/folders/1UI0p2Q2jE6tJciPgrPDncuaz6jytBBtK?usp=sharing"
-    },
-    {
-      "id": "2026-02-25_755688",
-      "fecha": "2026-02-25",
-      "ha": "HA755688",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "12:00",
-      "calle": "Dürerstraße 5",
-      "cp": "49143",
-      "ciudad": "Bissendorf",
-      "titulo": "2 TK Umtelkomd - Installation - HA755688  ",
-      "equipo": "West-002",
-      "status": "capturada",
-      "linkDocs": "https://drive.google.com/drive/folders/1qysedvfJwNt-mMttaUStqUIzFVvmWotK?usp=sharing"
-    },
-    {
-      "id": "2026-02-25_408869",
-      "fecha": "2026-02-25",
-      "ha": "HA408869",
-      "tecnicos": 3,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Ulmenweg 11",
-      "cp": "34414",
-      "ciudad": "Warburg",
-      "titulo": "3 TK Umtelkomd - Installation - HA408869",
-      "equipo": "West-004",
-      "status": "en_trabajo",
-      "linkDocs": "https://drive.google.com/drive/folders/1BhdkusIzReyGQkaJh-ziGpBmgUCuAZxt?usp=sharing"
-    },
-    {
-      "id": "2026-02-25_1118948",
-      "fecha": "2026-02-25",
-      "ha": "HA1118948",
-      "tecnicos": 2,
-      "inicio": "13:00",
-      "fin": "17:00",
-      "calle": "Mindener Str. 441",
-      "cp": "49086",
-      "ciudad": "Osnabrück",
-      "titulo": "2 TK Umtelkomd - 2.Installation - HA1118948",
-      "equipo": "West-002",
-      "status": "asignada",
-      "linkDocs": "https://drive.google.com/drive/folders/1PB7AONQ3i5gahbNv1ctQrEvv3KXUHm90?usp=sharing"
-    },
     {
       "id": "2026-02-26_707405",
       "fecha": "2026-02-26",
@@ -72,9 +12,9 @@
       "cp": "33014",
       "ciudad": "Bad Driburg",
       "titulo": "2 TK Umtelkomd - Installation - HA707405",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-003",
+      "status": "asignada",
+      "linkDocs": "https://drive.google.com/drive/folders/14o8belaygw9uyaapZPFNg0fWiQx-cJXO?usp=sharing"
     },
     {
       "id": "2026-02-26_706882",
@@ -87,9 +27,9 @@
       "cp": "33014",
       "ciudad": "Bad Driburg",
       "titulo": "2 TK Umtelkomd - Installation - HA706882",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-004",
+      "status": "asignada",
+      "linkDocs": "https://drive.google.com/drive/folders/1pJIL0DJiNxDG-uwmgXvjWeauSGwgp9E8?usp=sharing"
     },
     {
       "id": "2026-02-26_755766",
@@ -102,9 +42,9 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "2 TK Umtelkomd - Installation - HA755766",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
+      "equipo": "West-002",
+      "status": "asignada",
+      "linkDocs": "https://drive.google.com/drive/folders/1Nu6YvpCj9YfjoBVmBD2lhZmI5krETSjs?usp=sharing"
     },
     {
       "id": "2026-02-27_755772",
@@ -297,6 +237,36 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "3 TK Umtelkomd - Installation - HA754762",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-06_898713",
+      "fecha": "2026-03-06",
+      "ha": "HA898713",
+      "tecnicos": 3,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Wasserstraße 16",
+      "cp": "32549",
+      "ciudad": "Bad Oeynhausen",
+      "titulo": "3 TK Umtelkomd - Installation - HA898713",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-06_708505",
+      "fecha": "2026-03-06",
+      "ha": "HA708505",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "12:00",
+      "calle": "Vor d. Brede 11",
+      "cp": "33014",
+      "ciudad": "Bad Driburg",
+      "titulo": "2 TK Umtelkomd - Installation - HA708505",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
