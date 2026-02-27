@@ -1,51 +1,6 @@
 {
-  "generated": "2026-02-26T23:17:31.836627",
+  "generated": "2026-02-27T06:01:29.314144",
   "citas": [
-    {
-      "id": "2026-02-26_707405",
-      "fecha": "2026-02-26",
-      "ha": "HA707405",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Hildegundestraße 6",
-      "cp": "33014",
-      "ciudad": "Bad Driburg",
-      "titulo": "2 TK Umtelkomd - Installation - HA707405",
-      "equipo": "West-003",
-      "status": "asignada",
-      "linkDocs": "https://drive.google.com/drive/folders/14o8belaygw9uyaapZPFNg0fWiQx-cJXO?usp=sharing"
-    },
-    {
-      "id": "2026-02-26_706882",
-      "fecha": "2026-02-26",
-      "ha": "HA706882",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Bernhard-Brinkmöller-Straße 17",
-      "cp": "33014",
-      "ciudad": "Bad Driburg",
-      "titulo": "2 TK Umtelkomd - Installation - HA706882",
-      "equipo": "West-004",
-      "status": "finalizada_ok",
-      "linkDocs": "https://drive.google.com/drive/folders/1pJIL0DJiNxDG-uwmgXvjWeauSGwgp9E8?usp=sharing"
-    },
-    {
-      "id": "2026-02-26_755766",
-      "fecha": "2026-02-26",
-      "ha": "HA755766",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Bergstraße 17A",
-      "cp": "49143",
-      "ciudad": "Bissendorf",
-      "titulo": "2 TK Umtelkomd - Installation - HA755766",
-      "equipo": "West-002",
-      "status": "asignada",
-      "linkDocs": "https://drive.google.com/drive/folders/1Nu6YvpCj9YfjoBVmBD2lhZmI5krETSjs?usp=sharing"
-    },
     {
       "id": "2026-02-27_489131",
       "fecha": "2026-02-27",
@@ -74,7 +29,7 @@
       "titulo": "2 TK Umtelkomd - Installation - HA755772",
       "equipo": "West-002",
       "status": "asignada",
-      "linkDocs": ""
+      "linkDocs": "https://drive.google.com/drive/folders/174rzolt99KMgEtXNHY78UFySwj66e2t3?usp=sharing"
     },
     {
       "id": "2026-02-27_1053779",
@@ -89,7 +44,7 @@
       "titulo": "3 TK Umtelkomd - Installation - HA1053779",
       "equipo": "West-001",
       "status": "asignada",
-      "linkDocs": ""
+      "linkDocs": "https://drive.google.com/drive/folders/1K4vCx2n8mVWLF5250uKG_qpOpLLDI_ZW?usp=sharing"
     },
     {
       "id": "2026-02-27_755803",
@@ -104,7 +59,7 @@
       "titulo": "4 TK Umtelkomd - Installation - HA755803",
       "equipo": "West-002",
       "status": "asignada",
-      "linkDocs": ""
+      "linkDocs": "https://drive.google.com/drive/folders/1ydJB9Q4qc1knqAs6dMOcKjV_q4Afxhb7?usp=sharing"
     },
     {
       "id": "2026-03-02_487984",
@@ -290,13 +245,43 @@
       "id": "2026-03-09_410837",
       "fecha": "2026-03-09",
       "ha": "HA410837",
-      "tecnicos": 2,
+      "tecnicos": 0,
       "inicio": "08:00",
       "fin": "15:00",
       "calle": "Schwerte 18",
       "cp": "34414",
       "ciudad": "Warburg",
       "titulo": "Stephan - 2 TK Umtelcomd - Installation - HA410837",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-09_1118971",
+      "fecha": "2026-03-09",
+      "ha": "HA1118971",
+      "tecnicos": 4,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Sackstraße 8",
+      "cp": "49086",
+      "ciudad": "Osnabrück",
+      "titulo": "4 TK Umtelkomd - lange Leiter erforderlich - Installation - HA1118971",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-10_921064",
+      "fecha": "2026-03-10",
+      "ha": "HA921064",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "16:00",
+      "calle": "Am Sundern 1",
+      "cp": "49597",
+      "ciudad": "Rieste",
+      "titulo": "2 TK Umtelkomd - Installation - HA921064",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
