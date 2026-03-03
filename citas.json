@@ -1,51 +1,6 @@
 {
-  "generated": "2026-03-02T19:51:49.452623",
+  "generated": "2026-03-03T11:16:54.457645",
   "citas": [
-    {
-      "id": "2026-03-02_487984",
-      "fecha": "2026-03-02",
-      "ha": "HA487984",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Kreuzstraße 2",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "2 TK Umtelkomd - Installation - HA487984",
-      "equipo": "West-003",
-      "status": "asignada",
-      "linkDocs": "https://drive.google.com/drive/folders/1MTopAQylkG4DaQootYOKDCsGYJ8ViIEk?usp=sharing"
-    },
-    {
-      "id": "2026-03-02_485861",
-      "fecha": "2026-03-02",
-      "ha": "HA485861",
-      "tecnicos": 4,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "An d. Wippe 9c",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "4 TK Umtelkomd - Installation - HA485861",
-      "equipo": "West-004",
-      "status": "asignada",
-      "linkDocs": "https://drive.google.com/drive/folders/1VEm-zwFzNtuQ6mN1Wcp4D6o2yn4MWV_K?usp=sharing"
-    },
-    {
-      "id": "2026-03-02_489775",
-      "fecha": "2026-03-02",
-      "ha": "HA489775",
-      "tecnicos": 3,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Thüringer Weg 4",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "3 TK Umtelkomd - Installation - HA489775",
-      "equipo": "West-001",
-      "status": "en_trabajo",
-      "linkDocs": "https://drive.google.com/drive/folders/1DWK2YAzSwXe_uppsw4DNqPVSx2gZYkNR?usp=sharing"
-    },
     {
       "id": "2026-03-03_764742",
       "fecha": "2026-03-03",
@@ -58,7 +13,7 @@
       "ciudad": "Münster",
       "titulo": "4 TK Umtelkomd - Installation - HA764742",
       "equipo": "West-002",
-      "status": "asignada",
+      "status": "capturada",
       "linkDocs": ""
     },
     {
@@ -73,7 +28,7 @@
       "ciudad": "Fürstenau",
       "titulo": "3 TK Umtelkomd - Installation - HA306125",
       "equipo": "West-001",
-      "status": "asignada",
+      "status": "capturada",
       "linkDocs": ""
     },
     {
@@ -282,6 +237,36 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "3 TK Umtelkomd - Installation - HA755764",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-11_708588",
+      "fecha": "2026-03-11",
+      "ha": "HA708588",
+      "tecnicos": 4,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Zum Hillenwasser 20",
+      "cp": "33014",
+      "ciudad": "Bad Driburg",
+      "titulo": "4 TK Umtelkomd - Installation - HA708588",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-11_755194",
+      "fecha": "2026-03-11",
+      "ha": "HA755194",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Melanchthonstraße 9",
+      "cp": "49143",
+      "ciudad": "Bissendorf",
+      "titulo": "2 TK Umtelkomd - Installation - HA755194",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
