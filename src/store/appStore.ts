@@ -7,6 +7,7 @@ import type {
   PhotoQuality,
   Submission,
   Cita,
+  WeNTData,
 } from '../types'
 import { fetchConfig } from '../lib/api'
 import * as db from '../lib/db'
@@ -45,6 +46,10 @@ interface AppState {
   addPhoto: (fieldId: string, dataUrl: string, quality: PhotoQuality) => void
   removePhoto: (fieldId: string, index: number) => void
   hasPhoto: (fieldId: string) => boolean
+  weNT: Record<string, WeNTData>
+  setWeNT: (weId: string, data: Partial<WeNTData>) => void
+  weAtenuacion: Record<string, number | null>
+  setWeAtenuacion: (weId: string, val: number | null) => void
   checkedItems: string[]
   toggleChecked: (id: string) => void
   protocols: string[]
@@ -128,6 +133,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const p = get().photos[fieldId]
     return !!p && p.length > 0
   },
+  weNT: {},
+  setWeNT: (weId, data) =>
+    set((s) => ({
+      weNT: {
+        ...s.weNT,
+        [weId]: { ...(s.weNT[weId] || { mounted: false, status: '', notas: '' }), ...data },
+      },
+    })),
+  weAtenuacion: {},
+  setWeAtenuacion: (weId, val) =>
+    set((s) => ({ weAtenuacion: { ...s.weAtenuacion, [weId]: val } })),
   checkedItems: [],
   toggleChecked: (id) =>
     set((s) => ({
@@ -150,6 +166,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       checkedItems: [],
       protocols: [],
       selectedCita: null,
+      weNT: {},
+      weAtenuacion: {},
     }),
 
   // Submissions

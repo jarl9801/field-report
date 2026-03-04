@@ -167,6 +167,40 @@ const es = {
   syncingN: 'Sincronizando {n} envío(s)...',
   syncSuccess: 'Sincronización completada',
   syncFailed: 'Error al sincronizar',
+  // NT/ONT
+  ntMounted: 'NT montada en esta vivienda',
+  ntStatus: 'Estado NT',
+  ntWorking: 'Encendida y funcionando',
+  ntNotWorking: 'No se puede encender',
+  ntWhyNotWorking: '¿Por qué no enciende?',
+  // Route
+  routeLabel: 'Ruta del cableado',
+  routeChimney: 'Chimenea interna',
+  routeFacade: 'Fachada exterior',
+  routeCorridor: 'Pasillo/Escalera',
+  routeChimneyIn: 'Cable en entrada chimenea',
+  routeChimneyOut: 'Cable en salida chimenea',
+  routeFacadeCable: 'Cable en fachada exterior',
+  routeFacadeFix: 'Fijación en fachada',
+  routeCorridorT1: 'Pasillo/escalera tramo 1',
+  routeCorridorT2: 'Pasillo/escalera tramo 2',
+  routeCorridorFix: 'Sujeción en pasillo',
+  // Negocios
+  hasNegocios: '¿Hay locales comerciales / negocios en el edificio?',
+  negociosFibras: 'Número de fibras fusionadas para negocios',
+  negociosDetalle: 'Detalle de conexiones / locales',
+  negociosFoto: 'Documentación fusiones negocios',
+  // Atenuación
+  atenuacionLabel: 'Atenuación medida (dBm)',
+  atenuacionWarning: 'Atenuación fuera de rango (-1.5 a +1.5 dBm). Verifica la medición.',
+  // Help
+  helpSotano: 'Fotografía el GF-GV abierto antes de trabajar. Documenta todas las fusiones realizadas y los patch cables conectados. Captura el recorrido completo del cable desde la entrada hasta el GF-GV. Cierra y fotografía el GF-GV al terminar.',
+  helpAP: 'Si existe AP: fotografía el canalizado abierto mostrando el cable, y después cerrado con el trabajo terminado. El patch cable del AP al GV debe estar conectado y visible.',
+  helpWE: 'Por cada vivienda: fotografía el GF-TA con pegatinas, el patch cable conectado al ONT, el ONT funcionando con LEDs visibles, el número de serie del ONT y la medición de fibra.',
+  helpRoute: 'Documenta el recorrido del cable desde el sótano hasta las viviendas siguiendo el tipo de instalación seleccionado.',
+  helpExterior: 'Fotografía el canal/trunking en pasillo, escalera o exterior. Si hay sello cortafuegos, también fotografíalo.',
+  // PDF
+  pdfUpload: 'Subir PDF',
 } as const
 
 const de: Record<keyof typeof es, string> = {
@@ -323,6 +357,40 @@ const de: Record<keyof typeof es, string> = {
   syncingN: '{n} Einreichung(en) synchronisieren...',
   syncSuccess: 'Synchronisation abgeschlossen',
   syncFailed: 'Synchronisationsfehler',
+  // NT/ONT
+  ntMounted: 'NT in dieser Wohnung montiert',
+  ntStatus: 'NT-Status',
+  ntWorking: 'Eingeschaltet und funktionsfähig',
+  ntNotWorking: 'Lässt sich nicht einschalten',
+  ntWhyNotWorking: 'Warum lässt sich die NT nicht einschalten?',
+  // Route
+  routeLabel: 'Kabelführung',
+  routeChimney: 'Innenkamin',
+  routeFacade: 'Außenfassade',
+  routeCorridor: 'Flur/Treppe',
+  routeChimneyIn: 'Kabel am Kamineingang',
+  routeChimneyOut: 'Kabel am Kaminausgang',
+  routeFacadeCable: 'Kabel an der Fassade',
+  routeFacadeFix: 'Befestigung an der Fassade',
+  routeCorridorT1: 'Flur/Treppe Abschnitt 1',
+  routeCorridorT2: 'Flur/Treppe Abschnitt 2',
+  routeCorridorFix: 'Befestigung im Flur',
+  // Negocios
+  hasNegocios: 'Gibt es Gewerbeeinheiten / Geschäfte im Gebäude?',
+  negociosFibras: 'Anzahl gespleißter Fasern für Gewerbe',
+  negociosDetalle: 'Details der Anschlüsse / Gewerbeeinheiten',
+  negociosFoto: 'Dokumentation Gewerbe-Spleißungen',
+  // Atenuación
+  atenuacionLabel: 'Gemessene Dämpfung (dBm)',
+  atenuacionWarning: 'Dämpfung außerhalb des Bereichs (-1,5 bis +1,5 dBm). Messung überprüfen.',
+  // Help
+  helpSotano: 'GF-GV vor Arbeitsbeginn geöffnet fotografieren. Alle Spleißungen und angeschlossenen Patchkabel dokumentieren. Kompletten Kabelverlauf vom Eingang zum GF-GV erfassen. GF-GV am Ende geschlossen fotografieren.',
+  helpAP: 'Falls AP vorhanden: Kanal geöffnet mit sichtbarem Kabel fotografieren, dann geschlossen nach Fertigstellung. Patchkabel vom AP zum GV muss angeschlossen und sichtbar sein.',
+  helpWE: 'Pro Wohnung: GF-TA mit Aufklebern, Patchkabel zum ONT, ONT mit sichtbaren LEDs, ONT-Seriennummer und Fasermessung fotografieren.',
+  helpRoute: 'Den Kabelverlauf vom Keller zu den Wohnungen gemäß der gewählten Installationsart dokumentieren.',
+  helpExterior: 'Kanal/Trunking in Flur, Treppe oder Außenbereich fotografieren. Falls Brandschott vorhanden, ebenfalls fotografieren.',
+  // PDF
+  pdfUpload: 'PDF hochladen',
 }
 
 export type TranslationKey = keyof typeof es

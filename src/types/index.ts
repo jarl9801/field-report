@@ -77,6 +77,14 @@ export interface WeData {
   present: boolean
 }
 
+export interface WeNTData {
+  mounted: boolean
+  status: string
+  notas: string
+}
+
+export type RouteType = 'chimney' | 'facade' | 'corridor' | ''
+
 export interface ValidationResult {
   items: ValidationItem[]
   totalPoints: number
