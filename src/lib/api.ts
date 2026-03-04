@@ -109,18 +109,20 @@ export function formatDuration(mins: number): string {
 }
 
 export async function fetchCitasByTeam(team: string, date: string): Promise<Cita[]> {
+  // getLiveCitas returns all citas; we filter by team client-side
   const resp = await fetch(
-    `${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(team)}&date=${date}`
+    `${GOOGLE_SCRIPT_URL}?action=getLiveCitas&date=${date}`
   )
   const data = await resp.json()
-  // Backend returns `direccion` but Cita type uses `calle`, and times as Date objects
-  return (data.citas || []).map((c: Record<string, unknown>) => ({
-    ...c,
-    calle: c.calle || c.direccion || '',
-    cp: String(c.cp || ''),
-    inicio: parseTime(c.inicio),
-    fin: parseTime(c.fin),
-  }))
+  return (data.citas || [])
+    .filter((c: Record<string, unknown>) => c.equipo === team)
+    .map((c: Record<string, unknown>) => ({
+      ...c,
+      calle: c.calle || c.direccion || '',
+      cp: String(c.cp || ''),
+      inicio: parseTime(c.inicio),
+      fin: parseTime(c.fin),
+    }))
 }
 
 export async function fetchCitasJson(): Promise<{ generated: string; citas: Cita[] }> {
