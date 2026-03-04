@@ -139,17 +139,23 @@ export function WcSection() {
 
         <div className="mb-3">
           <label className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-gray-400">
-            HA <span className="text-red-400">*</span>
+            HA {!isSegunda && <span className="text-red-400">*</span>}
           </label>
-          <input
-            type="text"
-            value={formData.ha || ''}
-            onChange={(e) => setFormField('ha', e.target.value)}
-            placeholder="Ej: HA898706"
-            className="input-field"
-          />
-          {formData.ha && !haFormatOk && (
-            <p className="mt-1.5 text-[11px] font-medium text-amber-500">Formato: HA + números</p>
+          {isSegunda && formData.ha ? (
+            <div className="input-field bg-gray-50 text-gray-600">{formData.ha}</div>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={formData.ha || ''}
+                onChange={(e) => setFormField('ha', e.target.value)}
+                placeholder="Ej: HA898706"
+                className="input-field"
+              />
+              {formData.ha && !haFormatOk && (
+                <p className="mt-1.5 text-[11px] font-medium text-amber-500">Formato: HA + números</p>
+              )}
+            </>
           )}
         </div>
 

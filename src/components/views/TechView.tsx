@@ -107,8 +107,10 @@ export function TechView() {
     }
 
     // WC-specific
+    const isSegundaCita = formData.workStatus === 'client-reschedule' || formData.visitType === 'segunda'
     if (isWc) {
-      if (!formData.ha || !formData.units || !formData.variant) {
+      // En segunda cita solo se requiere HA (que viene de la cita)
+      if (!isSegundaCita && (!formData.ha || !formData.units || !formData.variant)) {
         addToast(t('needHA'), 'error')
         return false
       }
