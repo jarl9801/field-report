@@ -16,13 +16,6 @@ export const WC_AP_PHOTOS: PhotoDef[] = [
   { id: 'wc_ap_patch_gv', label: 'Patch cable GF-AP → GF-GV conectado', required: true },
 ]
 
-// Segunda cita — Fotos opcionales
-export const WC_SEGUNDA_CITA: PhotoDef[] = [
-  { id: 'wc_sc_foto1', label: 'Foto del trabajo realizado', required: false },
-  { id: 'wc_sc_foto2', label: 'Foto adicional', required: false },
-  { id: 'wc_sc_foto3', label: 'Foto adicional', required: false },
-]
-
 // Per-WE photos (primera cita)
 export const WC_WE_PHOTOS: WePhotoDef[] = [
   { suffix: 'gfta', label: 'GF-TA con pegatinas Home ID', required: true },
@@ -39,5 +32,3 @@ export const WC_EXTERIOR: PhotoDef[] = [
   { id: 'wc_sello_ext', label: 'Sello Cortafuegos exterior', required: false },
 ]
 
-// Legacy exports for backward compatibility
-export const WC_BASEMENT = WC_SOTANO_BASE
