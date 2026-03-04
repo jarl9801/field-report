@@ -98,6 +98,10 @@ function doGet(e) {
     return getLiveCitasData(e.parameter);
   }
 
+  if (action === 'getHistoryCitas') {
+    return getHistoryCitasData(e.parameter);
+  }
+
   // Write actions via GET (POST has auth redirect issues on some deployments)
   if (action === 'assignCita') {
     return assignCitaData(e.parameter);
@@ -948,6 +952,68 @@ function testConnection() {
     });
     Logger.log('✅ Slack OK — Código: ' + response.getResponseCode());
   } catch (e) { Logger.log('❌ Error Slack: ' + e.toString()); }
+}
+
+// ============================================
+// HISTORY CITAS — Lee TODAS las citas del Sheet (no calendario)
+// Params: ?action=getHistoryCitas[&dateFrom=YYYY-MM-DD][&dateTo=YYYY-MM-DD][&team=West-001]
+// ============================================
+
+function getHistoryCitasData(params) {
+  try {
+    const sheet = SpreadsheetApp.openById(CONFIG.SHEET_ID).getSheetByName('Citas');
+    if (!sheet || sheet.getLastRow() < 2) {
+      return jsonResponse({ success: true, citas: [], count: 0 });
+    }
+
+    const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 19).getValues();
+    const dateFrom = (params && params.dateFrom) || '';
+    const dateTo   = (params && params.dateTo)   || '';
+    const team     = (params && params.team)      || '';
+
+    const citas = [];
+    for (const row of data) {
+      const fecha  = _toDateStr(row[CITAS_COLS.FECHA - 1]);
+      const equipo = row[CITAS_COLS.EQUIPO - 1] || '';
+      const status = row[CITAS_COLS.STATUS - 1] || 'libre';
+
+      // Skip unassigned (libre) citas — history only shows touched citas
+      if (status === 'libre') continue;
+
+      // Date range filter
+      if (dateFrom && fecha < dateFrom) continue;
+      if (dateTo && fecha > dateTo) continue;
+
+      // Team filter
+      if (team && equipo !== team) continue;
+
+      citas.push({
+        id:        row[CITAS_COLS.ID - 1],
+        fecha:     fecha,
+        ha:        row[CITAS_COLS.HA - 1] || '',
+        calle:     row[CITAS_COLS.DIRECCION - 1] || '',
+        cp:        row[CITAS_COLS.CP - 1] || '',
+        ciudad:    row[CITAS_COLS.CIUDAD - 1] || '',
+        inicio:    row[CITAS_COLS.H_INICIO - 1] || '',
+        fin:       row[CITAS_COLS.H_FIN - 1] || '',
+        tecnicos:  row[CITAS_COLS.TECNICOS - 1] || 0,
+        equipo:    equipo,
+        status:    status,
+        linkDocs:  row[CITAS_COLS.LINK_DOCS - 1] || '',
+        notas:     row[CITAS_COLS.NOTAS - 1] || '',
+        tsAsig:    row[CITAS_COLS.TS_ASIGNACION - 1] || '',
+        tsFinal:   row[CITAS_COLS.TS_FINAL - 1] || ''
+      });
+    }
+
+    // Sort by date descending (newest first)
+    citas.sort((a, b) => b.fecha.localeCompare(a.fecha) || b.inicio.localeCompare(a.inicio));
+
+    return jsonResponse({ success: true, citas: citas, count: citas.length });
+  } catch (err) {
+    Logger.log('getHistoryCitasData error: ' + err.toString());
+    return jsonResponse({ success: false, error: err.toString(), citas: [] });
+  }
 }
 
 // ============================================

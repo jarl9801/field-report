@@ -43,7 +43,7 @@ function fallbackTeams(): TeamConfig[] {
       client: 'westconnect',
       members: ['Juan Correa', 'Eddier Aldana'],
     },
-    { pin: '4567', name: 'West-003', client: 'westconnect', members: ['Jaime Guzman'] },
+    { pin: '4567', name: 'West-003', client: 'westconnect', members: ['Andrés Melgarejo'] },
     { pin: '5678', name: 'West-004', client: 'westconnect', members: ['Michel Matos'] },
   ]
 }
@@ -113,7 +113,14 @@ export async function fetchCitasByTeam(team: string, date: string): Promise<Cita
     `${GOOGLE_SCRIPT_URL}?action=getCitasByTeam&team=${encodeURIComponent(team)}&date=${date}`
   )
   const data = await resp.json()
-  return data.citas || []
+  // Backend returns `direccion` but Cita type uses `calle`, and times as Date objects
+  return (data.citas || []).map((c: Record<string, unknown>) => ({
+    ...c,
+    calle: c.calle || c.direccion || '',
+    cp: String(c.cp || ''),
+    inicio: parseTime(c.inicio),
+    fin: parseTime(c.fin),
+  }))
 }
 
 export async function fetchCitasJson(): Promise<{ generated: string; citas: Cita[] }> {
@@ -141,7 +148,7 @@ export async function updateCitaStatus(
     action: 'updateCitaStatus',
     citaId,
     status,
-    ...(comments ? { comments } : {}),
+    ...(comments ? { notas: comments } : {}),
   })
   const resp = await fetch(`${GOOGLE_SCRIPT_URL}?${params}`, { redirect: 'follow' })
   return resp.json()
