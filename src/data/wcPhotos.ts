@@ -4,7 +4,7 @@ import type { PhotoDef, WePhotoDef } from '../types'
 export const WC_SOTANO_BASE: PhotoDef[] = [
   { id: 'wc_gv_abierto', label: 'GF-GV Abierto (antes de trabajos)', required: true },
   { id: 'wc_gv_fusiones', label: 'GF-GV con fusiones y patch cables conectados', required: true },
-  { id: 'wc_kela_recorrido', label: 'Recorrido KELA completo (cable entrada → GF-GV)', required: true },
+  { id: 'wc_sotano_recorrido', label: 'Recorrido completo sótano (cable entrada → GF-GV)', required: true },
   { id: 'wc_gv_cerrado_final', label: 'GF-GV Cerrado al final', required: true },
   { id: 'wc_sello_sotano', label: 'Sello Cortafuegos sótano', required: false },
 ]
