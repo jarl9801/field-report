@@ -10,6 +10,34 @@ import type { WorkStatus, RouteType } from '../../types'
 import type { TranslationKey } from '../../lib/i18n'
 import { HelpCircle, X } from 'lucide-react'
 
+
+function SkipToggle({ sectionId, skipped, onToggle, show }: {
+  sectionId: string; skipped: boolean; onToggle: (id: string) => void; show: boolean
+}) {
+  if (!show) return null
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(sectionId)}
+      className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${
+        skipped
+          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+          : 'bg-gray-100 text-gray-400 border border-gray-200'
+      }`}
+    >
+      {skipped ? '⚠️ Pendiente' : '✓ Completar'}
+    </button>
+  )
+}
+
+function SkippedBanner() {
+  return (
+    <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-[13px] text-amber-700 font-medium">
+      ⏳ Sección pendiente — se completará en la siguiente visita
+    </div>
+  )
+}
+
 function CountBadge({ filled, total }: { filled: number; total: number }) {
   const done = filled === total
   return (
@@ -66,9 +94,25 @@ export function WcSection() {
   const numWe = parseInt(formData.units || '0') || 0
   const [activeWe, setActiveWe] = useState(1)
 
-  // Primera / Segunda cita — toggle manual O status seleccionado
+  // Segunda cita = visitType toggle (actualmente EN la segunda visita)
   const visitType = formData.visitType || 'primera'
-  const isSegunda = visitType === 'segunda' || formData.workStatus === 'client-reschedule'
+  const isSegunda = visitType === 'segunda'
+  // Citar Nuevamente = primera visita incompleta, necesita segunda visita
+  const isCitarNuevamente = formData.workStatus === 'client-reschedule'
+  // Mostrar formulario completo si: finalizado OK o Citar Nuevamente (con secciones opcionales)
+  const showFullForm = isFinalized || isCitarNuevamente
+
+  // Secciones marcadas como "no completadas" (solo aplica a Citar Nuevamente)
+  const skippedRaw = formData.skippedSections || ''
+  const skippedSections = skippedRaw ? skippedRaw.split(',') : []
+  const toggleSkip = (sectionId: string) => {
+    const current = skippedSections
+    const next = current.includes(sectionId)
+      ? current.filter((s) => s !== sectionId)
+      : [...current, sectionId]
+    setFormField('skippedSections', next.join(','))
+  }
+  const isSkipped = (sectionId: string) => isCitarNuevamente && skippedSections.includes(sectionId)
 
   // AP exists toggle (default true)
   const apExists = formData.apExists !== 'false'
@@ -220,7 +264,7 @@ export function WcSection() {
         )}
       </section>
 
-      {/* CITAR NUEVAMENTE — Solo parte no ejecutada + foto opcional */}
+      {/* CITAR NUEVAMENTE — visitType=segunda: llenando info de la segunda visita */}
       {isSegunda && !!formData.workStatus && (
         <section className="section-card">
           <h3 className="mb-3 text-[15px] font-extrabold text-gray-900">🔄 Citar Nuevamente</h3>
@@ -239,40 +283,45 @@ export function WcSection() {
         </section>
       )}
 
-      {/* PRIMERA CITA — Fotos completas */}
-      {!isSegunda && isFinalized && (
+      {/* FORMULARIO COMPLETO — Cliente Finalizado o Citar Nuevamente (con secciones opcionales) */}
+      {!isSegunda && showFullForm && (
         <>
           {/* NE4 Checklist */}
           <section className="section-card">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-[15px] font-extrabold text-gray-900">Checklist NE4</h3>
-              <CountBadge filled={checkedItems.length} total={NE4_CHECKS.length} />
+              <div className="flex items-center gap-2">
+                <SkipToggle sectionId="checklist" skipped={isSkipped('checklist')} onToggle={toggleSkip} show={isCitarNuevamente} />
+                {!isSkipped('checklist') && <CountBadge filled={checkedItems.length} total={NE4_CHECKS.length} />}
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              {NE4_CHECKS.map((item) => {
-                const colors = CATEGORY_COLORS[item.category]
-                const checked = checkedItems.includes(item.id)
-                return (
-                  <label
-                    key={item.id}
-                    className={`flex items-start gap-3 rounded-xl border-l-[3px] p-3 transition-colors ${colors.border} ${
-                      checked ? colors.bg : 'bg-gray-50/50'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleChecked(item.id)}
-                      className="mt-0.5 h-5 w-5 rounded-md accent-brand-500"
-                    />
-                    <div>
-                      <div className="text-[13px] font-semibold text-gray-800">{t(item.titleKey)}</div>
-                      <div className="text-[11px] text-gray-400">{t(item.descKey)}</div>
-                    </div>
-                  </label>
-                )
-              })}
-            </div>
+            {isSkipped('checklist') ? <SkippedBanner /> : (
+              <div className="flex flex-col gap-1.5">
+                {NE4_CHECKS.map((item) => {
+                  const colors = CATEGORY_COLORS[item.category]
+                  const checked = checkedItems.includes(item.id)
+                  return (
+                    <label
+                      key={item.id}
+                      className={`flex items-start gap-3 rounded-xl border-l-[3px] p-3 transition-colors ${colors.border} ${
+                        checked ? colors.bg : 'bg-gray-50/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleChecked(item.id)}
+                        className="mt-0.5 h-5 w-5 rounded-md accent-brand-500"
+                      />
+                      <div>
+                        <div className="text-[13px] font-semibold text-gray-800">{t(item.titleKey)}</div>
+                        <div className="text-[11px] text-gray-400">{t(item.descKey)}</div>
+                      </div>
+                    </label>
+                  )
+                })}
+              </div>
+            )}
           </section>
 
           {/* Fotos Sótano */}
@@ -282,10 +331,13 @@ export function WcSection() {
                 <h3 className="text-[15px] font-extrabold text-gray-900">Sótano — Distribución fibra</h3>
                 <HelpButton helpKey="helpSotano" t={t} />
               </div>
-              <CountBadge filled={sotanoFilled} total={sotanoReq} />
+              <div className="flex items-center gap-2">
+                <SkipToggle sectionId="sotano" skipped={isSkipped('sotano')} onToggle={toggleSkip} show={isCitarNuevamente} />
+                {!isSkipped('sotano') && <CountBadge filled={sotanoFilled} total={sotanoReq} />}
+              </div>
             </div>
-            {WC_SOTANO_BASE.map((p) => (
-              <PhotoField key={p.id} fieldId={p.id} label={p.label} required={p.required} />
+            {isSkipped('sotano') ? <SkippedBanner /> : WC_SOTANO_BASE.map((p) => (
+              <PhotoField key={p.id} fieldId={p.id} label={p.label} required={p.required && !isCitarNuevamente} />
             ))}
           </section>
 
@@ -328,31 +380,38 @@ export function WcSection() {
 
           {/* AP toggle + fotos */}
           <section className="section-card">
-            <div className="mb-4 flex items-center gap-2">
-              <h3 className="text-[15px] font-extrabold text-gray-900">Punto de Acceso (AP)</h3>
-              <HelpButton helpKey="helpAP" t={t} />
-            </div>
-            <label className="mb-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-              <input
-                type="checkbox"
-                checked={apExists}
-                onChange={(e) => setFormField('apExists', e.target.checked ? 'true' : 'false')}
-                className="h-5 w-5 rounded accent-brand-500"
-              />
-              <div>
-                <div className="text-[13px] font-semibold text-gray-800">AP instalado / existente</div>
-                <div className="text-[11px] text-gray-400">Desmarcar si no hay AP en este edificio</div>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="text-[15px] font-extrabold text-gray-900">🔌 Punto de Acceso (AP)</h3>
+                <HelpButton helpKey="helpAP" t={t} />
               </div>
-            </label>
-            {apExists && (
+              <SkipToggle sectionId="ap" skipped={isSkipped('ap')} onToggle={toggleSkip} show={isCitarNuevamente} />
+            </div>
+            {isSkipped('ap') ? <SkippedBanner /> : (
               <>
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-[12px] font-semibold text-gray-600">Fotos del AP</span>
-                  <CountBadge filled={apFilled} total={WC_AP_PHOTOS.filter(p => p.required).length} />
-                </div>
-                {WC_AP_PHOTOS.map((p) => (
-                  <PhotoField key={p.id} fieldId={p.id} label={p.label} required={p.required} />
-                ))}
+                <label className="mb-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+                  <input
+                    type="checkbox"
+                    checked={apExists}
+                    onChange={(e) => setFormField('apExists', e.target.checked ? 'true' : 'false')}
+                    className="h-5 w-5 rounded accent-brand-500"
+                  />
+                  <div>
+                    <div className="text-[13px] font-semibold text-gray-800">AP instalado / existente</div>
+                    <div className="text-[11px] text-gray-400">Desmarcar si no hay AP en este edificio</div>
+                  </div>
+                </label>
+                {apExists && (
+                  <>
+                    <div className="mb-3 flex items-center justify-between">
+                      <span className="text-[12px] font-semibold text-gray-600">Fotos del AP</span>
+                      <CountBadge filled={apFilled} total={WC_AP_PHOTOS.filter(p => p.required).length} />
+                    </div>
+                    {WC_AP_PHOTOS.map((p) => (
+                      <PhotoField key={p.id} fieldId={p.id} label={p.label} required={p.required && !isCitarNuevamente} />
+                    ))}
+                  </>
+                )}
               </>
             )}
           </section>
@@ -363,6 +422,7 @@ export function WcSection() {
               <div className="mb-3 flex items-center gap-2">
                 <h3 className="text-[15px] font-extrabold text-gray-900">
                   Fotos por Vivienda ({numWe} WE)
+                <SkipToggle sectionId="we" skipped={isSkipped('we')} onToggle={toggleSkip} show={isCitarNuevamente} />
                 </h3>
                 <HelpButton helpKey="helpWE" t={t} />
               </div>
