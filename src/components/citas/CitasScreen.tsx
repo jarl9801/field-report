@@ -7,7 +7,10 @@ import { CITA_STATUS_DONE } from '../../types'
 import type { Cita } from '../../types'
 import { CitaCard } from './CitaCard'
 
+let _citasRenders = 0
 export function CitasScreen() {
+  _citasRenders++
+  if (_citasRenders > 30) console.error('CitasScreen re-render loop! count:', _citasRenders)
   const { t, lang } = useTranslation()
   const currentTeam = useAppStore((s) => s.currentTeam)
   const setSelectedCita = useAppStore((s) => s.setSelectedCita)
