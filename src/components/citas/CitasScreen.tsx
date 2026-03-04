@@ -39,28 +39,17 @@ export function CitasScreen() {
   )
 
   useEffect(() => {
-    async function findNextPending() {
-      if (!teamName) return
-      for (let i = 0; i < 14; i++) {
-        const d = new Date(Date.now() + i * 86400000).toISOString().split('T')[0]
-        try {
-          const result = await fetchCitasByTeam(teamName, d)
-          if (result.some((c) => !CITA_STATUS_DONE.includes(c.status))) {
-            setDate(d)
-            setCitas(result)
-            setLoading(false)
-            return
-          }
-        } catch {
-          // continue
-        }
-      }
-      const today = new Date().toISOString().split('T')[0]
-      setDate(today)
-      void loadCitas(today)
-    }
-    void findNextPending()
-  }, [teamName, loadCitas])
+    if (!teamName) return
+    // Load today's citas directly — no 14-day loop (too slow, causes issues)
+    const today = new Date().toISOString().split('T')[0]!
+    setDate(today)
+    setLoading(true)
+    fetchCitasByTeam(teamName, today)
+      .then((result) => { setCitas(result) })
+      .catch(() => { setCitas([]) })
+      .finally(() => { setLoading(false) })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamName])
 
   const handleDateChange = (newDate: string) => {
     setDate(newDate)
