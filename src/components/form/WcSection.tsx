@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo, useState } from 'react'
 import { useAppStore } from '../../store/appStore'
 import { useTranslation } from '../../hooks/useTranslation'
 import { WC_SOTANO_BASE, WC_AP_PHOTOS, WC_WE_PHOTOS, WC_EXTERIOR } from '../../data/wcPhotos'
@@ -69,17 +69,6 @@ export function WcSection() {
   // Primera / Segunda cita — toggle manual O status seleccionado
   const visitType = formData.visitType || 'primera'
   const isSegunda = visitType === 'segunda' || formData.workStatus === 'client-reschedule'
-
-  // Dynamic photo slots for segunda cita
-  const [photoSlots, setPhotoSlots] = useState<Array<{id: string; desc: string}>>([
-    { id: 'sc_photo_0', desc: '' }
-  ])
-  const addPhotoSlot = useCallback(() => {
-    setPhotoSlots(prev => [...prev, { id: `sc_photo_${prev.length}`, desc: '' }])
-  }, [])
-  const updateSlotDesc = useCallback((idx: number, desc: string) => {
-    setPhotoSlots(prev => prev.map((s, i) => i === idx ? { ...s, desc } : s))
-  }, [])
 
   // AP exists toggle (default true)
   const apExists = formData.apExists !== 'false'
@@ -231,49 +220,22 @@ export function WcSection() {
         )}
       </section>
 
-      {/* SEGUNDA CITA — Observaciones + fotos ilimitadas con descripción */}
+      {/* CITAR NUEVAMENTE — Solo parte no ejecutada + foto opcional */}
       {isSegunda && !!formData.workStatus && (
         <section className="section-card">
-          <h3 className="mb-3 text-[15px] font-extrabold text-gray-900">Segunda Cita</h3>
+          <h3 className="mb-3 text-[15px] font-extrabold text-gray-900">🔄 Citar Nuevamente</h3>
           <div className="mb-4">
             <label className="mb-1.5 block text-[12px] font-bold uppercase tracking-wider text-gray-400">
-              Observaciones generales
+              Parte no ejecutada <span className="text-red-400">*</span>
             </label>
             <textarea
               value={formData.secondaNotas || ''}
               onChange={(e) => setFormField('secondaNotas', e.target.value)}
-              placeholder="Describe el trabajo realizado en esta segunda visita..."
-              className="input-field min-h-[80px] resize-y"
+              placeholder="Describe qué parte del trabajo no se pudo ejecutar y el motivo..."
+              className="input-field min-h-[100px] resize-y"
             />
           </div>
-
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-[12px] font-bold uppercase tracking-wider text-gray-400">
-              Fotos del trabajo
-            </p>
-            <span className="text-[11px] text-gray-400">{photoSlots.length} foto(s)</span>
-          </div>
-
-          {photoSlots.map((slot, idx) => (
-            <div key={slot.id} className="mb-4 rounded-xl bg-gray-50 p-3">
-              <input
-                type="text"
-                value={slot.desc}
-                onChange={(e) => updateSlotDesc(idx, e.target.value)}
-                placeholder={`Descripción foto ${idx + 1}`}
-                className="input-field mb-2 text-[13px]"
-              />
-              <PhotoField fieldId={slot.id} label="" required={false} />
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={addPhotoSlot}
-            className="mt-1 w-full rounded-xl border-2 border-dashed border-brand-200 py-3 text-[13px] font-bold text-brand-500 active:bg-brand-50"
-          >
-            + Añadir foto
-          </button>
+          <PhotoField fieldId="sc_evidencia" label="Foto de evidencia (opcional)" required={false} />
         </section>
       )}
 
