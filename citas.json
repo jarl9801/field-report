@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-04T10:46:39.827276",
+  "generated": "2026-03-04T11:01:45.667612",
   "citas": [
     {
       "id": "2026-03-04_488698",
@@ -267,6 +267,36 @@
       "cp": "32549",
       "ciudad": "Bad Oeynhausen",
       "titulo": "2 TK Umtelkomd - Installation - HA899208",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-13_409596",
+      "fecha": "2026-03-13",
+      "ha": "HA409596",
+      "tecnicos": 3,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Josef-Kohlschein-Straße 46",
+      "cp": "34414",
+      "ciudad": "Warburg",
+      "titulo": "3 TK Umtelkomd - Installation - HA409596",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-13_486988",
+      "fecha": "2026-03-13",
+      "ha": "HA486988",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Franz-Claas-Straße 12",
+      "cp": "33428",
+      "ciudad": "Harsewinkel",
+      "titulo": "2 TK Umtelkomd - Installation - HA486988 ",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
