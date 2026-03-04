@@ -10,10 +10,7 @@ const KEYS = [
   ['', '0', 'del'],
 ]
 
-let _pinRenders = 0
 export function PinEntry() {
-  _pinRenders++
-  if (_pinRenders > 30) console.error('PinEntry re-render loop! count:', _pinRenders)
   const { t } = useTranslation()
   const teamsMap = useAppStore((s) => s.teamsMap)
   const configLoaded = useAppStore((s) => s.configLoaded)

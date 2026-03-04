@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useAppStore } from './store/appStore'
 import { useSync } from './hooks/useSync'
 import { StatusBar } from './components/layout/StatusBar'
@@ -13,9 +13,6 @@ import { Modal } from './components/ui/Modal'
 import { migrateOldDBs } from './lib/db'
 
 export function App() {
-  const renderCount = useRef(0)
-  renderCount.current++
-  if (renderCount.current > 30) console.error('App re-render loop! count:', renderCount.current)
   const view = useAppStore((s) => s.view)
   const loadConfig = useAppStore((s) => s.loadConfig)
   const loadSubmissions = useAppStore((s) => s.loadSubmissions)

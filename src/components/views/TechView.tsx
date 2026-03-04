@@ -12,10 +12,7 @@ import { EvidenceSection } from '../form/EvidenceSection'
 import { IS_FINALIZED, NEEDS_EVIDENCE } from '../../types'
 import type { WorkStatus, Submission } from '../../types'
 
-let _techRenders = 0
 export function TechView() {
-  _techRenders++
-  if (_techRenders > 30) console.error('TechView re-render loop! count:', _techRenders)
   const { t, lang } = useTranslation()
   const online = useOnline()
   const [submitting, setSubmitting] = useState(false)

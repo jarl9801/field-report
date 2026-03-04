@@ -125,6 +125,20 @@ export async function fetchCitasByTeam(team: string, date: string): Promise<Cita
     }))
 }
 
+export async function fetchHistoryCitas(team: string): Promise<Cita[]> {
+  const resp = await fetch(
+    `${GOOGLE_SCRIPT_URL}?action=getHistoryCitas&team=${encodeURIComponent(team)}`
+  )
+  const data = await resp.json()
+  return (data.citas || []).map((c: Record<string, unknown>) => ({
+    ...c,
+    calle: c.calle || c.direccion || '',
+    cp: String(c.cp || ''),
+    inicio: parseTime(c.inicio),
+    fin: parseTime(c.fin),
+  }))
+}
+
 export async function fetchCitasJson(): Promise<{ generated: string; citas: Cita[] }> {
   const resp = await fetch('citas.json?t=' + Date.now())
   return resp.json()
