@@ -83,12 +83,10 @@ export function CitasScreen() {
   }
 
   const handleCapture = async (citaId: string) => {
-    try {
-      await apiUpdateCitaStatus(citaId, 'capturada')
-      void loadLive(date)
-    } catch {
-      addToast('Error actualizando cita', 'error')
-    }
+    // Update local state immediately (optimistic)
+    setLiveCitas(prev => prev.map(c => c.id === citaId ? { ...c, status: 'capturada' } : c))
+    // Persist to localStorage + try backend in background
+    void apiUpdateCitaStatus(citaId, 'capturada')
   }
 
   const handleStart = async (cita: Cita) => {

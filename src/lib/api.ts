@@ -108,10 +108,28 @@ export function formatDuration(mins: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
+// localStorage key for persisted status overrides
+const STATUS_STORE_KEY = 'fr_cita_statuses'
+
+export function getLocalStatuses(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(STATUS_STORE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+export function setLocalStatus(citaId: string, status: string): void {
+  const current = getLocalStatuses()
+  current[citaId] = status
+  localStorage.setItem(STATUS_STORE_KEY, JSON.stringify(current))
+}
+
 export async function fetchCitasByTeam(team: string, date: string): Promise<Cita[]> {
   // Read from citas.json (GitHub Pages) — equipo assignments are stored there
   const resp = await fetch('citas.json?t=' + Date.now())
   const data = await resp.json()
+  const localStatuses = getLocalStatuses()
   return (data.citas || [])
     .filter((c: Record<string, unknown>) => c.fecha === date && c.equipo === team)
     .map((c: Record<string, unknown>) => ({
@@ -120,6 +138,8 @@ export async function fetchCitasByTeam(team: string, date: string): Promise<Cita
       cp: String(c.cp || ''),
       inicio: parseTime(c.inicio),
       fin: parseTime(c.fin),
+      // Apply local status override if exists
+      status: localStatuses[c.id as string] ?? c.status,
     }))
 }
 
@@ -158,12 +178,21 @@ export async function updateCitaStatus(
   status: string,
   comments?: string
 ): Promise<{ success: boolean }> {
-  const params = new URLSearchParams({
-    action: 'updateCitaStatus',
-    citaId,
-    status,
-    ...(comments ? { notas: comments } : {}),
-  })
-  const resp = await fetch(`${GOOGLE_SCRIPT_URL}?${params}`, { redirect: 'follow' })
-  return resp.json()
+  // Always persist locally first so UI reflects the change immediately
+  setLocalStatus(citaId, status)
+
+  // Try to sync to backend in background (best-effort)
+  try {
+    const params = new URLSearchParams({
+      action: 'updateCitaStatus',
+      citaId,
+      status,
+      ...(comments ? { notas: comments } : {}),
+    })
+    await fetch(`${GOOGLE_SCRIPT_URL}?${params}`, { redirect: 'follow' })
+  } catch {
+    // ignore — local status is the source of truth on the device
+  }
+
+  return { success: true }
 }
