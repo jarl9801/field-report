@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-06T07:46:21.416933",
+  "generated": "2026-03-06T08:16:20.895523",
   "citas": [
     {
       "id": "2026-03-06_898713",
@@ -14,7 +14,7 @@
       "titulo": "3 TK Umtelkomd - Installation - HA898713",
       "equipo": "West-001",
       "status": "asignada",
-      "linkDocs": ""
+      "linkDocs": "https://drive.google.com/drive/folders/1vTr3iZe6BaaYOq_N7v3ltwRVCm1Kmqo6?usp=sharing"
     },
     {
       "id": "2026-03-06_708505",
@@ -300,20 +300,6 @@
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
-    },
-    {
-      "id": "2026-03-06_1440418",
-      "fecha": "2026-03-06",
-      "ha": "HA1440418",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "16:00",
-      "calle": "Kottenbrink 29",
-      "cp": "32052",
-      "ciudad": "Herford",
-      "titulo": "2 TK Umtelkomd - Installation - HA1440418",
-      "equipo": "West-004",
-      "status": "asignada"
     }
   ]
 }
