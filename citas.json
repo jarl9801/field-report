@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-09T10:16:39.801845",
+  "generated": "2026-03-09T11:33:25.619309",
   "citas": [
     {
       "id": "2026-03-09_410837",
@@ -102,21 +102,6 @@
       "cp": "33014",
       "ciudad": "Bad Driburg",
       "titulo": "4 TK Umtelkomd - Installation - HA708588",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-11_755194",
-      "fecha": "2026-03-11",
-      "ha": "HA755194",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Melanchthonstraße 9",
-      "cp": "49143",
-      "ciudad": "Bissendorf",
-      "titulo": "2 TK Umtelkomd - Installation - HA755194",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
