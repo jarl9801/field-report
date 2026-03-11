@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-11T10:46:52.340927",
+  "generated": "2026-03-11T11:01:39.521921",
   "citas": [
     {
       "id": "2026-03-11_708588",
@@ -20,13 +20,13 @@
       "id": "2026-03-12_410135",
       "fecha": "2026-03-12",
       "ha": "HA410135",
-      "tecnicos": 4,
+      "tecnicos": 3,
       "inicio": "08:00",
       "fin": "17:00",
       "calle": "August-Dissen-Straße 21",
       "cp": "34414",
       "ciudad": "Warburg",
-      "titulo": "4 TK Umtelkomd - Installation - HA410135",
+      "titulo": "3 TK Umtelkomd - Installation - HA410135",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
@@ -42,6 +42,21 @@
       "cp": "32549",
       "ciudad": "Bad Oeynhausen",
       "titulo": "2 TK Umtelkomd - Installation - HA899208",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-13_1053638",
+      "fecha": "2026-03-13",
+      "ha": "HA1053638",
+      "tecnicos": 3,
+      "inicio": "08:00",
+      "fin": "14:00",
+      "calle": "Burtonstraße 33",
+      "cp": "49328",
+      "ciudad": "Melle",
+      "titulo": "3 TK  Umtelkomd Installation 2 HA1053638",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
