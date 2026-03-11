@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-11T11:01:39.521921",
+  "generated": "2026-03-11T11:31:39.094010",
   "citas": [
     {
       "id": "2026-03-11_708588",
@@ -200,13 +200,13 @@
       "id": "2026-03-19_763651",
       "fecha": "2026-03-19",
       "ha": "HA763651",
-      "tecnicos": 4,
+      "tecnicos": 3,
       "inicio": "08:00",
       "fin": "17:00",
       "calle": "Manfred-von-Richthofen-Straße 94",
       "cp": "48145",
       "ciudad": "Münster",
-      "titulo": "4 TK Umtelkomd - Installation - HA763651",
+      "titulo": "3 TK Umtelkomd - Installation - HA763651",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
