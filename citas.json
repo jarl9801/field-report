@@ -1,21 +1,6 @@
 {
-  "generated": "2026-03-11T20:46:22.143544",
+  "generated": "2026-03-12T06:01:19.082091",
   "citas": [
-    {
-      "id": "2026-03-11_708588",
-      "fecha": "2026-03-11",
-      "ha": "HA708588",
-      "tecnicos": 4,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Zum Hillenwasser 20",
-      "cp": "33014",
-      "ciudad": "Bad Driburg",
-      "titulo": "4 TK Umtelkomd - Installation - HA708588",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
     {
       "id": "2026-03-12_410135",
       "fecha": "2026-03-12",
@@ -237,6 +222,36 @@
       "cp": "49163",
       "ciudad": "Bohmte",
       "titulo": "4 TK Umtelkomd - Installation - HA431838",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-23_755020",
+      "fecha": "2026-03-23",
+      "ha": "HA755020",
+      "tecnicos": 2,
+      "inicio": "08:00",
+      "fin": "14:00",
+      "calle": "Neue Str. 12",
+      "cp": "49143",
+      "ciudad": "Bissendorf",
+      "titulo": "2 TK Umtelkomd - Installation - HA755020",
+      "equipo": "",
+      "status": "libre",
+      "linkDocs": ""
+    },
+    {
+      "id": "2026-03-23_754702",
+      "fecha": "2026-03-23",
+      "ha": "HA754702",
+      "tecnicos": 3,
+      "inicio": "08:00",
+      "fin": "17:00",
+      "calle": "Pundmanns Breite 4",
+      "cp": "49143",
+      "ciudad": "Bissendorf",
+      "titulo": "3 TK Umtelkomd - Installation - HA754702",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
