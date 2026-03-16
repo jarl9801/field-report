@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-16T07:01:22.533946",
+  "generated": "2026-03-16T07:16:15.322520",
   "citas": [
     {
       "id": "2026-03-16_486216",
@@ -57,21 +57,6 @@
       "cp": "49328",
       "ciudad": "Melle",
       "titulo": "4 TK Umtelkomd - Installation - HA252713",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-18_898849",
-      "fecha": "2026-03-18",
-      "ha": "HA898849",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "15:00",
-      "calle": "Ostpreußische Str. 3",
-      "cp": "32549",
-      "ciudad": "Bad Oeynhausen",
-      "titulo": "2 TK Umtelkomd - Installation - HA898849",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
