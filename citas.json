@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-18T09:16:20.491865",
+  "generated": "2026-03-18T09:31:44.076194",
   "citas": [
     {
       "id": "2026-03-18_920962",
@@ -207,21 +207,6 @@
       "cp": "33428",
       "ciudad": "Harsewinkel",
       "titulo": "4 TK Umtelkomd - Installation - HA485960",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-30_486988",
-      "fecha": "2026-03-30",
-      "ha": "HA486988",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "14:00",
-      "calle": "Franz-Claas-Straße 12",
-      "cp": "33428",
-      "ciudad": "Harsewinkel",
-      "titulo": "2 TK Umtelkomd - Installation - HA486988 ",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
