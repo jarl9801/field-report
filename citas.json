@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-23T10:46:40.129910",
+  "generated": "2026-03-23T11:01:46.200305",
   "citas": [
     {
       "id": "2026-03-23_755020",
@@ -87,21 +87,6 @@
       "cp": "49143",
       "ciudad": "Bissendorf",
       "titulo": "3 TK Umtelkomd - Installation - HA754702",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-25_430671",
-      "fecha": "2026-03-25",
-      "ha": "HA430671",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Theodor-Heuss-Straße 1",
-      "cp": "49163",
-      "ciudad": "Bohmte",
-      "titulo": "2 TK Umtelkomd - Lange Leiter erforderlich - Installation - HA430671",
       "equipo": "",
       "status": "libre",
       "linkDocs": ""
