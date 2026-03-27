@@ -1,36 +1,6 @@
 {
-  "generated": "2026-03-26T20:46:59.171999",
+  "generated": "2026-03-27T06:16:54.022258",
   "citas": [
-    {
-      "id": "2026-03-26_755758",
-      "fecha": "2026-03-26",
-      "ha": "HA755758",
-      "tecnicos": 3,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Neue Str. 45",
-      "cp": "49143",
-      "ciudad": "Bissendorf",
-      "titulo": "3 TK Umtelkomd - Installation - HA755758",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
-    {
-      "id": "2026-03-26_281328",
-      "fecha": "2026-03-26",
-      "ha": "HA281328",
-      "tecnicos": 2,
-      "inicio": "08:00",
-      "fin": "17:00",
-      "calle": "Goethestraße 27",
-      "cp": "32676",
-      "ciudad": "Lügde",
-      "titulo": " 2 TK Umtelkomd - Installation - HA281328",
-      "equipo": "",
-      "status": "libre",
-      "linkDocs": ""
-    },
     {
       "id": "2026-03-27_485960",
       "fecha": "2026-03-27",
